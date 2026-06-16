@@ -1,0 +1,21 @@
+# Example profile manifest.
+#
+# Pattern: keep skills in ONE registry (a git repo), then link the subset a
+# given runtime/profile needs into that runtime's skills dir. One source of
+# truth, many consumers — edit the registry, re-link, done.
+#
+# A small linker reads this file and symlinks `<registry>/<category>/<skill>`
+# into `target`. (Any linker works; this file is just the declaration.)
+
+profile: example
+target: ~/.claude/skills        # where this runtime discovers skills
+
+# Categories to include from the registry, in order.
+include:
+  - dev-skills                  # this kit
+  - personal                    # your own private category (not in this repo)
+
+exclude: []
+
+# Skills scoped to specific projects rather than global.
+project_skills: []

@@ -1,0 +1,22 @@
+# Per-host dependencies — never commit. Install after clone.
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Secrets / local
+.env
+.env.*
+*.local
+.DS_Store
+
+# Playwright auth state — holds live session tokens, regenerate per run
+playwright/.auth/
+test-results/
+playwright-report/
+
+# OpenClaw/clawhub vendoring artifacts (in case a skill is copied in with them)
+.clawhub/
+.clawbot/
+_meta.json

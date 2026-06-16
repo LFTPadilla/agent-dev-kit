@@ -1,0 +1,9 @@
+{
+  "name": "dev-skills",
+  "version": "0.6.1",
+  "description": "Curated, dependency-free agent skills for everyday development work.",
+  "author": {
+    "name": "Felipe Tejada",
+    "url": "https://github.com/LFTPadilla"
+  }
+}

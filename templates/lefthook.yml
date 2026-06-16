@@ -1,0 +1,26 @@
+# lefthook.yml — copy into a project root, then: npx lefthook install
+#
+# Fast gate on commit (staged files only), heavier checks on push.
+# lefthook runs commands in parallel (Go binary, ~10x husky).
+# Remove any command whose tool you don't use — nothing here is mandatory.
+
+pre-commit:
+  parallel: true
+  commands:
+    secrets:
+      run: gitleaks protect --staged --no-banner
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: npx tsc --noEmit            # whole-project: types are cross-file
+    lint:
+      glob: "*.{ts,tsx,js,jsx}"
+      run: npx eslint {staged_files}
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    dead-code:
+      run: npx knip                    # unused files/exports/deps
+    sast:
+      run: semgrep --config auto --error $(git diff --name-only --diff-filter=ACM origin/HEAD)
