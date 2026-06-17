@@ -29,6 +29,7 @@ Per-project dev tools — install where you use them, not globally.
 | **Sentry MCP** | Pull prod issues/stack traces into the agent. See [`sentry-mcp.md`](sentry-mcp.md). | `claude mcp add --transport http sentry https://mcp.sentry.dev/mcp` |
 | **Playwright MCP** | Drive a real browser as a tool — powers the `live-qa` skill. | `claude mcp add playwright npx '@playwright/mcp@latest'` |
 | **Stagehand** | Self-healing NL browser automation on Playwright (`stagehand` skill). | `npm i @browserbasehq/stagehand` |
+| **draw.io desktop CLI** | Export `.drawio` → PNG/SVG/PDF for the `drawio-skill`. Python scripts need `python3`; optional auto-layout needs Graphviz (`dot`). | `brew install drawio` (+ `brew install graphviz` optional) |
 
 ## Layering (no overlap)
 

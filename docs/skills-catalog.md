@@ -10,7 +10,7 @@
 - **External tools** (GSD, caveman, ponytail, MCP servers) install separately —
   see [external-deps.md](external-deps.md).
 
-## Skills (16)
+## Skills (17)
 
 ### Documents & media
 | Skill | Adds | Triggers on |
@@ -18,7 +18,8 @@
 | `pdf` | Inspect / summarize / split / merge / convert PDFs | "work with this PDF", "summarize the PDF" |
 | `excel-xlsx` | Build `.xlsx` from tables/CSV/JSON | "make a spreadsheet", "export to Excel" |
 | `word-docx` | Build `.docx` from a title + body | "write a Word doc", "make a .docx" |
-| `diagram-render` | Network/infra/flow diagrams → PNG (SVG+sharp) | "draw the topology", "render this diagram" |
+| `diagram-render` | Network/infra/flow diagrams → PNG (SVG+sharp) — quick, static | "draw the topology", "render this diagram" |
+| `drawio-skill` | NL → editable `.drawio` diagrams (presets, 10k+ shapes, AI/LLM logos, PNG/SVG/PDF export) — when you want an *editable* diagram, not just a PNG. Needs draw.io desktop CLI. Vendored, MIT. | "make an architecture/ER/UML diagram", "diagram I can edit" |
 | `tex-render` | LaTeX math → PNG/SVG (MathJax) | "render this equation as an image" |
 | `image-finalize` | Two-stage image gen (draft → polish) | "generate an image", "refine this image" |
 

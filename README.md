@@ -40,7 +40,7 @@ agent-dev-kit/
 ├── .claude-plugin/marketplace.json   # this repo IS a Claude plugin marketplace
 ├── plugins/dev-skills/               # the bundled skills plugin
 │   ├── .claude-plugin/plugin.json
-│   ├── skills/<skill>/SKILL.md       # 16 curated skills (knip, semgrep, live-qa, security-checklist, ...)
+│   ├── skills/<skill>/SKILL.md       # 17 curated skills (knip, semgrep, live-qa, drawio-skill, ...)
 │   └── commands/pr-review.md         # multi-lens review + pre-report gate + FP skip-list
 ├── evals/                            # benchmark: planted bugs + clean control, scored on recall & FP rate
 ├── WRITEUP.md                        # design notes + the layering thesis (read this)
