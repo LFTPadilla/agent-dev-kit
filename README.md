@@ -1,11 +1,37 @@
 # agent-dev-kit
 
-A replicable, shareable agent development setup for Claude Code (and other
-runtimes). Curated skills bundled as a plugin, plus a bootstrap for the
-external tools that complete the stack.
+![License](https://img.shields.io/badge/license-MIT-blue) ![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin%20marketplace-8A2BE2) ![Codex](https://img.shields.io/badge/Codex-compatible-black)
 
-The goal: a teammate clones this, runs one script, runs a few `/plugin`
-commands, and has the same model-augmented dev environment you do.
+**A layered system for directing coding agents** — separated concerns,
+measurable quality gates, and honest boundaries. A teammate clones this, runs one
+script, and has the same AI-augmented dev environment you do.
+
+```mermaid
+flowchart TB
+  C["caveman — how it talks"]
+  P["ponytail — what it builds"]
+  G["GSD — how work flows"]
+  S["dev-skills — capabilities (this repo)"]
+  S --> R["/pr-review · multi-lens + adversarial verify"]
+  S --> Q["live-QA · 3 layers"]
+  S --> SC["security · semgrep + checklist"]
+  R --> E[("evals · measured, not asserted")]
+```
+
+The contribution isn't the borrowed pieces (caveman, ponytail, GSD are credited)
+— it's the architecture they sit in, the original parts (adversarial PR review,
+layered live-QA, prompt-injection defense), and the judgment about what to leave
+out.
+
+**Read next:** [WRITEUP.md](WRITEUP.md) (design + thesis) · [evals/](evals) (does it actually catch bugs?) · [docs/skills-catalog.md](docs/skills-catalog.md) (every skill).
+
+## What this demonstrates
+
+- **Agent orchestration** — multi-lens review fanned out + adversarially verified; multi-runtime (Claude + Codex) skill sync.
+- **Measuring AI systems** — an eval set with planted bugs + a clean control, scored on recall *and* false-positive rate.
+- **Designing for the real failure mode** — LLM reviewers' confident false positives, attacked with a pre-report gate + refuter panel.
+- **Security awareness** — prompt-injection defense on every agent that reads untrusted input (diffs, web pages).
+- **Senior judgment** — honest attribution ([ATTRIBUTION.md](ATTRIBUTION.md)) and deliberate curation ([CURATION.md](CURATION.md)): shipping less, on purpose.
 
 ## What's inside
 
@@ -16,11 +42,14 @@ agent-dev-kit/
 │   ├── .claude-plugin/plugin.json
 │   ├── skills/<skill>/SKILL.md       # 16 curated skills (knip, semgrep, live-qa, security-checklist, ...)
 │   └── commands/pr-review.md         # multi-lens review + pre-report gate + FP skip-list
+├── evals/                            # benchmark: planted bugs + clean control, scored on recall & FP rate
+├── WRITEUP.md                        # design notes + the layering thesis (read this)
 ├── manifests/example.yml             # multi-profile skill-linking pattern
 ├── templates/lefthook.yml            # copy-in pre-commit/pre-push gate
 ├── templates/playwright/             # auth.setup.ts (login-once storageState)
 ├── bootstrap.sh                      # installs external (npm) tools + prints plugin steps
 ├── docs/skills-catalog.md            # every skill/command: what it adds + how to trigger
+├── docs/going-public.md              # pre-flip checklist (repo is private for now)
 ├── docs/external-deps.md             # GSD, caveman, ponytail, knip, semgrep, lefthook, Sentry MCP
 ├── docs/profiles.md                  # one registry, many runtimes (symlink layout)
 ├── docs/sentry-mcp.md                # triage prod errors from the editor

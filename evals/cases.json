@@ -1,0 +1,7 @@
+[
+  { "file": "01-sql-injection.ts",        "plantedBug": true,  "category": "security",    "severity": "CRITICAL", "note": "string-interpolated SQL" },
+  { "file": "02-missing-auth.ts",          "plantedBug": true,  "category": "security",    "severity": "CRITICAL", "note": "no auth/ownership on delete" },
+  { "file": "03-n-plus-one.ts",            "plantedBug": true,  "category": "performance", "severity": "HIGH",     "note": "query per loop iteration" },
+  { "file": "04-react-stale-closure.tsx",  "plantedBug": true,  "category": "correctness", "severity": "MEDIUM",   "note": "useEffect missing dep; SAST usually misses" },
+  { "file": "05-clean-control.ts",         "plantedBug": false, "category": null,          "severity": null,       "note": "control — flagging this is a false positive" }
+]
