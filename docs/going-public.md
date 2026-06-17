@@ -1,8 +1,8 @@
-# Going public — pre-flip checklist (NOT yet done)
+# Going public — pre-publish checklist (PASSED, repo is public)
 
-The repo is private. Before flipping it to public as a portfolio piece, review
-each item — don't rush it. The history is already squashed to one clean commit,
-so there is no leaked-history concern to undo.
+This repo went public on 2026-06-18 after passing every check below (gitleaks
+over full history clean, coupling scan clean, attribution + license present).
+Kept as the record + a reusable checklist for the next repo.
 
 ## Review before flipping
 

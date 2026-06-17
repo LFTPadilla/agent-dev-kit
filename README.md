@@ -49,7 +49,7 @@ agent-dev-kit/
 ├── templates/playwright/             # auth.setup.ts (login-once storageState)
 ├── bootstrap.sh                      # installs external (npm) tools + prints plugin steps
 ├── docs/skills-catalog.md            # every skill/command: what it adds + how to trigger
-├── docs/going-public.md              # pre-flip checklist (repo is private for now)
+├── docs/going-public.md              # the pre-publish checklist this repo passed
 ├── docs/external-deps.md             # GSD, caveman, ponytail, knip, semgrep, lefthook, Sentry MCP
 ├── docs/profiles.md                  # one registry, many runtimes (symlink layout)
 ├── docs/sentry-mcp.md                # triage prod errors from the editor
