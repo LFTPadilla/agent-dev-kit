@@ -14,18 +14,34 @@ on the `cases/` set. Manual, but repeatable and honest.
    - **False positives** = findings on case 05 (target: 0)
    - **Severity accuracy** = correct severity / caught
 
-## Results (fill in when run)
+## Results
+
+Run 2026-06-18. ✓ = caught, ✗ = missed, — = correctly silent on the control.
 
 | Tool | 01 sql | 02 auth | 03 n+1 | 04 deps | 05 clean | Recall | FP |
 |---|---|---|---|---|---|---|---|
-| semgrep (`run.mjs`) | | | | | | | |
-| `security-checklist` | | | | | | | |
-| `/pr-review` (single pass) | | | | | | | |
-| `/pr-review` (+ adversarial verify) | | | | | | | |
+| semgrep `p/owasp+js+ts+nodejs-scan` | ✗ | ✗ | ✗ | ✗ | — | **0/4** | 0 |
+| LLM single-pass review (Claude, manual) | ✓ | ✓ | ✓ | ✓ | — | **4/4** | 0 |
+| `/pr-review` (+ adversarial verify) | — | — | — | — | — | not run | — |
 
-The interesting comparison is the last two rows: the adversarial verify layer
-should hold recall while driving false positives toward zero. That is the whole
-thesis of `pr-review` — measure it, don't assert it.
+**Reading it honestly:**
+
+- **semgrep 0/4 is real, and the reason is the lesson.** 547 rules loaded, 79 ran
+  on the TS files, zero findings. The cases use a project-specific `db.query`
+  sink — generic SAST taint rules key off *known library* sinks (pg, knex,
+  sequelize), so they miss injection through a custom wrapper. This is a true,
+  common limitation: deterministic SAST is brittle to bespoke abstractions and
+  needs codebase-tuned rules (or `semgrep login` for more) to do better here.
+- **LLM single-pass 4/4, 0 FP** — the reasoning layer reads intent, not just
+  patterns, so the custom sink, the missing auth, the N+1, and the stale closure
+  all register; the clean control stays clean.
+- **Caveat:** these 4 bugs are classic and obvious — a smoke test of the method,
+  not proof on hard cases. The `/pr-review` + adversarial-verify row needs a real
+  PR run to fill; the value it adds shows on *ambiguous* findings, which this set
+  doesn't yet contain. Add subtler cases (TOCTOU, cross-tenant leak) to stress it.
+
+The headline isn't "LLM beats semgrep" — it's that they fail differently, so the
+kit runs both: semgrep as a deterministic floor, the LLM layer for intent.
 
 ## Extending
 

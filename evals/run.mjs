@@ -9,9 +9,12 @@ import { readFileSync } from 'node:fs'
 
 const cases = JSON.parse(readFileSync(new URL('./cases.json', import.meta.url)))
 
+// Explicit public registry packs (no login needed) — the config our semgrep
+// skill recommends. `--config auto` alone pulls a thinner ruleset.
+const PACKS = '--config p/owasp-top-ten --config p/javascript --config p/typescript --config p/nodejs-scan'
 let raw = ''
 try {
-  raw = execSync('semgrep --config auto --json evals/cases', { encoding: 'utf8' })
+  raw = execSync(`semgrep ${PACKS} --json evals/cases`, { encoding: 'utf8' })
 } catch (e) {
   raw = e.stdout || '' // semgrep exits non-zero when it finds something
 }

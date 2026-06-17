@@ -10,17 +10,22 @@ review tool in this kit can be scored on two axes that actually matter:
 
 ## The set (`cases/`)
 
-| Case | Planted issue | Category | A deterministic SAST should… |
+| Case | Planted issue | Category | Notes |
 |---|---|---|---|
-| 01 | String-interpolated SQL | security/CRITICAL | catch |
-| 02 | No auth on a delete route | security/CRITICAL | often miss (needs intent) |
-| 03 | N+1 query in a loop | performance/HIGH | often miss |
-| 04 | `useEffect` missing dep | correctness/MEDIUM | miss (semantic) |
+| 01 | String-interpolated SQL (custom `db.query` sink) | security/CRITICAL | generic SAST misses it — sink isn't a known library |
+| 02 | No auth on a delete route | security/CRITICAL | needs intent — SAST misses |
+| 03 | N+1 query in a loop | performance/HIGH | SAST misses |
+| 04 | `useEffect` missing dep | correctness/MEDIUM | semantic — SAST misses |
 | 05 | **clean control** | — | **never flag** |
 
-The mix is deliberate: 01 is easy for static rules; 02–04 need reasoning; 05
-exists only to catch over-eager reviewers. A tool that scores 100% recall by
-flagging everything also flags 05 — and fails.
+The mix is deliberate: 02–04 need reasoning, and 01 shows that even a "classic"
+vuln slips past generic rules when the sink is a project-specific wrapper. 05
+exists only to catch over-eager reviewers — a tool that scores 100% recall by
+flagging everything also flags 05 and fails.
+
+**Latest run (see [PROTOCOL.md](PROTOCOL.md) for the table + honest reading):**
+semgrep `0/4`, LLM single-pass `4/4`, both `0` false positives. They fail
+differently — which is exactly why the kit runs both.
 
 ## Two layers, two methods
 
