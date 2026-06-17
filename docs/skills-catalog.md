@@ -10,7 +10,7 @@
 - **External tools** (GSD, caveman, ponytail, MCP servers) install separately —
   see [external-deps.md](external-deps.md).
 
-## Skills (17)
+## Skills (18)
 
 ### Documents & media
 | Skill | Adds | Triggers on |
@@ -27,6 +27,7 @@
 | Skill | Adds | Triggers on |
 |---|---|---|
 | `knip` | Find dead code / unused exports / unused deps (TS/JS) | "clean up bloat", "find unused code", before a refactor |
+| `improve` | Senior-advisor audit (read-only) → writes prioritized implementation plans for *other* agents to execute. Pairs your most-capable model (audit) with cheaper executors. | "audit this codebase", "where should this project go", "write a plan for X" |
 | `git-essentials` | Git command/workflow reference | git workflow questions |
 
 ### Security

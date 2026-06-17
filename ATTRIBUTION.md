@@ -22,3 +22,11 @@ block was trimmed of platform-specific (openclaw/hermes) install hints. All
 credit to the original author.
 
 Source: https://github.com/Agents365-ai/drawio-skill — MIT, Copyright (c) 2026 Agents365-ai.
+
+## improve — shadcn/improve (MIT)
+
+`plugins/dev-skills/skills/improve/` is vendored verbatim (its `LICENSE.md` is
+kept in that directory). A read-only "senior advisor" skill: audits a codebase
+and writes execution plans for other agents.
+
+Source: https://github.com/shadcn/improve — MIT, Copyright (c) 2026 shadcn.
