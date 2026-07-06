@@ -1,0 +1,124 @@
+version: 1
+scope: public-safe
+default_policy: read-only
+
+profiles:
+  pi-diagnose:
+    purpose: "Read-only root-cause analysis over local code, logs, and reports."
+    packages:
+      - npm:context-mode
+      - npm:@bacnh85/pi-serena
+      - npm:@braintrust/pi-extension
+    sandbox_policy: read-only
+    allowed:
+      - read repository files
+      - inspect logs supplied by the primary agent
+      - propose verification commands
+    forbidden:
+      - write files
+      - read secrets
+      - mutate production systems
+      - run destructive commands
+    output_contract:
+      - root_cause
+      - confidence
+      - evidence
+      - verification
+      - rollback
+      - proposed_next_steps
+
+  pi-sre-research:
+    purpose: "Current documentation and package research for infrastructure or SDK questions."
+    packages:
+      - npm:pi-web-access
+      - npm:pi-all-search
+      - npm:context-mode
+    sandbox_policy: research-network
+    allowed:
+      - web research
+      - package documentation review
+      - comparison tables
+    forbidden:
+      - secrets
+      - customer data
+      - authenticated production consoles
+    output_contract:
+      - sources
+      - recommendations
+      - risks
+      - version_notes
+
+  pi-code-review:
+    purpose: "Read-only code review with semantic navigation and false-positive control."
+    packages:
+      - npm:@bacnh85/pi-serena
+      - npm:@bacnh85/pi-plan
+      - npm:@braintrust/pi-extension
+    sandbox_policy: read-only
+    allowed:
+      - inspect changed files
+      - inspect nearby code
+      - propose tests
+    forbidden:
+      - write files
+      - run production commands
+      - invent issues without file/line evidence
+    output_contract:
+      - findings
+      - severity
+      - file_refs
+      - test_gaps
+      - false_positive_notes
+
+  pi-parallel-workers:
+    purpose: "Bounded worker pool for independent read-only research/review tasks."
+    packages:
+      - npm:pi-subagents
+      - npm:@gjczone/pi-swarm
+    sandbox_policy: read-only
+    concurrency:
+      initial: 3
+      max_without_review: 5
+      max_runtime_minutes: 20
+    allowed:
+      - fan out independent analysis tasks
+      - summarize per-worker evidence
+    forbidden:
+      - shared write access
+      - production access
+      - unbounded research
+    output_contract:
+      - worker_summaries
+      - consensus
+      - disagreements
+      - verified_next_steps
+
+  pi-browser-lab:
+    purpose: "Disposable browser automation for local/staging UI QA."
+    packages:
+      - npm:@lebronj/pi-playwright
+    sandbox_policy: browser-lab
+    allowed:
+      - local browser QA
+      - screenshots
+      - accessibility smoke checks
+    forbidden:
+      - bank/payment credentials
+      - customer OAuth tokens
+      - unattended authenticated third-party actions
+    output_contract:
+      - scenario
+      - screenshots
+      - failures
+      - reproduction_steps
+
+deferred_profiles:
+  pi-memory:
+    packages:
+      - npm:gentle-engram
+      - npm:pi-nocturne-memory
+    reason: "Persistent memory needs an explicit retention, privacy, and deletion policy first."
+  pi-actors:
+    packages:
+      - npm:@llblab/pi-actors
+    reason: "Actor-based delegation should wait until read-only profiles have a measured baseline."

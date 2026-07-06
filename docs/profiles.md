@@ -7,7 +7,8 @@ copying files around by hand.
 
 One **registry** (a git repo of skill folders, grouped into categories) is the
 single source of truth. Each runtime or profile gets the subset it needs via
-**symlinks**, declared in a per-profile manifest (`manifests/*.yml`).
+**symlinks**, declared in a per-profile manifest (`profiles/*.yml` for shipped
+profiles, `manifests/*.yml` for examples or local experiments).
 
 ```
 registry (git)                 runtime config
@@ -43,3 +44,19 @@ this profile setup if you'd rather not do it by hand.
   the installer.
 
 See [`external-deps.md`](external-deps.md).
+
+## Profile contract
+
+Every shipped profile declares:
+
+- `profile`
+- `runtime`
+- `target`
+- `sandbox_policy`
+- `include_skills`
+- `capabilities`
+- `limits`
+
+Sandbox policies live in [`../policies/sandbox-policies.json`](../policies/sandbox-policies.json).
+They are contracts for agents and wrappers; private production policies belong
+in a private overlay.

@@ -1,0 +1,24 @@
+{
+  "profiles": {
+    "pi-code-review": {
+      "extensions": [
+        "npm:@bacnh85/pi-serena",
+        "npm:@bacnh85/pi-plan",
+        "npm:@braintrust/pi-extension"
+      ],
+      "policy": "read-only"
+    },
+    "pi-sre-research": {
+      "extensions": [
+        "npm:pi-web-access",
+        "npm:pi-all-search",
+        "npm:context-mode"
+      ],
+      "policy": "research-network"
+    }
+  },
+  "notes": [
+    "Pin package versions after the pilot.",
+    "Keep project-specific profiles in a private overlay."
+  ]
+}

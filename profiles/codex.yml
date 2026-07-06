@@ -1,0 +1,18 @@
+profile: codex-default
+runtime: codex
+target: ~/.codex/skills
+sandbox_policy: workspace-write
+include_skills:
+  - dev-skills
+  - overnight-task-kit
+capabilities:
+  - code-editing
+  - terminal-verification
+  - repo-audit
+  - long-running-implementation
+limits:
+  production: explicit-only
+  secrets: explicit-only
+  git_push: explicit-only
+notes:
+  - Keep private project context in that project's repository, not in this kit.

@@ -18,7 +18,7 @@ Source: https://github.com/affaan-m/ECC — MIT License.
 
 `plugins/dev-skills/skills/drawio-skill/` is vendored largely verbatim (its own
 `LICENSE` is kept in that directory). Only change: the frontmatter `metadata`
-block was trimmed of platform-specific (openclaw/hermes) install hints. All
+block was trimmed of platform-specific install hints. All
 credit to the original author.
 
 Source: https://github.com/Agents365-ai/drawio-skill — MIT, Copyright (c) 2026 Agents365-ai.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi Harness"
+  short_description: "Route tasks to Pi or OpenCode"
+  default_prompt: "Use $multi-harness to delegate a scoped code review to the best local harness."

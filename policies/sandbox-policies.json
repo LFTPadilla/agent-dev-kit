@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "policies": {
+    "read-only": {
+      "writes": false,
+      "network": false,
+      "secrets": false,
+      "production": false,
+      "git_push": false,
+      "destructive_ops": false,
+      "description": "Review, research over local files, and planning only."
+    },
+    "research-network": {
+      "writes": false,
+      "network": true,
+      "secrets": false,
+      "production": false,
+      "git_push": false,
+      "destructive_ops": false,
+      "description": "Current documentation and ecosystem research without local mutation."
+    },
+    "workspace-write": {
+      "writes": true,
+      "network": false,
+      "secrets": false,
+      "production": false,
+      "git_push": false,
+      "destructive_ops": false,
+      "description": "Scoped implementation in the current worktree; no production or secret access."
+    },
+    "browser-lab": {
+      "writes": true,
+      "network": true,
+      "secrets": false,
+      "production": false,
+      "git_push": false,
+      "destructive_ops": false,
+      "description": "Local browser automation and visual QA. Auth state must be explicit and disposable."
+    },
+    "operator-confirmed": {
+      "writes": true,
+      "network": true,
+      "secrets": "explicit-only",
+      "production": "explicit-only",
+      "git_push": "explicit-only",
+      "destructive_ops": "explicit-only",
+      "description": "Reserved for tasks where the user explicitly grants production/operator scope in the same session."
+    }
+  }
+}

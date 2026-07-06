@@ -43,6 +43,12 @@ agent-dev-kit/
 │   ├── skills/<skill>/SKILL.md       # 18 curated skills (knip, semgrep, live-qa, drawio-skill, improve, ...)
 │   └── commands/pr-review.md         # multi-lens review + pre-report gate + FP skip-list
 ├── evals/                            # benchmark: planted bugs + clean control, scored on recall & FP rate
+├── profiles/                         # runtime profile manifests (Claude, Codex, Pi, OpenCode)
+├── policies/                         # sandbox policy contracts
+├── scripts/agent-dev-kit.mjs         # doctor / validate / inventory CLI
+├── skill-provenance.json             # source, license, deps, risk for every skill
+├── pi-profiles/                      # public-safe Pi delegation presets
+├── overnight-task-kit/               # generic long-running task runner + skills
 ├── WRITEUP.md                        # design notes + the layering thesis (read this)
 ├── manifests/example.yml             # multi-profile skill-linking pattern
 ├── templates/lefthook.yml            # copy-in pre-commit/pre-push gate
@@ -76,6 +82,18 @@ four composing layers:
 
 See [`docs/external-deps.md`](docs/external-deps.md).
 
+## Health checks
+
+```bash
+npm run doctor
+npm run validate
+npm run inventory
+```
+
+`doctor` checks local tool availability, runtime skill targets, manifests,
+profiles, eval fixtures, provenance, and public/private coupling. `validate` is
+the CI-friendly subset.
+
 ## Usage
 
 Skills trigger automatically when your request matches their description — or
@@ -100,7 +118,10 @@ Each tool keeps its own upstream update channel — nothing is vendored or forke
   (ones that encode your team's tickets, reviewers, or worktree layout) belong in
   that project's `.claude/commands/`, not here.
 - **Profiles** — running the same skills across multiple Claude configs/runtimes:
-  see [`docs/profiles.md`](docs/profiles.md) and `manifests/example.yml`.
+  see [`docs/profiles.md`](docs/profiles.md), `profiles/*.yml`, and
+  `manifests/example.yml`.
+- **Private overlays** — project/company-specific context belongs outside this
+  public kit. See [`docs/private-overlays.md`](docs/private-overlays.md).
 
 ## Quality gates & observability
 
@@ -110,6 +131,8 @@ Each tool keeps its own upstream update channel — nothing is vendored or forke
 - **Sentry MCP**: pull prod errors into the agent — see [`docs/sentry-mcp.md`](docs/sentry-mcp.md).
 - **security-checklist** skill: pattern → severity → fix review for trust boundaries (LLM complement to semgrep).
 - **Prompt-injection defense** for agents that read untrusted input (diffs, pages) — see [`docs/prompt-defense.md`](docs/prompt-defense.md). Adapted ideas credited in [`ATTRIBUTION.md`](ATTRIBUTION.md).
+- **Skill provenance**: `skill-provenance.json` records source, license,
+  dependencies, risk, and visibility for every bundled skill.
 
 ### Live QA / E2E (layered)
 
@@ -132,6 +155,8 @@ Stable *and* realistic = three layers, not one tool:
 2. Keep it dependency-free, or list deps and add them to `.gitignore` (install per host).
 3. Strip anything private (paths, IPs, secrets, internal system names) — see `CURATION.md`.
 4. Commit. Bump `plugins/dev-skills/.claude-plugin/plugin.json` version.
+5. Add an entry to `skill-provenance.json`.
+6. Run `npm run validate`.
 
 ## License
 

@@ -24,3 +24,11 @@ pre-push:
       run: npx knip                    # unused files/exports/deps
     sast:
       run: semgrep --config auto --error $(git diff --name-only --diff-filter=ACM origin/HEAD)
+    secrets-history:
+      run: gitleaks detect --no-banner # full git history scan, not just staged
+    dep-audit-node:
+      glob: "package-lock.json"
+      run: npm audit --audit-level=high
+    dep-audit-python:
+      glob: "requirements*.txt"
+      run: pip-audit -r requirements.txt

@@ -1,0 +1,18 @@
+profile: browser-lab
+runtime: any
+target: project-local
+sandbox_policy: browser-lab
+include_skills:
+  - live-qa
+  - playwright-stability
+  - stagehand
+capabilities:
+  - visual-regression
+  - browser-automation
+  - exploratory-qa
+limits:
+  production: explicit-only
+  secrets: never
+  third_party_auth: disposable-only
+notes:
+  - Use local or staging targets unless the user explicitly authorizes otherwise.

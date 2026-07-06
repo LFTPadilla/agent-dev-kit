@@ -1,0 +1,16 @@
+{
+  "name": "agent-dev-kit",
+  "version": "0.10.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "agent-dev-kit": "./scripts/agent-dev-kit.mjs"
+  },
+  "scripts": {
+    "doctor": "node scripts/agent-dev-kit.mjs doctor",
+    "validate": "node scripts/agent-dev-kit.mjs validate",
+    "inventory": "node scripts/agent-dev-kit.mjs inventory",
+    "overnight:init": "node overnight-task-kit/scripts/overnight-runner.mjs init",
+    "eval:semgrep": "node evals/run.mjs"
+  }
+}

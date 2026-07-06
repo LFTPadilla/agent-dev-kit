@@ -1,7 +1,7 @@
 ---
 name: diagram-render
 tags: ['skill']
-description: Renders network diagrams, flowcharts, and infrastructure diagrams as PNG images using SVG generation and sharp. Use when the agent needs to output a network diagram, system architecture, flowchart, or infrastructure map as a viewable image. Triggers on: "make a diagram", "render this network", "show infrastructure as image", "draw topology", "create flowchart", "generate diagram".
+description: 'Renders network diagrams, flowcharts, and infrastructure diagrams as PNG images using SVG generation and sharp. Use when the agent needs to output a network diagram, system architecture, flowchart, or infrastructure map as a viewable image. Triggers on: "make a diagram", "render this network", "show infrastructure as image", "draw topology", "create flowchart", "generate diagram".'
 ---
 
 # Diagram Render 🔧

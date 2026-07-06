@@ -18,17 +18,17 @@ end and strip: absolute paths, host IPs, account IDs, internal system names
 - [x] image-finalize
 - [x] excel-xlsx        — scrubbed: absolute paths → relative, creator string → generic
 - [x] word-docx         — same scrub as excel
-- [x] diagram-render    — scrubbed paths/example hostnames; needs `sharp` (npm install per host)
+- [x] diagram-render    - scrubbed paths/example hostnames; needs `sharp` (npm install per host)
 - [x] tex-render        — scrubbed; needs mathjax/svg2img/sharp (npm install per host)
 
 ## Held back — need a rewrite, not a scrub
 
-These are bound to the OpenClaw platform (auth flows, gateway cron, committed
-WASM), not just decorated with stray paths. Publishing means re-implementing
-the capability generically, so they wait.
+These are bound to private platform assumptions (auth flows, gateway cron,
+committed WASM), not just decorated with stray paths. Publishing means
+re-implementing the capability generically, so they wait.
 
 - ocr-skill            — requires *committed* node_modules (tesseract WASM can't be bundled); doesn't fit a dependency-free repo
-- gmail-oauth, google-auth, google-drive, gcalcli-calendar — OpenClaw-bound Google auth ("connect the client's account", broker token paths)
+- gmail-oauth, google-auth, google-drive, gcalcli-calendar - private-platform Google auth ("connect the user's account", broker token paths)
 - reminder             — Discord/Telnyx/cron via the gateway layer
 - ssh-exec             — Tailscale-node + clawhub coupling
 
@@ -40,7 +40,7 @@ discord-admin, discord-channel-factory, discord-csv-handler,
 discord-data-showcase, discord-embed-builder, discord-format,
 gateway-discord-channel-bind, gateway-user-onboarding
 
-> These reference private brokers, gateways, hosts, or the OpenClaw stack.
+> These reference private brokers, gateways, hosts, or a private platform stack.
 > Generalize (remove the coupling) before any could be published.
 
 ## Excluded — private / client / redundant

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "visibility_contract": "public-safe",
+  "skills": {
+    "diagram-render": { "source": "local", "license": "MIT", "visibility": "public", "risk": "low", "dependencies": ["node"] },
+    "drawio-skill": { "source": "third-party-adapted", "license": "see skill directory", "visibility": "public", "risk": "medium", "dependencies": ["draw.io compatible assets"] },
+    "excel-xlsx": { "source": "local", "license": "MIT", "visibility": "public", "risk": "low", "dependencies": ["office/xlsx tooling when used"] },
+    "find-skills": { "source": "local", "license": "MIT", "visibility": "public", "risk": "low", "dependencies": [] },
+    "git-essentials": { "source": "local", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": ["git"] },
+    "human-writing-style": { "source": "local", "license": "MIT", "visibility": "public", "risk": "low", "dependencies": [] },
+    "image-finalize": { "source": "local", "license": "MIT", "visibility": "public", "risk": "low", "dependencies": ["image tools when used"] },
+    "improve": { "source": "third-party-adapted", "license": "see skill directory", "visibility": "public", "risk": "low", "dependencies": [] },
+    "knip": { "source": "tool-wrapper", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": ["npx", "knip"] },
+    "live-qa": { "source": "local", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": ["playwright or browser MCP"] },
+    "orchestrate": { "source": "local", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": [] },
+    "pdf": { "source": "local", "license": "MIT", "visibility": "public", "risk": "low", "dependencies": ["pandoc/typst when used"] },
+    "playwright-stability": { "source": "local", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": ["playwright"] },
+    "security-checklist": { "source": "local", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": [] },
+    "semgrep": { "source": "tool-wrapper", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": ["semgrep"] },
+    "stagehand": { "source": "tool-wrapper", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": ["stagehand"] },
+    "tex-render": { "source": "local", "license": "MIT", "visibility": "public", "risk": "low", "dependencies": ["node", "tex tooling when used"] },
+    "web-browse": { "source": "local", "license": "MIT", "visibility": "public", "risk": "medium", "dependencies": ["network access"] },
+    "word-docx": { "source": "local", "license": "MIT", "visibility": "public", "risk": "low", "dependencies": ["office/docx tooling when used"] }
+  }
+}

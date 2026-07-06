@@ -6,17 +6,19 @@ on the `cases/` set. Manual, but repeatable and honest.
 ## Run
 
 1. For each case file, give the agent only that file and ask it to review
-   (or open a throwaway PR containing all five and run `/pr-review <url>`).
+   (or open a throwaway PR containing all cases and run `/pr-review <url>`).
 2. Record, per case: did it report a finding? right category? right severity?
-   Did it report anything on the clean control (05)?
+   Did it report anything on the clean controls?
 3. Tally:
-   - **Recall** = planted bugs caught / 4
-   - **False positives** = findings on case 05 (target: 0)
+   - **Recall** = planted bugs caught / planted case count
+   - **False positives** = findings on clean controls (target: 0)
    - **Severity accuracy** = correct severity / caught
 
 ## Results
 
-Run 2026-06-18. ✓ = caught, ✗ = missed, — = correctly silent on the control.
+Run 2026-06-18 covered the original 5-case smoke set. Re-run this table after
+changes to the reviewers or eval set. ✓ = caught, ✗ = missed, — = correctly
+silent on the control.
 
 | Tool | 01 sql | 02 auth | 03 n+1 | 04 deps | 05 clean | Recall | FP |
 |---|---|---|---|---|---|---|---|

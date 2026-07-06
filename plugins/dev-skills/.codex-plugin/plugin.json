@@ -1,0 +1,6 @@
+{
+  "name": "dev-skills",
+  "version": "0.9.0",
+  "description": "Curated, dependency-free agent skills for everyday development work.",
+  "skills": "./skills/"
+}

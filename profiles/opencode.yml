@@ -1,0 +1,17 @@
+profile: opencode-fast
+runtime: opencode
+target: ~/.config/opencode/command
+sandbox_policy: read-only
+include_skills:
+  - overnight-task-kit
+capabilities:
+  - fast-review
+  - command-style-workflows
+  - secondary-opinion
+limits:
+  writes: disabled-by-default
+  production: never-by-default
+  secrets: never
+  git_push: never
+notes:
+  - OpenCode command files use a different format; see overnight-task-kit docs.

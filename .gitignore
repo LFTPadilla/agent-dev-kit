@@ -10,6 +10,9 @@ __pycache__/
 .env.*
 *.local
 .DS_Store
+.pi/
+private-overlays/
+.agent-runs/
 
 # Playwright auth state — holds live session tokens, regenerate per run
 playwright/.auth/

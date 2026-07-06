@@ -1,7 +1,17 @@
 [
-  { "file": "01-sql-injection.ts",        "plantedBug": true,  "category": "security",    "severity": "CRITICAL", "note": "string-interpolated SQL" },
-  { "file": "02-missing-auth.ts",          "plantedBug": true,  "category": "security",    "severity": "CRITICAL", "note": "no auth/ownership on delete" },
-  { "file": "03-n-plus-one.ts",            "plantedBug": true,  "category": "performance", "severity": "HIGH",     "note": "query per loop iteration" },
-  { "file": "04-react-stale-closure.tsx",  "plantedBug": true,  "category": "correctness", "severity": "MEDIUM",   "note": "useEffect missing dep; SAST usually misses" },
-  { "file": "05-clean-control.ts",         "plantedBug": false, "category": null,          "severity": null,       "note": "control — flagging this is a false positive" }
+  { "file": "01-sql-injection.ts", "plantedBug": true, "category": "security", "severity": "CRITICAL", "note": "string-interpolated SQL" },
+  { "file": "02-missing-auth.ts", "plantedBug": true, "category": "security", "severity": "CRITICAL", "note": "no auth/ownership on delete" },
+  { "file": "03-n-plus-one.ts", "plantedBug": true, "category": "performance", "severity": "HIGH", "note": "query per loop iteration" },
+  { "file": "04-react-stale-closure.tsx", "plantedBug": true, "category": "correctness", "severity": "MEDIUM", "note": "useEffect missing dep; SAST usually misses" },
+  { "file": "05-clean-control.ts", "plantedBug": false, "category": null, "severity": null, "note": "control - flagging this is a false positive" },
+  { "file": "06-ssrf-fetch.ts", "plantedBug": true, "category": "security", "severity": "HIGH", "note": "fetches arbitrary user-supplied URL" },
+  { "file": "07-path-traversal.ts", "plantedBug": true, "category": "security", "severity": "HIGH", "note": "path join with untrusted filename" },
+  { "file": "08-tenant-filter-missing.ts", "plantedBug": true, "category": "security", "severity": "CRITICAL", "note": "cross-tenant data access" },
+  { "file": "09-race-condition.ts", "plantedBug": true, "category": "correctness", "severity": "HIGH", "note": "check-then-write race on limited resource" },
+  { "file": "10-overbroad-cors.ts", "plantedBug": true, "category": "security", "severity": "MEDIUM", "note": "reflects arbitrary Origin with credentials" },
+  { "file": "11-clean-react-control.tsx", "plantedBug": false, "category": null, "severity": null, "note": "clean React control" },
+  { "file": "12-secret-logging.ts", "plantedBug": true, "category": "security", "severity": "HIGH", "note": "logs authorization token" },
+  { "file": "13-prompt-injection-tool.ts", "plantedBug": true, "category": "ai-safety", "severity": "HIGH", "note": "untrusted page content drives privileged tool call" },
+  { "file": "14-missing-rate-limit.ts", "plantedBug": true, "category": "abuse", "severity": "MEDIUM", "note": "expensive unauthenticated endpoint lacks rate limit" },
+  { "file": "15-clean-permission-control.ts", "plantedBug": false, "category": null, "severity": null, "note": "clean permission check control" }
 ]

@@ -1,0 +1,19 @@
+profile: pi-delegation
+runtime: pi
+target: ~/.pi/agent/skills
+sandbox_policy: read-only
+include_skills:
+  - dev-skills
+capabilities:
+  - secondary-review
+  - plan-critique
+  - package-research
+  - bounded-delegation
+limits:
+  writes: disabled-by-default
+  production: never-by-default
+  secrets: never
+  git_push: never
+notes:
+  - Promote to workspace-write only for a named task with explicit approval.
+  - Prefer structured output that the primary agent can verify.

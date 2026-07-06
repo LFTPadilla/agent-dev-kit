@@ -1,0 +1,7 @@
+interface:
+  display_name: "Orchestrate"
+  short_description: "Plan and delegate work to subagents"
+  default_prompt: "Use $orchestrate to plan this task, choose subagent models, delegate execution, and verify the result."
+
+policy:
+  allow_implicit_invocation: false

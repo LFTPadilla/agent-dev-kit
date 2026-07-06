@@ -11,7 +11,8 @@ set -euo pipefail
 command -v npm >/dev/null || { echo "error: npm required (install Node.js first)"; exit 1; }
 
 echo "==> npm tools"
-npm i -g pi-gsd          # GSD — spec-driven workflow system (/gsd:*)
+npm i -g pi-gsd                  # GSD — spec-driven workflow system (/gsd:*)
+npm i -g @hypabolic/hypa         # Hypa — command rewriting + MCP proxy for Claude/Codex
 # npm i -g jean-claude   # optional: multi-profile Claude config sync. Uncomment if you use multiple accounts.
 
 # Optional quality tools (per-project usually; uncomment to install globally):
@@ -34,4 +35,19 @@ cat <<'EOF'
     claude mcp add --transport http sentry https://mcp.sentry.dev/mcp
 EOF
 echo
+echo
+echo "==> Installing Hypa hooks into Claude Code and Codex"
+hypa init --agent claude
+hypa init --agent codex
+
+echo
+echo "==> Linking dev-skills to Claude Code + PI"
+bash "$(dirname "$0")/sync.sh"
+
+echo
+echo "==> Running public kit validation"
+node "$(dirname "$0")/scripts/agent-dev-kit.mjs" validate
+
+echo
 echo "Done. See docs/external-deps.md for what each tool does and why."
+echo "Re-run sync.sh after 'git pull' to pick up new skills."

@@ -7,7 +7,7 @@ Kept as the record + a reusable checklist for the next repo.
 ## Review before flipping
 
 - [ ] **Secrets** — `gitleaks detect` clean; no tokens, keys, `.env` committed.
-- [ ] **Coupling scan** — no private names left: `grep -rinwE "blackrack|openclaw|clawhub|kommit|sunset|elaad|snhq|/home/node" . --exclude-dir=.git` returns only author attribution.
+- [ ] **Coupling scan** — no private organization names, hostnames, IPs, customer names, or project paths remain in tracked files.
 - [ ] **Attribution complete** — `ATTRIBUTION.md` credits every adapted source (ECC, etc.); licenses compatible (all MIT).
 - [ ] **No employer/client IP** — nothing from Sunset/Very/Kommit work in the skills or examples.
 - [ ] **README is the portfolio front door** — thesis, diagram, "what this demonstrates", links to `WRITEUP.md` and `evals/`.

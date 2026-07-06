@@ -1,0 +1,19 @@
+profile: claude-default
+runtime: claude
+target: ~/.claude/skills
+sandbox_policy: workspace-write
+include_skills:
+  - dev-skills
+  - overnight-task-kit
+capabilities:
+  - code-editing
+  - code-review
+  - browser-qa
+  - docs-generation
+limits:
+  production: explicit-only
+  secrets: explicit-only
+  git_push: explicit-only
+notes:
+  - Primary interactive development profile.
+  - Use project-local instructions for private overlays.
