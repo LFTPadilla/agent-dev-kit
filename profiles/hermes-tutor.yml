@@ -1,0 +1,58 @@
+profile: hermes-tutor
+runtime: hermes
+target: ~/.hermes/profiles/hermes-tutor/skills
+sandbox_policy: workspace-write
+role: orchestrator
+tmux:
+  delegate_session: komp
+  paste_buffer_safe: true
+  force_sleep_after_paste_ms: 1000
+  spinner_poll_timeout_s: 10
+  completion_poll_timeout_s: 60
+include_skills:
+  - ai-workflow-orchestrator
+  - orchestrate
+  - delegating-to-tmux-claude
+  - kanban-orchestrator
+  - kanban-worker
+  - plan
+  - writing-plans
+  - subagent-driven-development
+  - requesting-code-review
+  - developer-audit
+  - dogfood
+  - test-driven-development
+capabilities:
+  process-coaching
+  decompose-and-route
+  tmux-delegation
+  kanban-dispatch
+  post-delegation-audit
+  ask-user-question-relay
+limits:
+  production: explicit-only
+  secrets: never-read-or-print
+  git_push: explicit-only
+  destructive_ops: explicit-only
+  provider_config: explicit-only
+  direct_code_edit: never
+  direct_test_run: never
+  direct_commit: never
+  direct_pr_open: never
+notes:
+  - "Hermes Workflow Tutor is a pure orchestrator profile: plans and routes, never implements."
+  - "Subagents are Claude Code TUIs attached to tmux windows in the configured tmux.delegate_session
+    (default komp). The user can monitor each pane directly."
+  - "Long-running, multi-lane, or restart-safe work goes through kanban instead of tmux."
+  - "All delegation uses the tmux-safe three-step (load-buffer + paste-buffer + sleep + Enter),
+    spinner detection, completion polling, and disk-level audit. Never send-keys -l with
+    multi-line prompts."
+  - "ai-workflow-orchestrator covers out-of-process workers (tmux + kanban). The companion
+    skill orchestrate covers in-process subagents (Codex/Claude Code/PI/OpenCode) and GSD
+    routing — load $orchestrate when workers share the harness or the user invoked GSD
+    explicitly, this skill when workers live in tmux or other profiles."
+  - "Pre-installed skills are shared with the source profile this one was cloned from
+    (default: the 'kommit' profile on the installer's local machine, but any other
+    profile works). Add org-specific overlays on top, not by editing this manifest."
+  - "Auto-updates may refresh orchestrator skills/templates after validation, but must not
+    mutate user projects, the komp tmux layout, or model/provider credentials."
