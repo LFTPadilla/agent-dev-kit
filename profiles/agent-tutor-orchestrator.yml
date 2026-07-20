@@ -1,17 +1,22 @@
-profile: hermes-tutor
+profile: agent-tutor-orchestrator
 runtime: hermes
-target: ~/.hermes/profiles/hermes-tutor/skills
+target: ~/.hermes/profiles/agent-tutor-orchestrator/skills
 sandbox_policy: workspace-write
 role: orchestrator
 tmux:
-  delegate_session: komp
+  delegate_session: tutor
   paste_buffer_safe: true
   force_sleep_after_paste_ms: 1000
   spinner_poll_timeout_s: 10
   completion_poll_timeout_s: 60
+# Tier B — skills that ship in this public repo (cold-clone ready).
 include_skills:
   - ai-workflow-orchestrator
   - orchestrate
+# Tier C — skills expected from a private org overlay or Hermes hub install.
+# Cold-clone does NOT include these; tutor-bootstrap will report them missing
+# until an overlay is linked. Do not treat them as public kit contents.
+requires_private_overlay:
   - delegating-to-tmux-claude
   - kanban-orchestrator
   - kanban-worker
@@ -40,9 +45,9 @@ limits:
   direct_commit: never
   direct_pr_open: never
 notes:
-  - "Hermes Workflow Tutor is a pure orchestrator profile: plans and routes, never implements."
+  - "Agent Tutor Orchestrator is a pure orchestrator profile: plans and routes, never implements."
   - "Subagents are Claude Code TUIs attached to tmux windows in the configured tmux.delegate_session
-    (default komp). The user can monitor each pane directly."
+    (default tutor). The user can monitor each pane directly."
   - "Long-running, multi-lane, or restart-safe work goes through kanban instead of tmux."
   - "All delegation uses the tmux-safe three-step (load-buffer + paste-buffer + sleep + Enter),
     spinner detection, completion polling, and disk-level audit. Never send-keys -l with
@@ -51,8 +56,8 @@ notes:
     skill orchestrate covers in-process subagents (Codex/Claude Code/PI/OpenCode) and GSD
     routing — load $orchestrate when workers share the harness or the user invoked GSD
     explicitly, this skill when workers live in tmux or other profiles."
-  - "Pre-installed skills are shared with the source profile this one was cloned from
-    (default: the 'kommit' profile on the installer's local machine, but any other
-    profile works). Add org-specific overlays on top, not by editing this manifest."
+  - "Optionally clone from another Hermes profile at install time via AGENT_TUTOR_CLONE_FROM
+    or --clone-from. Tier C private overlay skills (requires_private_overlay) are optional
+    and live outside this repo; do not bake org-specific content into this public manifest."
   - "Auto-updates may refresh orchestrator skills/templates after validation, but must not
-    mutate user projects, the komp tmux layout, or model/provider credentials."
+    mutate user projects, the tutor tmux layout, or model/provider credentials."

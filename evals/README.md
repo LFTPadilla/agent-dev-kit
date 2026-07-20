@@ -33,9 +33,17 @@ vuln slips past generic rules when the sink is a project-specific wrapper. 05
 exists only to catch over-eager reviewers — a tool that scores 100% recall by
 flagging everything also flags 05 and fails.
 
-**Latest run (see [PROTOCOL.md](PROTOCOL.md) for the table + honest reading):**
-semgrep `0/4`, LLM single-pass `4/4`, both `0` false positives. They fail
-differently — which is exactly why the kit runs both.
+**Latest run (see [PROTOCOL.md](PROTOCOL.md) for tables + honest reading):**
+
+1. semgrep smoke (01–05): `0/4` recall, `0` FP
+2. LLM single-pass smoke (01–05, 2026-06-18): `4/4`, `0` FP
+3. `/pr-review` protocol smoke (01–05, 2026-07-20): `4/4`, `0` FP
+4. `/pr-review` protocol batch (06–15, 2026-07-20): `8/8` planted, `0` FP on
+   controls 11 + 15 — same per-file lenses + adversarial verify method
+5. Combined protocol (01–15): **`12/12` recall, `0/3` FP** — still **not** a
+   live `/pr-review <url>` GitHub Workflow run
+
+They fail differently — which is exactly why the kit runs both semgrep and LLM review.
 
 ## Two layers, two methods
 

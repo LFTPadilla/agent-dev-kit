@@ -20,8 +20,8 @@ if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
 else USER_HOME="/home/felipe"; fi
 [ -d "$USER_HOME" ] || USER_HOME="/home/felipe"
 
-PROFILE="${HERMES_TUTOR_PROFILE:-hermes-tutor}"
-WORKLOG_DIR="${HERMES_TUTOR_WORKLOG_DIR:-$USER_HOME/kommit/worklogs}"
+PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
+WORKLOG_DIR="${AGENT_TUTOR_WORKLOG_DIR:-$USER_HOME/.hermes/profiles/$PROFILE/worklogs}"
 
 lane_id="${1:-}"; shift || true
 description=""

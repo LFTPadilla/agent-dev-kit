@@ -1,6 +1,6 @@
-# Lane prompt for hermes-tutor delegation
+# Lane prompt for agent-tutor-orchestrator delegation
 
-You are working inside a worktree delegated by the Hermes Workflow Tutor. Read
+You are working inside a worktree delegated by the Agent Tutor Orchestrator. Read
 the precondition check below BEFORE doing anything. If anything does not match,
 STOP and report — do not improvise around it.
 
@@ -76,7 +76,7 @@ NEXT_ACTIONS:     <what the auditor should check>
 
 ## Verification expectation
 
-The Hermes Workflow Tutor will independently verify this work by running
+The Agent Tutor Orchestrator will independently verify this work by running
 `git status --short`, `git diff --stat`, and re-reading the diff against the
 acceptance criteria above. Self-reports are not trusted. Do not modify files
 outside the allowlist.

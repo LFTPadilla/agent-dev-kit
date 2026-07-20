@@ -1,6 +1,6 @@
 ---
 name: ai-workflow-orchestrator
-description: Use when guiding a developer through an AI-assisted software development workflow as a pure orchestrator. Holds the picture, decomposes work into lanes, and delegates every concrete task to a Claude Code subagent attached to a tmux window in a named session (default `komp`) or to a Hermes Kanban card. Does not edit, test, build, commit, or push itself. Trusts but verifies via disk-level audit.
+description: Use when guiding a developer through an AI-assisted software development workflow as a pure orchestrator. Holds the picture, decomposes work into lanes, and delegates every concrete task to a Claude Code subagent attached to a tmux window in a named session (default `tutor`) or to a Hermes Kanban card. Does not edit, test, build, commit, or push itself. Trusts but verifies via disk-level audit.
 version: 0.2.0
 author: Hermes Agent
 license: MIT
@@ -8,6 +8,8 @@ platforms: [linux, macos]
 metadata:
   hermes:
     tags: [workflow, orchestrator, tmux, kanban, delegation, audit]
+    # related_skills below typically require a private org overlay or Hermes hub
+    # install; they are NOT shipped in this public repo's plugins/dev-skills/.
     related_skills:
       - delegating-to-tmux-claude
       - kanban-orchestrator
@@ -17,11 +19,12 @@ metadata:
       - writing-plans
       - requesting-code-review
       - developer-audit
+      - orchestrate
 ---
 
 # AI Workflow Orchestrator
 
-> The companion to the Hermes Workflow Tutor profile. This skill is the *playbook* the
+> The companion to the Agent Tutor Orchestrator profile. This skill is the *playbook* the
 > tutor follows; the profile's `SOUL.md` is the *persona*. Load both.
 
 ## What This Is
@@ -32,7 +35,7 @@ touch code, tests, or infra. Your value is:
 1. **Holding the picture** — track every workstream and where it lives (tmux window,
    kanban card id, branch).
 2. **Routing** — every concrete task goes to a subagent. You choose between:
-   - **tmux delegation** — a Claude Code TUI attached to a window in the `komp` tmux
+   - **tmux delegation** — a Claude Code TUI attached to a window in the `tutor` tmux
      session. Best for interactive, in-flight, steerable work.
    - **kanban delegation** — a `kanban_create` card assigned to a specialist profile.
      Best for multi-step, restart-safe, parallel work.
@@ -61,7 +64,7 @@ Don't use for:
 
 This skill is for **out-of-process orchestration**: the orchestrator (you) is a Hermes
 profile, and the workers are **external processes** — Claude Code TUIs in a tmux session
-(default `komp`), or Hermes Kanban cards assigned to other profiles. Workers do not share
+(default `tutor`), or Hermes Kanban cards assigned to other profiles. Workers do not share
 your conversation context; you audit them by reading the disk.
 
 If the workers are **subagents inside the same harness** (Codex, Claude Code, PI,
@@ -115,23 +118,23 @@ multiple tmux panes.
 ### Pick the Target Pane
 
 ```bash
-tmux list-windows -t komp -F \
+tmux list-windows -t tutor -F \
   "#{window_index} #{window_name} #{pane_current_command} #{pane_current_path}"
 ```
 
 Select a window already running `claude`. Verify it is alive:
 
 ```bash
-tmux display-message -t komp:<n> -p "alive=#{pane_dead} cmd=#{pane_current_command}"
+tmux display-message -t tutor:<n> -p "alive=#{pane_dead} cmd=#{pane_current_command}"
 ```
 
-If `pane_dead=1`, do not send — pick a different target or open a new window in `komp`:
+If `pane_dead=1`, do not send — pick a different target or open a new window in `tutor`:
 
 ```bash
-tmux new-window -t komp -n <short-name> -c <abs-repo-path>
-tmux send-keys -t komp:<n> "claude --dangerously-skip-permissions" Enter
+tmux new-window -t tutor -n <short-name> -c <abs-repo-path>
+tmux send-keys -t tutor:<n> "claude --dangerously-skip-permissions" Enter
 sleep 8    # let the TUI boot
-tmux send-keys -t komp:<n> "/ide"  # or whatever boot command you want
+tmux send-keys -t tutor:<n> "/ide"  # or whatever boot command you want
 ```
 
 ### Compose the Prompt
@@ -150,7 +153,7 @@ Write to `/tmp/<topic>_prompt_<n>.md` first. Required elements:
 ### Inject via the Three-Step
 
 ```bash
-TARGET=komp:4
+TARGET=tutor:4
 tmux load-buffer -t $TARGET /tmp/<topic>_prompt_<n>.md
 tmux paste-buffer -t $TARGET
 sleep 1
@@ -264,11 +267,11 @@ poll above.
 
 ### Different tmux windows
 
-Multiple parallel lanes → different tmux windows in `komp`:
+Multiple parallel lanes → different tmux windows in `tutor`:
 
 ```bash
-tmux new-window -t komp -n <lane-name>
-tmux send-keys -t komp:<new-index> "cd <abs-repo>/.worktrees/<lane-name> && claude --dangerously-skip-permissions" Enter
+tmux new-window -t tutor -n <lane-name>
+tmux send-keys -t tutor:<new-index> "cd <abs-repo>/.worktrees/<lane-name> && claude --dangerously-skip-permissions" Enter
 sleep 8
 ```
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tutor-bootstrap.sh — verify and repair skills on profile boot.
 #
-# For every skill in profiles/hermes-tutor.yml's `include_skills`, plus a
+# For every skill in profiles/agent-tutor-orchestrator.yml's `include_skills`, plus a
 # curated set of critical skills, check:
 #   - the directory exists under ~/.hermes/profiles/<profile>/skills/
 #   - SKILL.md exists and parses (frontmatter has `name:` and `description:`)
@@ -11,7 +11,7 @@
 # Repair actions (in order):
 #   1. If a healthy copy exists at ~/.hermes/skills/<name> (global), symlink
 #      the profile copy to it.
-#   2. Otherwise, if a healthy copy exists in another profile (kommit, local),
+#   2. Otherwise, if a healthy copy exists in another local Hermes profile,
 #      copy from the most-recently-modified version.
 #   3. Otherwise, fall back to `hermes skills install <name>` for hub skills.
 #
@@ -27,7 +27,7 @@ set -uo pipefail
 
 # USER_HOME resolution (no $HOME trust). SELF_PATH must be the resolved
 # real path: if BASH_SOURCE is itself a symlink (e.g. ~/.local/bin/tutor-bootstrap
-# -> ~/.hermes/profiles/hermes-tutor/scripts/tutor-bootstrap.sh), follow it so we
+# -> ~/.hermes/profiles/agent-tutor-orchestrator/scripts/tutor-bootstrap.sh), follow it so we
 # walk the real on-disk location and find the .hermes directory at the
 # canonical path.
 SELF_PATH="${BASH_SOURCE[0]}"
@@ -44,27 +44,27 @@ if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
 else USER_HOME="/home/felipe"; fi
 [ -d "$USER_HOME" ] || USER_HOME="/home/felipe"
 
-PROFILE="${HERMES_TUTOR_PROFILE:-hermes-tutor}"
+PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 PROFILE_DIR="$USER_HOME/.hermes/profiles/$PROFILE"
 SKILLS_DIR="$PROFILE_DIR/skills"
-MANIFEST="$USER_HOME/programming/agent-dev-kit/profiles/hermes-tutor.yml"
-[ ! -f "$MANIFEST" ] && MANIFEST="$PROFILE_DIR/config.yaml"  # fallback if user hasn't cloned the repo
+# Prefer the public kit manifest next to this script's repo checkout, then
+# a copied manifest under the profile, then config.yaml.
+script_dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
+MANIFEST=""
+for candidate in \
+  "$script_dir/../profiles/agent-tutor-orchestrator.yml" \
+  "$USER_HOME/programming/agent-dev-kit/profiles/agent-tutor-orchestrator.yml" \
+  "$PROFILE_DIR/agent-tutor-orchestrator.yml" \
+  "$PROFILE_DIR/config.yaml"; do
+  if [ -f "$candidate" ]; then MANIFEST="$candidate"; break; fi
+done
 
-# Curated critical skills beyond what the manifest declares — these are
-# pulled in by other skills or by the user directly during a session.
+# Public kit skills that should always be present after tutor-install.
+# Overlay / hub skills live in requires_private_overlay in the manifest and
+# are reported separately (missing is expected on a cold clone).
 CRITICAL_SKILLS=(
   ai-workflow-orchestrator
-  worklog
-  delegating-to-tmux-claude
-  kanban-orchestrator
-  kanban-worker
-  plan
-  writing-plans
-  subagent-driven-development
-  requesting-code-review
-  developer-audit
-  dogfood
-  test-driven-development
+  orchestrate
 )
 
 # All GSD skills (these often get out of sync because there are 67 of them)
@@ -88,21 +88,33 @@ declare -a checks_ok=()
 declare -a checks_fixed=()
 declare -a checks_broken=()
 
-# Read manifest include_skills
+# Read a YAML list block: awk from KEY: until the next top-level key.
+read_yaml_list() {
+  local key="$1" file="$2"
+  [ -f "$file" ] || return 0
+  awk -v key="$key" '
+    $0 ~ "^" key ":" { grab=1; next }
+    grab && /^[a-zA-Z_][a-zA-Z0-9_-]*:/ { exit }
+    grab { print }
+  ' "$file" | while IFS= read -r s; do
+    s="$(echo "$s" | sed 's/^[[:space:]]*-[[:space:]]*//;s/[[:space:]]*$//;s/#.*//')"
+    [ -n "$s" ] && printf '%s\n' "$s"
+  done
+}
+
 declare -a declared=()
-if [ -f "$MANIFEST" ]; then
-  while IFS= read -r s; do
-    s="$(echo "$s" | sed 's/^[[:space:]]*-[[:space:]]*//;s/[[:space:]]*$//')"
-    [ -n "$s" ] && [[ ! "$s" =~ ^# ]] && declared+=("$s")
-  done < <(awk '/^include_skills:/,/^[a-z]/{ if (!/^include_skills:/) { if (/^[a-zA-Z_-]+:/) exit; print } }' "$MANIFEST")
+declare -a overlay=()
+if [ -n "$MANIFEST" ] && [ -f "$MANIFEST" ]; then
+  while IFS= read -r s; do declared+=("$s"); done < <(read_yaml_list "include_skills" "$MANIFEST")
+  while IFS= read -r s; do overlay+=("$s"); done < <(read_yaml_list "requires_private_overlay" "$MANIFEST")
 fi
 
-# All skill names to check: declared + critical + gsd
+# Public skills to check/repair: include_skills + critical + any local gsd copies
 declare -a all_skills=()
 for s in "${declared[@]}" "${CRITICAL_SKILLS[@]}" "${GSD_SKILLS[@]}"; do
-  # de-dupe
   case " ${all_skills[*]} " in *" $s "*) ;; *) all_skills+=("$s") ;; esac
 done
+declare -a overlay_missing=()
 
 # Source candidates to try when repairing. We exclude the destination
 # (the profile's own skills dir) to avoid self-referential symlinks.
@@ -116,16 +128,20 @@ source_candidates() {
                 social-media; do
     cand+=("$USER_HOME/.hermes/skills/$parent/$name")
   done
-  # 2. OTHER profiles only (not $PROFILE)
-  for p in local kommit hermes-agent; do
-    [ "$p" = "$PROFILE" ] && continue
-    cand+=("$USER_HOME/.hermes/profiles/$p/skills/$name")
-    for parent in software-development devops gsd autonomous-ai-agents creative \
-                  data-science github mcp note-taking productivity research \
-                  social-media; do
-      cand+=("$USER_HOME/.hermes/profiles/$p/skills/$parent/$name")
+  # 2. OTHER profiles only (not $PROFILE) — scan whatever exists locally
+  if [ -d "$USER_HOME/.hermes/profiles" ]; then
+    for pdir in "$USER_HOME/.hermes/profiles"/*/; do
+      [ -d "$pdir" ] || continue
+      p="$(basename "$pdir")"
+      [ "$p" = "$PROFILE" ] && continue
+      cand+=("$USER_HOME/.hermes/profiles/$p/skills/$name")
+      for parent in software-development devops gsd autonomous-ai-agents creative \
+                    data-science github mcp note-taking productivity research \
+                    social-media; do
+        cand+=("$USER_HOME/.hermes/profiles/$p/skills/$parent/$name")
+      done
     done
-  done
+  fi
   printf '%s\n' "${cand[@]}"
 }
 
@@ -276,13 +292,34 @@ else
   done
 fi
 
+# Overlay skills: missing is expected without a private overlay (not broken).
+for s in "${overlay[@]}"; do
+  if ! check_skill "$s" >/dev/null 2>&1; then
+    # check_skill appended to checks_broken; pull that back out
+    declare -a filtered_broken=()
+    for entry in "${checks_broken[@]}"; do
+      case "$entry" in
+        "$s"*) overlay_missing+=("$s") ;;
+        *) filtered_broken+=("$entry") ;;
+      esac
+    done
+    checks_broken=("${filtered_broken[@]}")
+    # Also drop accidental ok entries for overlay names
+    declare -a new_ok=()
+    for entry in "${checks_ok[@]}"; do [ "$entry" != "$s" ] && new_ok+=("$entry"); done
+    checks_ok=("${new_ok[@]}")
+  fi
+done
+
 # Emit
 ok_count=${#checks_ok[@]}
 fixed_count=${#checks_fixed[@]}
 broken_count=${#checks_broken[@]}
+overlay_missing_count=${#overlay_missing[@]}
 
 if [ "$JSON" -eq 1 ]; then
-  printf '{"ok":%d,"fixed":%d,"broken":%d,"fixed_list":[' "$ok_count" "$fixed_count" "$broken_count"
+  printf '{"ok":%d,"fixed":%d,"broken":%d,"overlay_missing":%d,"fixed_list":[' \
+    "$ok_count" "$fixed_count" "$broken_count" "$overlay_missing_count"
   first=1
   for f in "${checks_fixed[@]}"; do
     [ $first -eq 0 ] && printf ','
@@ -296,11 +333,19 @@ if [ "$JSON" -eq 1 ]; then
     printf '"%s"' "${b//\"/\\\"}"
     first=0
   done
+  printf '],"overlay_missing_list":['
+  first=1
+  for o in "${overlay_missing[@]}"; do
+    [ $first -eq 0 ] && printf ','
+    printf '"%s"' "${o//\"/\\\"}"
+    first=0
+  done
   printf ']}\n'
 else
   printf 'OK:    %d\n' "$ok_count"
   printf 'FIXED: %d\n' "$fixed_count"
   printf 'BROKEN:%d\n' "$broken_count"
+  printf 'OVERLAY_MISSING:%d (expected without private overlay)\n' "$overlay_missing_count"
   if [ "$fixed_count" -gt 0 ]; then
     printf '\nfixed:\n'
     for f in "${checks_fixed[@]}"; do printf '  - %s\n' "$f"; done
@@ -308,6 +353,10 @@ else
   if [ "$broken_count" -gt 0 ]; then
     printf '\nstill broken:\n'
     for b in "${checks_broken[@]}"; do printf '  - %s\n' "$b"; done
+  fi
+  if [ "$overlay_missing_count" -gt 0 ]; then
+    printf '\noverlay skills missing (link a private overlay to supply):\n'
+    for o in "${overlay_missing[@]}"; do printf '  - %s\n' "$o"; done
   fi
 fi
 

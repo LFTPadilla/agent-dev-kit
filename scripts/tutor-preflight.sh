@@ -23,7 +23,7 @@ if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
 else USER_HOME="/home/felipe"; fi
 [ -d "$USER_HOME" ] || USER_HOME="/home/felipe"
 
-PROFILE="${HERMES_TUTOR_PROFILE:-hermes-tutor}"
+PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 STATE_DIR="$USER_HOME/.hermes/profiles/$PROFILE/state"
 mkdir -p "$STATE_DIR"
 
@@ -80,7 +80,7 @@ else
 fi
 
 cat > "$out" <<EOF
-# Pre-flight context for hermes-tutor
+# Pre-flight context for agent-tutor-orchestrator
 # Generated: $ts
 profile: $PROFILE
 repo: "$repo"

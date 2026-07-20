@@ -2,10 +2,11 @@
 # Bootstrap the agent dev kit on a fresh machine. Idempotent — safe to re-run.
 #
 # Two layers:
-#   1. External tools (this script installs the npm ones).
+#   1. External tools (this script installs the npm core).
 #   2. Claude Code marketplaces + plugins (printed — run them inside Claude Code).
 #
-# ponytail: no installer framework. A shell script + printed instructions covers it.
+# Optional day-to-day toolchain (gnhf, gh-axi, no-mistakes, treehouse, skills CLI)
+# is EXTERNAL — this script prints a copy-paste block; it does not prompt y/N.
 set -euo pipefail
 
 command -v npm >/dev/null || { echo "error: npm required (install Node.js first)"; exit 1; }
@@ -13,11 +14,28 @@ command -v npm >/dev/null || { echo "error: npm required (install Node.js first)
 echo "==> npm tools"
 npm i -g pi-gsd                  # GSD — spec-driven workflow system (/gsd:*)
 npm i -g @hypabolic/hypa         # Hypa — command rewriting + MCP proxy for Claude/Codex
-# npm i -g jean-claude   # optional: multi-profile Claude config sync. Uncomment if you use multiple accounts.
+# npm i -g jean-claude   # optional: multi-profile Claude config sync
 
-# Optional quality tools (per-project usually; uncomment to install globally):
-# command -v pipx >/dev/null && pipx install semgrep   # SAST (semgrep skill)
-# knip + lefthook are run via npx per-project — no global install needed.
+echo
+echo "==> Optional toolchain (copy-paste when ready — not installed automatically)"
+cat <<'EOF'
+  npm i -g gnhf          # preferred overnight runner (pairs with overnight-task-kit)
+  npm i -g gh-axi        # GitHub AXI (agent-shaped CLI output)
+  # optional: npm i -g chrome-devtools-axi
+
+  no-mistakes + treehouse: curl installers from upstream docs
+    https://github.com/kunchenguid/no-mistakes
+    https://github.com/kunchenguid/treehouse
+
+  Skill packs:
+    npx skills
+    # install reference lifecycle pack from addyosmani/agent-skills via the CLI
+    # do not copy that pack into this repo tree
+
+  TOON (agent-facing structured output): https://toonformat.dev
+  Flow map: docs/how-it-fits-together.md
+  Dep table:  docs/external-deps.md
+EOF
 
 echo
 echo "==> Run these inside Claude Code (interactive — cannot be scripted from bash):"
@@ -34,7 +52,7 @@ cat <<'EOF'
   Optional — connect Sentry to triage prod errors (see docs/sentry-mcp.md):
     claude mcp add --transport http sentry https://mcp.sentry.dev/mcp
 EOF
-echo
+
 echo
 echo "==> Installing Hypa hooks into Claude Code and Codex"
 hypa init --agent claude
@@ -49,5 +67,7 @@ echo "==> Running public kit validation"
 node "$(dirname "$0")/scripts/agent-dev-kit.mjs" validate
 
 echo
-echo "Done. See docs/external-deps.md for what each tool does and why."
+echo "Done. See docs/how-it-fits-together.md and docs/external-deps.md."
 echo "Re-run sync.sh after 'git pull' to pick up new skills."
+echo "Optional: compose with a private org skills overlay outside this repo."
+echo "Agent Tutor Orchestrator: ./scripts/tutor-install.sh then ./scripts/tutor-doctor.sh"

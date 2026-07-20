@@ -6,7 +6,7 @@
 #     --repo <abs> --branch <name> --worktree <abs> \
 #     --goal "<text>" --allowed "<f1>,<f2>" --forbidden "<f3>" \
 #     --criteria "<c1>|<c2>|<c3>" \
-#     --target "komp:<n>" \
+#     --target "tutor:<n>" \
 #     [--context "<text>"] [--skills "<hint1>,<hint2>"]
 #
 # Writes the rendered prompt to /tmp/lane-<id>-prompt.md, then injects via
@@ -25,7 +25,7 @@ if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
 else USER_HOME="/home/felipe"; fi
 [ -d "$USER_HOME" ] || USER_HOME="/home/felipe"
 
-PROFILE="${HERMES_TUTOR_PROFILE:-hermes-tutor}"
+PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 STATE_DIR="$USER_HOME/.hermes/profiles/$PROFILE/state"
 TEMPLATE="$USER_HOME/.hermes/profiles/$PROFILE/templates/lane-prompt.md"
 
@@ -52,7 +52,7 @@ while [ $# -gt 0 ]; do
 done
 
 [ -n "$lane_id" ] || { echo "usage: $0 <lane_id> [flags]"; exit 2; }
-[ -n "$target" ] || { echo "--target required (e.g. komp:4)"; exit 2; }
+[ -n "$target" ] || { echo "--target required (e.g. tutor:4)"; exit 2; }
 [ -n "$repo" ]   || { echo "--repo required"; exit 2; }
 [ -n "$branch" ] || { echo "--branch required"; exit 2; }
 

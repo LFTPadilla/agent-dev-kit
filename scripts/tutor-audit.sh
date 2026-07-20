@@ -24,7 +24,7 @@ if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
 else USER_HOME="/home/felipe"; fi
 [ -d "$USER_HOME" ] || USER_HOME="/home/felipe"
 
-PROFILE="${HERMES_TUTOR_PROFILE:-hermes-tutor}"
+PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 STATE_DIR="$USER_HOME/.hermes/profiles/$PROFILE/state"
 LANES="$STATE_DIR/lanes.json"
 prompt_file="/tmp/lane-${1:-}-prompt.md"

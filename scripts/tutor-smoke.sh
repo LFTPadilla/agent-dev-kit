@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tutor-smoke.sh — readiness checks for the Hermes Workflow Tutor profile.
+# tutor-smoke.sh — readiness checks for the Agent Tutor Orchestrator profile.
 # Run before starting a real session to catch misconfig early.
 #
 # Exit code: 0 = READY, 1 = one or more checks failed.
@@ -14,7 +14,7 @@ set -uo pipefail
 # script (or its realpath) to derive the canonical user home.
 SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then SELF_PATH="$(readlink -f "$SELF_PATH")"; fi
-# SELF_PATH is something like /home/felipe/.hermes/profiles/hermes-tutor/scripts/tutor-smoke.sh
+# SELF_PATH is something like /home/felipe/.hermes/profiles/agent-tutor-orchestrator/scripts/tutor-smoke.sh
 # Walk up until we find a dir named .hermes, then USER_HOME is its parent.
 HERMES_DIR=""
 dir="$(dirname "$SELF_PATH")"
@@ -30,14 +30,14 @@ else
 fi
 [ -d "$USER_HOME" ] || USER_HOME="/home/felipe"
 
-PROFILE="${HERMES_TUTOR_PROFILE:-hermes-tutor}"
-SESSION="${HERMES_TUTOR_SESSION:-komp}"
-WORKLOG_DIR="$USER_HOME/kommit/worklogs"
+PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
+SESSION="${AGENT_TUTOR_SESSION:-tutor}"
+WORKLOG_DIR="${AGENT_TUTOR_WORKLOG_DIR:-$USER_HOME/.hermes/profiles/$PROFILE/worklogs}"
 SKILLS_DIR="$USER_HOME/.hermes/profiles/$PROFILE/skills"
 PROFILE_DIR="$USER_HOME/.hermes/profiles/$PROFILE"
 CONFIG_YAML="$PROFILE_DIR/config.yaml"
-WRAPPER_CANDIDATES=("$USER_HOME/.local/bin/hermes-tutor"
-                    "$USER_HOME/.hermes/profiles/kommit/home/.local/bin/hermes-tutor")
+WRAPPER_CANDIDATES=("$USER_HOME/.local/bin/agent-tutor-orchestrator"
+                    "$PROFILE_DIR/home/.local/bin/agent-tutor-orchestrator")
 
 pass=0
 fail=0
@@ -86,7 +86,7 @@ if [ -n "$wrapper" ]; then
     fail=$((fail + 1)); failures+=("wrapper delegate")
   fi
 else
-  printf '  FAIL no hermes-tutor wrapper found\n'
+  printf '  FAIL no agent-tutor-orchestrator wrapper found\n'
   fail=$((fail + 1)); failures+=("wrapper")
 fi
 
@@ -173,15 +173,15 @@ fi
 section "Helpers"
 for s in tutor-smoke tutor-status tutor-preflight tutor-audit \
          tutor-delegate tutor-log-suggest tutor-lane-update tutor-install \
-         tutor-bootstrap; do
+         tutor-bootstrap tutor-doctor; do
   check "$s installed" "test -x $USER_HOME/.local/bin/$s"
 done
 
 # Optional: if --bootstrap was passed, run the skill repair pass too
 if [ "${1:-}" = "--bootstrap" ]; then
   section "Bootstrap (auto-repair)"
-  if "$USER_HOME/.local/bin/tutor-bootstrap" --json >/tmp/hermes-tutor-bootstrap.$$ 2>&1; then
-    broken="$(python3 -c "import json,sys; print(json.load(open('/tmp/hermes-tutor-bootstrap.$$')).get('broken', 0))")"
+  if "$USER_HOME/.local/bin/tutor-bootstrap" --json >/tmp/agent-tutor-orchestrator-bootstrap.$$ 2>&1; then
+    broken="$(python3 -c "import json,sys; print(json.load(open('/tmp/agent-tutor-orchestrator-bootstrap.$$')).get('broken', 0))")"
     if [ "$broken" = "0" ]; then
       printf '  OK   bootstrap repaired, no broken skills\n'
       pass=$((pass + 1))
@@ -193,7 +193,7 @@ if [ "${1:-}" = "--bootstrap" ]; then
     printf '  FAIL bootstrap exit code %s\n' "$?"
     fail=$((fail + 1)); failures+=("bootstrap")
   fi
-  rm -f /tmp/hermes-tutor-bootstrap.$$
+  rm -f /tmp/agent-tutor-orchestrator-bootstrap.$$
 fi
 
 section "Summary"
@@ -203,4 +203,4 @@ if [ "$fail" -gt 0 ]; then
   for f in "${failures[@]}"; do printf '  - %s\n' "$f"; done
   exit 1
 fi
-printf '\nREADY — hermes-tutor profile is operational.\n'
+printf '\nREADY — agent-tutor-orchestrator profile is operational.\n'
