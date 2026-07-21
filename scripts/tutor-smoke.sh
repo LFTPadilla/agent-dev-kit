@@ -16,19 +16,22 @@ SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then SELF_PATH="$(readlink -f "$SELF_PATH")"; fi
 # SELF_PATH is something like /home/felipe/.hermes/profiles/agent-tutor-orchestrator/scripts/tutor-smoke.sh
 # Walk up until we find a dir named .hermes, then USER_HOME is its parent.
+# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
 HERMES_DIR=""
-dir="$(dirname "$SELF_PATH")"
+dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
 while [ "$dir" != "/" ]; do
   base="$(basename "$dir")"
   if [ "$base" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  dir="$(dirname "$dir")"
+  parent="$(dirname "$dir")"
+  [ "$parent" = "$dir" ] && break
+  dir="$parent"
 done
 if [ -n "$HERMES_DIR" ]; then
   USER_HOME="$(dirname "$HERMES_DIR")"
 else
-  USER_HOME="/home/felipe"
+  USER_HOME="${HOME:-/home/felipe}"
 fi
-[ -d "$USER_HOME" ] || USER_HOME="/home/felipe"
+[ -d "$USER_HOME" ] || USER_HOME="${HOME:-/home/felipe}"
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 SESSION="${AGENT_TUTOR_SESSION:-tutor}"

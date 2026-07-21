@@ -13,15 +13,19 @@ set -uo pipefail
 
 SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then SELF_PATH="$(readlink -f "$SELF_PATH")"; fi
+# Resolve to an absolute directory so relative invocations (bash scripts/…)
+# cannot spin forever on dirname(".") → ".".
 HERMES_DIR=""
-dir="$(dirname "$SELF_PATH")"
+dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
 while [ "$dir" != "/" ]; do
   if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  dir="$(dirname "$dir")"
+  parent="$(dirname "$dir")"
+  [ "$parent" = "$dir" ] && break
+  dir="$parent"
 done
 if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="/home/felipe"; fi
-[ -d "$USER_HOME" ] || USER_HOME="/home/felipe"
+else USER_HOME="${HOME:-/home/felipe}"; fi
+[ -d "$USER_HOME" ] || USER_HOME="${HOME:-/home/felipe}"
 
 PROFILE="agent-tutor-orchestrator"
 SESSION="${AGENT_TUTOR_SESSION:-tutor}"
