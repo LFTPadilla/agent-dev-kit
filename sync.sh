@@ -2,14 +2,15 @@
 # Sync dev-skills from this registry to all runtimes that share the SKILL.md format.
 # Idempotent — safe to re-run after git pull.
 #
-# Covered:   Claude Code (~/.claude/skills, ~/.claude-very/skills)  · PI (~/.pi/agent/skills)
-# Not covered: OpenCode + Codex need different file formats (see docs/profiles.md)
+# Covered: Claude Code (~/.claude/skills, ~/.claude-very/skills),
+# Codex (~/.agents/skills), and PI (~/.pi/agent/skills).
+# OpenCode commands use a different format and are not linked here.
 set -euo pipefail
 
 KIT="$(cd "$(dirname "$0")/plugins/dev-skills/skills" && pwd)"
 
 # All dirs that consume SKILL.md — add more profiles here as needed
-RUNTIMES=()
+RUNTIMES=("$HOME/.agents/skills")
 for candidate in \
   "$HOME/.claude/skills" \
   "$HOME/.claude-very/skills" \

@@ -8,8 +8,8 @@ don't vendor. Flow map: [`how-it-fits-together.md`](how-it-fits-together.md).
 | Tool | What it does | Install |
 |---|---|---|
 | **GSD** (`pi-gsd`) | Spec-driven plan → execute → verify | `npm i -g pi-gsd` |
-| **caveman** | Compressed agent talk | `/plugin marketplace add JuliusBrussee/caveman` then `/plugin install caveman@caveman` |
-| **ponytail** | Minimal diffs / YAGNI build mode | `/plugin marketplace add DietrichGebert/ponytail` then `/plugin install ponytail@ponytail` |
+| **caveman** | Compressed agent talk | Codex: `npx -y skills@1.5.20 add 'JuliusBrussee/caveman#v1.9.1' -g -a codex -s caveman -y`; Claude: `/plugin marketplace add JuliusBrussee/caveman` then `/plugin install caveman@caveman` |
+| **ponytail** | Minimal diffs / YAGNI build mode | Codex: `npx -y skills@1.5.20 add 'DietrichGebert/ponytail#v4.8.4' -g -a codex -s ponytail -y`; Claude: `/plugin marketplace add DietrichGebert/ponytail` then `/plugin install ponytail@ponytail` |
 | **hypa** (`@hypabolic/hypa`) | Token-efficient shell + MCP proxy | `npm i -g @hypabolic/hypa && hypa init --agent claude && hypa init --agent codex` |
 | **jean-claude** *(optional)* | Multi-machine / multi-account Claude sync | `npm i -g jean-claude` |
 
@@ -41,4 +41,7 @@ Per-project usually; install where you use them.
 | **Stagehand** | Self-healing NL browser steps | `npm i @browserbasehq/stagehand` |
 | **draw.io desktop CLI** | Export for `drawio-skill` | `brew install drawio` (+ optional `graphviz`) |
 
-`bootstrap.sh` installs the npm core it can and prints copy-paste blocks for the rest.
+`bootstrap.sh` links this kit's skills into Codex's documented global user
+directory (`~/.agents/skills`) and installs the pinned caveman and ponytail
+releases there through `npx skills`. It also installs the npm core it can and
+prints copy-paste blocks for the remaining optional tools.
