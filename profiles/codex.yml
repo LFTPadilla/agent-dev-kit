@@ -1,6 +1,6 @@
 profile: codex-default
 runtime: codex
-target: ~/.codex/skills
+target: ~/.agents/skills
 sandbox_policy: workspace-write
 include_skills:
   - dev-skills

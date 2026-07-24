@@ -10,6 +10,7 @@
     "doctor": "node scripts/agent-dev-kit.mjs doctor",
     "validate": "node scripts/agent-dev-kit.mjs validate",
     "inventory": "node scripts/agent-dev-kit.mjs inventory",
+    "test:codex-workhorse": "bash scripts/test-codex-workhorse.sh",
     "overnight:init": "node overnight-task-kit/scripts/overnight-runner.mjs init",
     "eval:semgrep": "node evals/run.mjs"
   }

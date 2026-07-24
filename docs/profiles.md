@@ -1,6 +1,6 @@
 # Profiles & multi-runtime layout
 
-How to run one set of skills across several Claude profiles / runtimes without
+How to run one set of skills across Codex, Claude, Pi, and other runtimes without
 copying files around by hand.
 
 ## The idea
@@ -15,6 +15,7 @@ registry (git)                 runtime config
 ─────────────                  ──────────────
 dev-skills/git-essentials  ──▶ ~/.claude/skills/git-essentials   (symlink)
 dev-skills/pdf             ──▶ ~/.claude/skills/pdf              (symlink)
+dev-skills/knip            ──▶ ~/.agents/skills/knip             (Codex global)
 personal/my-thing          ──▶ ~/.claude/skills/my-thing         (symlink)
 ```
 
@@ -37,8 +38,9 @@ this profile setup if you'd rather not do it by hand.
 
 ## What NOT to link this way
 
-- **Plugins** (caveman, ponytail, this kit's marketplace) — installed via
-  `/plugin`, managed by Claude. Don't symlink them into `skills/`.
+- **External plugins** (caveman and ponytail) — Claude manages them through
+  `/plugin`; Codex receives their pinned upstream skill packs through
+  `scripts/install-codex-workhorse.sh`. Do not vendor either project here.
 - **GSD** — installs per-runtime via `pi-gsd`; it has its own `/gsd:update
   --sync` to align runtimes. Don't symlink GSD into the registry — it fights
   the installer.

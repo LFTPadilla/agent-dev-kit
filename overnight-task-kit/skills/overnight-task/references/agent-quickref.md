@@ -16,10 +16,10 @@
 
 **Source of truth examples:** `/home/felipe/vault/Resources/AI/Skills/shared/caveman/SKILL.md`, `agent-constraints/SKILL.md`.
 
-## Codex (`~/.codex/skills/`)
+## Codex (`~/.agents/skills/`)
 
 ```
-~/.codex/skills/
+~/.agents/skills/
 ├── <skill-name>/
 │   ├── SKILL.md          # frontmatter + body
 │   └── agents/           # optional: sub-agents
@@ -82,7 +82,7 @@ Edit the source once; the symlinks pick it up everywhere.
 | Source file | Symlink target |
 |---|---|
 | `~/programming/agent-dev-kit/overnight-task-kit/skills/<name>/SKILL.md` | `~/.claude/skills/<name>/SKILL.md` |
-| same | `~/.codex/skills/<name>/SKILL.md` |
+| same | `~/.agents/skills/<name>/SKILL.md` |
 | same | `~/.pi/skills/<name>/SKILL.md` |
 | `~/programming/agent-dev-kit/overnight-task-kit/skills/<name>/<name>.opencode.md` | `~/.config/opencode/command/<name>.md` |
 
