@@ -103,4 +103,77 @@ add DietrichGebert/ponytail#v4.8.4 --global --agent codex --skill ponytail --yes
 EXPECTED
 cmp "$TEST_ROOT/expected.log" "$SKILLS_LOG"
 
-echo "Codex workhorse tests passed ($actual bundled skills + 2 pinned external packs)"
+OVERNIGHT_HOME="$TEST_ROOT/overnight-home"
+mkdir -p "$OVERNIGHT_HOME"
+HOME="$OVERNIGHT_HOME" bash "$ROOT/overnight-task-kit/install.sh" >/dev/null
+
+for skill in overnight-task multi-harness; do
+  OVERNIGHT_SOURCE="$ROOT/overnight-task-kit/skills/$skill"
+  CODEX_TARGET="$OVERNIGHT_HOME/.agents/skills/$skill"
+  [ -L "$CODEX_TARGET" ] || { echo "missing overnight Codex skill link: $skill"; exit 1; }
+  [ "$(readlink -f "$CODEX_TARGET")" = "$(readlink -f "$OVERNIGHT_SOURCE")" ] || {
+    echo "incorrect overnight Codex skill link: $skill"
+    exit 1
+  }
+  [ -L "$OVERNIGHT_HOME/.claude/skills/$skill" ] || {
+    echo "missing overnight Claude skill link: $skill"
+    exit 1
+  }
+  [ -L "$OVERNIGHT_HOME/.pi/skills/$skill" ] || {
+    echo "missing overnight Pi skill link: $skill"
+    exit 1
+  }
+done
+[ ! -e "$OVERNIGHT_HOME/.codex/skills" ] || {
+  echo "overnight installer created legacy Codex skill directory"
+  exit 1
+}
+
+OVERNIGHT_CONFLICT_HOME="$TEST_ROOT/overnight-conflict-home"
+OVERNIGHT_CONFLICT="$OVERNIGHT_CONFLICT_HOME/.agents/skills/overnight-task"
+mkdir -p "$OVERNIGHT_CONFLICT"
+printf 'preserve me\n' > "$OVERNIGHT_CONFLICT/unmanaged.txt"
+set +e
+HOME="$OVERNIGHT_CONFLICT_HOME" \
+  bash "$ROOT/overnight-task-kit/install.sh" overnight-task >/dev/null 2>&1
+OVERNIGHT_CONFLICT_STATUS=$?
+set -e
+[ "$OVERNIGHT_CONFLICT_STATUS" -ne 0 ] || {
+  echo "overnight installer unexpectedly accepted Codex conflict"
+  exit 1
+}
+[ "$(cat "$OVERNIGHT_CONFLICT/unmanaged.txt")" = "preserve me" ] || {
+  echo "overnight installer changed Codex conflict contents"
+  exit 1
+}
+for target in \
+  "$OVERNIGHT_CONFLICT_HOME/.claude/skills/overnight-task" \
+  "$OVERNIGHT_CONFLICT_HOME/.pi/skills/overnight-task" \
+  "$OVERNIGHT_CONFLICT_HOME/.config/opencode/command/overnight-task.md"
+do
+  [ -L "$target" ] || {
+    echo "Codex conflict prevented another harness install: $target"
+    exit 1
+  }
+done
+
+OVERNIGHT_SYMLINK_HOME="$TEST_ROOT/overnight-symlink-home"
+OVERNIGHT_FOREIGN_SKILL="$TEST_ROOT/overnight-foreign-skill"
+OVERNIGHT_SYMLINK="$OVERNIGHT_SYMLINK_HOME/.agents/skills/multi-harness"
+mkdir -p "$(dirname "$OVERNIGHT_SYMLINK")" "$OVERNIGHT_FOREIGN_SKILL"
+ln -s "$OVERNIGHT_FOREIGN_SKILL" "$OVERNIGHT_SYMLINK"
+set +e
+HOME="$OVERNIGHT_SYMLINK_HOME" \
+  bash "$ROOT/overnight-task-kit/install.sh" multi-harness >/dev/null 2>&1
+OVERNIGHT_SYMLINK_STATUS=$?
+set -e
+[ "$OVERNIGHT_SYMLINK_STATUS" -ne 0 ] || {
+  echo "overnight installer unexpectedly accepted Codex symlink conflict"
+  exit 1
+}
+[ "$(readlink "$OVERNIGHT_SYMLINK")" = "$OVERNIGHT_FOREIGN_SKILL" ] || {
+  echo "overnight installer changed Codex symlink conflict"
+  exit 1
+}
+
+echo "Codex workhorse tests passed ($actual bundled skills + 2 pinned external packs + overnight kit)"
