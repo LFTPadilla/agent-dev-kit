@@ -23,6 +23,34 @@ SKILLS=("$KIT"/*/)
 SKILL_NAMES=()
 for s in "${SKILLS[@]}"; do SKILL_NAMES+=("$(basename "$s")"); done
 
+is_managed_skill_destination() {
+  local destination="${1%/}"
+  local name
+
+  [[ "$destination" == "$KIT/"* ]] || return 1
+  name="${destination#"$KIT/"}"
+  [[ -n "$name" && "$name" != */* && "$name" != "." && "$name" != ".." ]]
+}
+
+for target in "${RUNTIMES[@]}"; do
+  for skill in "${SKILLS[@]}"; do
+    name=$(basename "$skill")
+    path="$target/$name"
+    [[ -e "$path" || -L "$path" ]] || continue
+
+    if [[ ! -L "$path" ]]; then
+      echo "error: skill conflict at $path (existing entry is not managed by $KIT)" >&2
+      exit 1
+    fi
+
+    existing=$(readlink "$path")
+    if ! is_managed_skill_destination "$existing"; then
+      echo "error: skill conflict at $path (symlink is not managed by $KIT)" >&2
+      exit 1
+    fi
+  done
+done
+
 for target in "${RUNTIMES[@]}"; do
   mkdir -p "$target"
   added=0 pruned=0
@@ -42,7 +70,7 @@ for target in "${RUNTIMES[@]}"; do
     [[ -L "${link%/}" ]] || continue
     dest=$(readlink "${link%/}")
     # Only touch links that point into this kit
-    [[ "$dest" != "$KIT/"* ]] && continue
+    is_managed_skill_destination "$dest" || continue
     name=$(basename "$link")
     if [[ ! -d "$KIT/$name" ]]; then
       rm "${link%/}"
