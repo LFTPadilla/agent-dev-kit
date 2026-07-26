@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Shared runtime helpers for the Personal Dev Tutor profile.
+
+personal_tutor_real_home() {
+  if [ -n "${PERSONAL_TUTOR_USER_HOME:-}" ] && [ -d "$PERSONAL_TUTOR_USER_HOME" ]; then
+    (cd "$PERSONAL_TUTOR_USER_HOME" && pwd -P)
+    return
+  fi
+
+  local passwd_home
+  passwd_home="$(getent passwd "$(id -u)" 2>/dev/null | cut -d: -f6)"
+  if [ -n "$passwd_home" ] && [ -d "$passwd_home" ]; then
+    printf '%s\n' "$passwd_home"
+    return
+  fi
+
+  printf '%s\n' "${HOME:?unable to resolve real user home}"
+}
+
+personal_tutor_prepare_tmux() {
+  local uid runtime
+  uid="$(id -u)"
+  runtime="${XDG_RUNTIME_DIR:-/run/user/$uid}"
+  if [ -S "$runtime/tmux-$uid/default" ]; then
+    export TMUX_TMPDIR="$runtime"
+  fi
+}
+
+personal_tutor_graphify() {
+  local runtime_dir
+  runtime_dir="$PERSONAL_TUTOR_USER_HOME/.cache/personal-dev-tutor/graphify-runtime"
+  umask 077
+  mkdir -p "$runtime_dir"
+  chmod 700 "$runtime_dir"
+  (
+    cd "$runtime_dir"
+    HOME="$PERSONAL_TUTOR_USER_HOME" command graphify "$@"
+  )
+}
+
+PERSONAL_TUTOR_USER_HOME="$(personal_tutor_real_home)"
+PERSONAL_TUTOR_INFERRED_PROFILE=""
+PERSONAL_TUTOR_LIB_PATH="${BASH_SOURCE[0]}"
+if [ -L "$PERSONAL_TUTOR_LIB_PATH" ]; then PERSONAL_TUTOR_LIB_PATH="$(readlink -f "$PERSONAL_TUTOR_LIB_PATH")"; fi
+case "$PERSONAL_TUTOR_LIB_PATH" in
+  "$PERSONAL_TUTOR_USER_HOME"/.hermes/profiles/*/scripts/*)
+    PERSONAL_TUTOR_INFERRED_PROFILE="${PERSONAL_TUTOR_LIB_PATH#"$PERSONAL_TUTOR_USER_HOME/.hermes/profiles/"}"
+    PERSONAL_TUTOR_INFERRED_PROFILE="${PERSONAL_TUTOR_INFERRED_PROFILE%%/*}"
+    ;;
+esac
+PERSONAL_TUTOR_PROFILE="${PERSONAL_TUTOR_PROFILE:-${PERSONAL_TUTOR_INFERRED_PROFILE:-personal-dev-tutor}}"
+PERSONAL_TUTOR_PROFILE_DIR="$PERSONAL_TUTOR_USER_HOME/.hermes/profiles/$PERSONAL_TUTOR_PROFILE"
+PERSONAL_TUTOR_CODEX_USER_HOME="$PERSONAL_TUTOR_PROFILE_DIR/codex-user"
+PERSONAL_TUTOR_CODEX_HOME="$PERSONAL_TUTOR_CODEX_USER_HOME/.codex"
+PERSONAL_TUTOR_MANIFEST="$PERSONAL_TUTOR_PROFILE_DIR/personal-dev-tutor.yml"
+PERSONAL_TUTOR_MANIFEST_SESSION=""
+if [ -f "$PERSONAL_TUTOR_MANIFEST" ]; then
+  PERSONAL_TUTOR_MANIFEST_SESSION="$(awk '/delegate_session:/ {print $2; exit}' "$PERSONAL_TUTOR_MANIFEST")"
+fi
+PERSONAL_TUTOR_SESSION="${PERSONAL_TUTOR_SESSION:-${PERSONAL_TUTOR_MANIFEST_SESSION:-personal}}"
+PERSONAL_TUTOR_GRAPHIFY_VERSION="0.9.25"
+PERSONAL_TUTOR_CONTEXT7_URL="https://mcp.context7.com/mcp"
+PERSONAL_TUTOR_BASELINE_SKILLS=(caveman ponytail)
+
+# The flagship profile intentionally excludes the two alternative orchestrators
+# and dynamic skill discovery. GSD is the only lifecycle authority here.
+PERSONAL_TUTOR_HERMES_SKILLS=(
+  personal-development-mentor diagram-render drawio-skill excel-xlsx
+  git-essentials human-writing-style image-finalize improve java-development
+  knip live-qa pdf playwright-stability security-checklist semgrep stagehand
+  tex-render web-browse word-docx
+)
+
+# Worker capabilities only. Tutor/orchestrator and skill-discovery skills remain
+# exclusive to Hermes so Codex cannot silently expand or redefine its role.
+PERSONAL_TUTOR_CODEX_SKILLS=(
+  diagram-render drawio-skill excel-xlsx git-essentials human-writing-style
+  image-finalize improve java-development knip live-qa pdf playwright-stability
+  security-checklist semgrep stagehand tex-render web-browse word-docx
+)
+
+export PATH="$PERSONAL_TUTOR_USER_HOME/.nix-profile/bin:$PERSONAL_TUTOR_USER_HOME/.local/bin:$PATH"
+personal_tutor_prepare_tmux

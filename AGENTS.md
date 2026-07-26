@@ -6,8 +6,9 @@ read the README; agents follow this file.
 ## What this repo is
 
 A public, generalist kit for directing coding agents. It ships curated skills,
-an adversarial `/pr-review` command, evals, overnight protocol templates, and an
-Agent Tutor Orchestrator profile. It is meant to compose with optional
+an adversarial `/pr-review` command, evals, overnight protocol templates, and
+the flagship Personal Dev Tutor profile. The strict Agent Tutor Orchestrator
+remains available as an alternative. The kit composes with optional
 **private org skills overlays** that live *outside* this git tree.
 
 ## Layers (do not collapse them)
@@ -16,9 +17,9 @@ Agent Tutor Orchestrator profile. It is meant to compose with optional
 |---|---|---|
 | caveman | how the agent talks | external plugin |
 | ponytail | what the agent builds | external plugin |
-| GSD | how work flows (plan → execute → verify) | external (`pi-gsd`) |
+| GSD | how work flows (plan → execute → verify) | external (`get-shit-done-cc` for Hermes; optional `pi-gsd` helper) |
 | dev-skills | discrete capabilities | `plugins/dev-skills/` (this repo) |
-| ship / overnight / orchestration | gates, isolation, long runs, pure orchestration | external toolchain + `overnight-task-kit/` + Agent Tutor Orchestrator + `orchestrate` / `ai-workflow-orchestrator` skills |
+| ship / overnight / orchestration | gates, isolation, long runs, tutoring and pure orchestration | external toolchain + `overnight-task-kit/` + Personal Dev Tutor + Agent Tutor Orchestrator + `orchestrate` / `ai-workflow-orchestrator` skills |
 
 Full map: [docs/how-it-fits-together.md](docs/how-it-fits-together.md).
 External installs: [docs/external-deps.md](docs/external-deps.md).
@@ -36,9 +37,11 @@ External installs: [docs/external-deps.md](docs/external-deps.md).
    a human-facing config file, or an existing schema that already requires JSON.
 6. Install extra skills via **vercel-labs/skills** (`npx skills`); reference
    lifecycle packs from **addyosmani/agent-skills** without vendoring them here.
-7. Use **Agent Tutor Orchestrator** / `ai-workflow-orchestrator` when the user
-   wants a pure orchestrator (no direct edits). See
-   [docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md).
+7. Prefer **Personal Dev Tutor** / `personal-development-mentor` as the
+   flagship GSD + Codex tutor-orchestrator for personal and learning projects.
+   Use **Agent Tutor Orchestrator** / `ai-workflow-orchestrator` when the user
+   specifically wants strict pure orchestration through Claude tmux panes or
+   Hermes Kanban. See [docs/personal-dev-tutor.md](docs/personal-dev-tutor.md).
 
 ## Hard rules
 
@@ -66,12 +69,13 @@ External installs: [docs/external-deps.md](docs/external-deps.md).
 
 | Need | Path |
 |---|---|
-| Skill catalog (all 20) | `docs/skills-catalog.md` |
+| Skill catalog (all 22) | `docs/skills-catalog.md` |
 | Provenance / license / risk | `skill-provenance.json` |
 | Curation decisions | `CURATION.md` |
 | Design thesis | `WRITEUP.md` |
 | Going-public checklist | `docs/going-public.md` |
 | Agent Tutor Orchestrator | `docs/agent-tutor-orchestrator.md`, `profiles/agent-tutor-orchestrator.yml` |
+| Personal Dev Tutor | `docs/personal-dev-tutor.md`, `profiles/personal-dev-tutor.yml` |
 | How layers fit | `docs/how-it-fits-together.md` |
 | Profiles / multi-runtime | `docs/profiles.md` |
 

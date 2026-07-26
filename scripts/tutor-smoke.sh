@@ -109,6 +109,12 @@ else
 fi
 
 section "Skills"
+for baseline_skill in caveman ponytail; do
+  baseline_global="$USER_HOME/.hermes/skills/$baseline_skill"
+  baseline_profile="$SKILLS_DIR/external/$baseline_skill"
+  check "Hermes baseline skill: $baseline_skill" \
+    "[ -f '$baseline_global/SKILL.md' ] && [ -L '$baseline_profile' ] && [ \"\$(readlink -f '$baseline_profile')\" = \"\$(readlink -f '$baseline_global')\" ]"
+done
 if find_skill ai-workflow-orchestrator; then
   printf '  OK   ai-workflow-orchestrator SKILL.md\n'; pass=$((pass+1))
 else

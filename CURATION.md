@@ -8,12 +8,13 @@ client/personal. This file tracks the triage so migration stays honest.
 end and strip: absolute paths, host IPs, account IDs, internal system names
 (brokers, gateways, bot names), client names, vendored `node_modules`/`.clawhub`.
 
-## Migrated (public, in repo) — 20 skills
+## Migrated (public, in repo) — 22 skills
 
 ### Agentic core
 
 - [x] orchestrate
 - [x] ai-workflow-orchestrator — Agent Tutor Orchestrator playbook; keep employer-free
+- [x] personal-development-mentor — flagship GSD + Codex tutor-orchestrator; employer-neutral
 
 ### Utilities
 
@@ -36,6 +37,10 @@ end and strip: absolute paths, host IPs, account IDs, internal system names
 - [x] live-qa
 - [x] stagehand
 
+### Languages and frameworks
+
+- [x] java-development — repository-first Maven/Gradle/JDK/JUnit workflow contract
+
 ## External toolchain (documented, not vendored)
 
 Adopt as day-to-day companions; do not copy into `plugins/dev-skills/`:
@@ -48,8 +53,8 @@ Adopt as day-to-day companions; do not copy into `plugins/dev-skills/`:
 6. **addyosmani/agent-skills** — reference lifecycle packs via skills CLI
 
 **Not adopted as runtime:** firstmate (compare in
-[docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md); Agent Tutor Orchestrator stays
-the generalist orchestrator in this kit).
+[docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md); Personal Dev Tutor is the
+flagship learning orchestrator, while Agent Tutor Orchestrator remains the strict pure-orchestrator alternative).
 
 ## Held back — need a rewrite, not a scrub
 

@@ -28,6 +28,15 @@
       "destructive_ops": false,
       "description": "Scoped implementation in the current worktree; no production or secret access."
     },
+    "trusted-development": {
+      "writes": true,
+      "network": true,
+      "secrets": "credentialed-tools-only",
+      "production": "explicit-only",
+      "git_push": "explicit-only",
+      "destructive_ops": "explicit-only",
+      "description": "Productive workstation development with normal network access and existing configured CLIs. Credentials stay inside their tools; production, push, and destructive actions still require explicit scope."
+    },
     "browser-lab": {
       "writes": true,
       "network": true,

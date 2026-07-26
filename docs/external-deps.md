@@ -7,9 +7,11 @@ don't vendor. Flow map: [`how-it-fits-together.md`](how-it-fits-together.md).
 
 | Tool | What it does | Install |
 |---|---|---|
-| **GSD** (`pi-gsd`) | Spec-driven plan → execute → verify | `npm i -g pi-gsd` |
-| **caveman** | Compressed agent talk | `/plugin marketplace add JuliusBrussee/caveman` then `/plugin install caveman@caveman` |
-| **ponytail** | Minimal diffs / YAGNI build mode | `/plugin marketplace add DietrichGebert/ponytail` then `/plugin install ponytail@ponytail` |
+| **GSD** (`get-shit-done-cc`) | Spec-driven plan → execute → verify; installs the Hermes skill pack and `gsd-sdk` | `npm i -g get-shit-done-cc && get-shit-done-cc --hermes --global` |
+| **Graphify** (`graphifyy`) | Local AST code graph for architecture, call paths, and impact analysis; Personal Dev Tutor uses the reviewed code-only release | `uv tool install graphifyy==0.9.25` (the profile installer installs platform skills) |
+| **pi-gsd** | Optional Pi-native GSD helper/runtime | `npm i -g pi-gsd` |
+| **caveman** | Compressed agent talk | Claude: `/plugin marketplace add JuliusBrussee/caveman` then `/plugin install caveman@caveman`; Hermes: `./scripts/install-hermes-workhorse.sh --all-profiles` |
+| **ponytail** | Minimal diffs / YAGNI build mode | Claude: `/plugin marketplace add DietrichGebert/ponytail` then `/plugin install ponytail@ponytail`; Hermes: `./scripts/install-hermes-workhorse.sh --all-profiles` |
 | **hypa** (`@hypabolic/hypa`) | Token-efficient shell + MCP proxy | `npm i -g @hypabolic/hypa && hypa init --agent claude && hypa init --agent codex` |
 | **jean-claude** *(optional)* | Multi-machine / multi-account Claude sync | `npm i -g jean-claude` |
 
@@ -33,12 +35,25 @@ Per-project usually; install where you use them.
 |---|---|---|
 | **knip** | Dead code / unused exports | `npx knip` |
 | **semgrep** | Deterministic SAST | `pipx install semgrep` |
+| **bubblewrap** (`bwrap`, Linux) | Offline, empty-home verification boundary used by Personal Dev Tutor | distro package, e.g. `apt install bubblewrap`; requires unprivileged user namespaces |
 | **lefthook** | Parallel git hooks | `npm i -D lefthook && npx lefthook install` |
 | **gitleaks** | Secret scanning | `brew install gitleaks` or [releases](https://github.com/gitleaks/gitleaks) |
 | **pip-audit** | Python dependency CVEs | `pipx install pip-audit` |
 | **Sentry MCP** | Prod errors into the agent | see [`sentry-mcp.md`](sentry-mcp.md) |
+| **Context7 MCP** | Current upstream library documentation for Hermes and Codex | endpoint `https://mcp.context7.com/mcp`; Codex: `codex mcp add context7 --url https://mcp.context7.com/mcp && codex mcp login context7` |
 | **Playwright MCP** | Browser tools for `live-qa` | `claude mcp add playwright npx '@playwright/mcp@latest'` |
 | **Stagehand** | Self-healing NL browser steps | `npm i @browserbasehq/stagehand` |
 | **draw.io desktop CLI** | Export for `drawio-skill` | `brew install drawio` (+ optional `graphviz`) |
+| **D2** | Polished, presentation-ready architecture diagrams | [d2lang.com](https://d2lang.com/tour/install) |
+| **Mermaid CLI** (`mmdc`) | Render maintainable Mermaid sources to SVG/PNG | `npm i -g @mermaid-js/mermaid-cli` |
 
 `bootstrap.sh` installs the npm core it can and prints copy-paste blocks for the rest.
+When Hermes is present, bootstrap also installs the pinned caveman and ponytail
+skills and links them into every existing Hermes profile. Each managed Hermes
+profile installer repeats that step for profiles created later.
+
+Graphify is an Apache-2.0 upstream dependency and is not vendored. Personal Dev
+Tutor requires the reviewed version 0.9.25 and runs `--code-only` by default. Semantic
+LLM extraction and document/media/URL ingestion remain opt-in because they can
+cross a provider boundary. Context7 requests should contain library questions,
+not project source, secrets, or private documents.

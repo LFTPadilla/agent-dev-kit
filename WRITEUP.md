@@ -20,15 +20,15 @@ Orthogonal layers, each governing one thing, composed together:
 | **caveman** | how the agent *talks* | output compression (~75% fewer tokens) |
 | **ponytail** | what the agent *builds* | YAGNI / stdlib-first / shortest diff |
 | **GSD** | how work *flows* | plan → execute → verify |
-| **dev-skills** (this repo) | discrete *capabilities* | per-task skills + commands (20 skills) |
-| **ship / overnight / orchestration** | gates, isolation, long runs, pure orchestration | no-mistakes, treehouse, gnhf, AXI/TOON, Agent Tutor Orchestrator, `orchestrate` |
+| **dev-skills** (this repo) | discrete *capabilities* | per-task skills + commands (22 skills) |
+| **ship / overnight / orchestration** | gates, isolation, long runs, tutored orchestration | no-mistakes, treehouse, gnhf, AXI/TOON, Personal Dev Tutor, `orchestrate` |
 
 They don't overlap, so they don't fight. caveman and ponytail are other people's
 plugins (credited); GSD is an npm package; the ship/overnight tools are external
 companions. The contribution here is treating them as a *layered system*, filling
 the capability layer, and making ship/overnight/orchestration first-class.
 
-Skill distribution is also layered: this marketplace ships the curated 20;
+Skill distribution is also layered: this marketplace ships the curated 22;
 **vercel-labs/skills** installs additional packs; **addyosmani/agent-skills**
 is a reference lifecycle pack (not vendored).
 
@@ -62,14 +62,17 @@ ECC (MIT, credited); the multi-lens + adversarial-verify architecture is mine.
 
 ## Orchestration and overnight
 
-1. **`orchestrate`** — explicit planner mode: decompose, route workers, verify.
-2. **Agent Tutor Orchestrator / `ai-workflow-orchestrator`** — pure orchestrator: holds the
+1. **Personal Dev Tutor / `personal-development-mentor`** — flagship profile:
+   GSD owns lifecycle state, Codex implements bounded units in visible tmux
+   lanes, and understanding gates prevent cognitive debt.
+2. **`orchestrate`** — explicit planner mode: decompose, route workers, verify.
+3. **Agent Tutor Orchestrator / `ai-workflow-orchestrator`** — strict pure orchestrator: holds the
    picture, delegates to tmux or Kanban, audits on disk. Chosen over adopting
    firstmate as a runtime (see [docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md)).
-3. **Overnight** — `overnight-task-kit/` is protocol and templates; **gnhf** is
+4. **Overnight** — `overnight-task-kit/` is protocol and templates; **gnhf** is
    the preferred runner. No second ralph-loop.
-4. **treehouse** — isolate parallel agents in worktrees so they don't stomp each other.
-5. **AXI + TOON** — contracts and token-efficient agent-facing structured output
+5. **treehouse** — isolate parallel agents in worktrees so they don't stomp each other.
+6. **AXI + TOON** — contracts and token-efficient agent-facing structured output
    (prefer TOON when the consumer is another agent; JSON when the schema demands it).
 
 ## Measuring instead of asserting

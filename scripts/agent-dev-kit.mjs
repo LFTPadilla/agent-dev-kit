@@ -4,6 +4,7 @@ import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSy
 import { homedir } from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
+import { parseDocument } from 'yaml'
 
 const root = path.resolve(new URL('..', import.meta.url).pathname)
 const privatePatterns = [
@@ -119,6 +120,7 @@ function validateSkills(checks) {
     const name = fm.get('name')
     const description = fm.get('description')
     if (!name) checks.push(fail(`${rel(file)} is missing frontmatter field: name`))
+    else if (name !== path.basename(dir)) checks.push(fail(`${rel(file)} name must match directory ${path.basename(dir)}`))
     if (!description || description.length < 20) checks.push(fail(`${rel(file)} needs an actionable description`))
   }
   checks.push(ok(`${dirs.length} skill frontmatters checked`))
@@ -134,8 +136,12 @@ function validateYamlFiles(checks) {
     const text = readFileSync(file, 'utf8')
     if (text.includes('\t')) checks.push(fail(`${rel(file)} contains tabs; use spaces in YAML`))
     if (!text.trim()) checks.push(fail(`${rel(file)} is empty`))
+    const document = parseDocument(text, { prettyErrors: true, strict: true })
+    for (const error of document.errors) {
+      checks.push(fail(`${rel(file)} is not valid YAML: ${error.message.replaceAll('\n', ' ')}`))
+    }
   }
-  checks.push(ok('YAML files passed lightweight syntax checks'))
+  checks.push(ok('YAML files parse with strict syntax checks'))
 }
 
 function validatePlugin(checks) {
@@ -145,6 +151,32 @@ function validatePlugin(checks) {
   if (!/^\d+\.\d+\.\d+/.test(data.version || '')) checks.push(fail(`${rel(file)} version must be semver-like`))
   if (!data.name || !data.description) checks.push(fail(`${rel(file)} must include name and description`))
   else checks.push(ok('plugin manifest checked'))
+}
+
+function validateReleaseVersions(checks) {
+  const packageFile = path.join(root, 'package.json')
+  const lockFile = path.join(root, 'package-lock.json')
+  const claudeFile = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
+  const codexFile = path.join(root, 'plugins/dev-skills/.codex-plugin/plugin.json')
+  const packageData = readJson(packageFile, checks)
+  const lockData = readJson(lockFile, checks)
+  const claudeData = readJson(claudeFile, checks)
+  const codexData = readJson(codexFile, checks)
+  if (![packageData, lockData, claudeData, codexData].every(Boolean)) return
+  const versions = new Map([
+    [rel(packageFile), packageData.version],
+    [`${rel(lockFile)} root`, lockData.version],
+    [`${rel(lockFile)} package`, lockData.packages?.['']?.version],
+    [rel(claudeFile), claudeData.version],
+    [rel(codexFile), codexData.version],
+  ])
+  const expected = packageData.version
+  for (const [source, version] of versions) {
+    if (version !== expected) checks.push(fail(`${source} version ${version ?? 'missing'} does not match ${expected}`))
+  }
+  if ([...versions.values()].every((version) => version === expected)) {
+    checks.push(ok(`release versions aligned at ${expected}`))
+  }
 }
 
 function validateProvenance(checks) {
@@ -180,6 +212,61 @@ function validateProfiles(checks) {
     }
   }
   checks.push(ok(`${files.length} profile manifests checked`))
+}
+
+function validatePiPackageResearch(checks) {
+  const dir = path.join(root, 'pi-profiles')
+  const settingsFile = path.join(dir, 'settings.example.json')
+  const profilesFile = path.join(dir, 'profiles.yaml')
+  const readmeFile = path.join(dir, 'README.md')
+  const matrixFile = path.join(dir, 'package-matrix.md')
+  const auditFile = path.join(dir, 'context-mode-audit.md')
+  const remainingAuditFile = path.join(dir, 'remaining-candidates-audit.md')
+
+  const settings = readJson(settingsFile, checks)
+  if (!settings || !Array.isArray(settings.packages)) {
+    checks.push(fail('pi-profiles/settings.example.json must define a packages array'))
+  } else if (settings.packages.length !== 0) {
+    checks.push(fail('pi-profiles/settings.example.json must remain inert with an empty packages array'))
+  }
+
+  for (const file of [profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile]) {
+    if (!existsSync(file)) checks.push(fail(`${rel(file)} is missing`))
+  }
+  if (![profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile].every(existsSync)) return
+
+  const profiles = readFileSync(profilesFile, 'utf8')
+  const readme = readFileSync(readmeFile, 'utf8')
+  const matrix = readFileSync(matrixFile, 'utf8')
+  const audit = readFileSync(auditFile, 'utf8')
+  const remainingAudit = readFileSync(remainingAuditFile, 'utf8')
+
+  if (!profiles.includes('status: research-only') || !profiles.includes('runtime_activation: none')) {
+    checks.push(fail('pi-profiles/profiles.yaml must remain research-only with no runtime activation'))
+  }
+  if (/(?:npm|git|https?):[^\s"']+/.test(profiles)) {
+    checks.push(fail('pi-profiles/profiles.yaml must not activate or name package sources'))
+  }
+  if (!readme.includes('enables no') || !readme.includes('third-party package')) {
+    checks.push(fail('pi-profiles/README.md must state that no third-party package is enabled'))
+  }
+  if (!matrix.includes('context-mode@1.0.169') || !audit.includes('do not install, enable, or pilot')) {
+    checks.push(fail('Pi package research must preserve the reviewed context-mode pin and no-pilot decision'))
+  }
+  for (const packagePin of [
+    'pi-sandbox@0.6.0',
+    'pi-distill@1.1.0',
+    '@gotgenes/pi-permission-system@20.10.0',
+  ]) {
+    if (!remainingAudit.includes(packagePin)) {
+      checks.push(fail(`Pi package research must preserve the reviewed decision for ${packagePin}`))
+    }
+  }
+  if (!remainingAudit.includes('No Pi') && !remainingAudit.includes('No Pi\n')) {
+    checks.push(fail('remaining Pi audits must state that no Pi package is enabled'))
+  }
+
+  checks.push(ok('Pi package research is inert and preserves authority boundaries'))
 }
 
 function validatePolicies(checks) {
@@ -251,9 +338,11 @@ function validate() {
   validateJsonFiles(checks)
   validateYamlFiles(checks)
   validatePlugin(checks)
+  validateReleaseVersions(checks)
   validateSkills(checks)
   validateProvenance(checks)
   validateProfiles(checks)
+  validatePiPackageResearch(checks)
   validatePolicies(checks)
   validateEvals(checks)
   validateLinks(checks)

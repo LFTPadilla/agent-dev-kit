@@ -17,7 +17,7 @@ semgrep --config p/typescript         # registry rule pack (TS)
 semgrep --config p/javascript
 semgrep --config p/owasp-top-ten      # OWASP Top 10 patterns
 semgrep --config p/secrets            # hardcoded secrets
-semgrep --config p/nodejs-scan        # Node-specific
+semgrep --config p/nodejs             # Node-specific
 semgrep --config auto --json          # machine-readable for processing
 ```
 

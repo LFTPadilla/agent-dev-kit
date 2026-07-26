@@ -32,15 +32,29 @@ SESSION="${AGENT_TUTOR_SESSION:-tutor}"
 CLONE_FROM="${AGENT_TUTOR_CLONE_FROM:-}"
 SOURCE=""
 WRAPPER_DEST="$USER_HOME/.local/bin/agent-tutor-orchestrator"
-WORKLOG_DIR="${AGENT_TUTOR_WORKLOG_DIR:-$USER_HOME/.hermes/profiles/$PROFILE/worklogs}"
+SESSION_OVERRIDE=""
+WORKLOG_OVERRIDE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --source) SOURCE="$2"; shift 2 ;;
-    --clone-from) CLONE_FROM="$2"; shift 2 ;;
-    *) shift ;;
+    --source) SOURCE="${2:?--source requires a path}"; shift 2 ;;
+    --clone-from) CLONE_FROM="${2:?--clone-from requires a profile}"; shift 2 ;;
+    --session) SESSION_OVERRIDE="${2:?--session requires a value}"; shift 2 ;;
+    --worklog-dir) WORKLOG_OVERRIDE="${2:?--worklog-dir requires a path}"; shift 2 ;;
+    *) echo "unknown argument: $1"; exit 2 ;;
   esac
 done
+
+[ -n "$SESSION_OVERRIDE" ] && SESSION="$SESSION_OVERRIDE"
+[[ "$SESSION" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || {
+  echo "invalid tmux session name: $SESSION"
+  exit 2
+}
+if [ -n "$WORKLOG_OVERRIDE" ]; then
+  WORKLOG_DIR="$WORKLOG_OVERRIDE"
+else
+  WORKLOG_DIR="${AGENT_TUTOR_WORKLOG_DIR:-$USER_HOME/.hermes/profiles/$PROFILE/worklogs}"
+fi
 
 # Default source: this script lives next to the agent-dev-kit repo's profiles/
 # and skills/. If --source is given, use that as the repo root.
@@ -55,6 +69,10 @@ fi
 }
 [ -f "$SOURCE/plugins/dev-skills/skills/ai-workflow-orchestrator/SKILL.md" ] || {
   echo "missing $SOURCE/plugins/dev-skills/skills/ai-workflow-orchestrator/SKILL.md"
+  exit 1
+}
+[ -x "$SOURCE/scripts/install-hermes-workhorse.sh" ] || {
+  echo "missing executable $SOURCE/scripts/install-hermes-workhorse.sh"
   exit 1
 }
 
@@ -104,10 +122,32 @@ if [ -f "$SOURCE/plugins/dev-skills/skills/orchestrate/SKILL.md" ]; then
 fi
 cp -f "$SOURCE/profiles/agent-tutor-orchestrator.yml" \
       "$USER_HOME/.hermes/profiles/$PROFILE/agent-tutor-orchestrator.yml"
+"$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE" || exit 1
+
+# The public manifest stays generic. A local installation may select its own
+# long-lived tmux session without baking that organization's name into git.
+if [ -n "$SESSION_OVERRIDE" ]; then
+  python3 - "$USER_HOME/.hermes/profiles/$PROFILE/agent-tutor-orchestrator.yml" "$SESSION" <<'PY'
+from pathlib import Path
+import sys
+
+path, session = Path(sys.argv[1]), sys.argv[2]
+text = path.read_text()
+lines = text.splitlines()
+for i, line in enumerate(lines):
+    if line.strip().startswith("delegate_session:"):
+        indent = line[:len(line) - len(line.lstrip())]
+        lines[i] = f"{indent}delegate_session: {session}"
+        break
+else:
+    raise SystemExit("delegate_session missing from profile manifest")
+path.write_text("\n".join(lines) + "\n")
+PY
+fi
 
 # Worklog dir lives under the tutor profile by default (override with
-# AGENT_TUTOR_WORKLOG_DIR). Worklog skill is repaired by tutor-bootstrap
-# from global ~/.hermes/skills when present — no employer profile assumed.
+# AGENT_TUTOR_WORKLOG_DIR). The public kit does not assume an organization
+# worklog location.
 mkdir -p "$WORKLOG_DIR"
 echo "  worklog dir: $WORKLOG_DIR"
 
@@ -116,7 +156,7 @@ echo "[6/6] runtime helpers"
 mkdir -p "$PROFILE_SKILLS/../scripts" "$PROFILE_SKILLS/../templates" \
          "$PROFILE_SKILLS/../state"
 [ -d "$SOURCE/scripts" ] && \
-  cp -rn "$SOURCE/scripts/tutor-"*.sh "$PROFILE_SKILLS/../scripts/" 2>/dev/null || true
+  cp -f "$SOURCE/scripts/tutor-"*.sh "$PROFILE_SKILLS/../scripts/" 2>/dev/null || true
 [ -f "$SOURCE/templates/lane-prompt.md" ] && \
   cp -f "$SOURCE/templates/lane-prompt.md" "$PROFILE_SKILLS/../templates/"
 

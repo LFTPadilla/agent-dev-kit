@@ -1,6 +1,6 @@
 ---
 name: multi-harness
-description: Delegate bounded coding-agent work to another local harness such as Pi or OpenCode, choosing profiles by task type, model strength, tool permissions, and risk. Use when the user asks to use multiple harnesses, delegate work to opencode/pi, run GLM-5.2 subscription models, fan out research/review/implementation tasks outside the current agent, compare harness outputs, or keep the primary agent as orchestrator while external agents execute scoped jobs.
+description: Delegate bounded coding-agent work to a different local harness such as Pi or OpenCode. Use only when the user explicitly requests Pi, OpenCode, another/external/cross harness, comparison between distinct harnesses, or a model/runtime available only through an external harness. Do not use for generic requests to spawn, delegate, fan out, orchestrate, or parallelize subagents inside the current harness, or for a Codex-native model or role such as GPT-5.3 Codex Spark; use the current harness's native subagent capability instead.
 ---
 
 # Multi Harness
@@ -8,6 +8,23 @@ description: Delegate bounded coding-agent work to another local harness such as
 Coordinate local agent harnesses without losing control of scope, safety, or verification.
 
 Use this skill as the primary agent. You remain the orchestrator: decide what to delegate, run the external harness, inspect its output and any file changes, then synthesize the result for the user.
+
+## Routing Gate
+
+Apply this gate before diagnostics, profile selection, or running `delegate.py`:
+
+1. Default to the current harness's native subagents. Requests for subagents, workers, parallelism, orchestration, cheaper models, or a native model/role are not external-harness requests.
+2. Use this skill only with an explicit external signal: Pi, OpenCode, another/external/cross harness, multiple distinct harnesses, harness comparison, or an external-only runtime the user has asked to use.
+3. Treat model names independently from harness names. For example, GPT-5.3 Codex Spark means a Codex-native subagent when Codex exposes that model; never translate it into a Pi or OpenCode profile.
+4. If this skill was auto-triggered without an external signal, do not run diagnostics or delegation scripts. Continue using the current harness's native subagent tools.
+5. If a requested model is unavailable natively, report that limitation or ask whether the user wants an external fallback. Do not silently switch harnesses.
+
+Examples:
+
+- "Levanta tres subagentes GPT-5.3 Codex Spark" -> native Codex subagents; do not use `multi-harness`.
+- "Paraleliza la revisión con subagentes" -> native subagents; do not use `multi-harness`.
+- "Manda esta revisión a Pi con GLM-5.2" -> use `multi-harness`.
+- "Compara el resultado de Codex con OpenCode" -> use `multi-harness`.
 
 ## Quick Start
 

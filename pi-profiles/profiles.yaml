@@ -1,124 +1,88 @@
-version: 1
+version: 2
 scope: public-safe
+status: research-only
+runtime_activation: none
 default_policy: read-only
 
+authority:
+  lifecycle: gsd
+  context_and_orchestration: hermes
+  bounded_implementation_worker: codex
+  pi_role: advisory-only
+
 profiles:
-  pi-diagnose:
-    purpose: "Read-only root-cause analysis over local code, logs, and reports."
-    packages:
-      - npm:context-mode
-      - npm:@bacnh85/pi-serena
-      - npm:@braintrust/pi-extension
+  pi-read-only-advisor:
+    purpose: "Return a bounded second opinion with file and line evidence."
+    packages: []
     sandbox_policy: read-only
     allowed:
-      - read repository files
-      - inspect logs supplied by the primary agent
+      - inspect explicitly supplied public-safe repository files
       - propose verification commands
+      - separate confirmed facts from hypotheses
     forbidden:
       - write files
-      - read secrets
-      - mutate production systems
-      - run destructive commands
-    output_contract:
-      - root_cause
-      - confidence
-      - evidence
-      - verification
-      - rollback
-      - proposed_next_steps
-
-  pi-sre-research:
-    purpose: "Current documentation and package research for infrastructure or SDK questions."
-    packages:
-      - npm:pi-web-access
-      - npm:pi-all-search
-      - npm:context-mode
-    sandbox_policy: research-network
-    allowed:
-      - web research
-      - package documentation review
-      - comparison tables
-    forbidden:
-      - secrets
-      - customer data
-      - authenticated production consoles
-    output_contract:
-      - sources
-      - recommendations
-      - risks
-      - version_notes
-
-  pi-code-review:
-    purpose: "Read-only code review with semantic navigation and false-positive control."
-    packages:
-      - npm:@bacnh85/pi-serena
-      - npm:@bacnh85/pi-plan
-      - npm:@braintrust/pi-extension
-    sandbox_policy: read-only
-    allowed:
-      - inspect changed files
-      - inspect nearby code
-      - propose tests
-    forbidden:
-      - write files
-      - run production commands
-      - invent issues without file/line evidence
+      - read secrets or environment files
+      - mutate git state
+      - access production systems
+      - create or delegate lifecycle state
     output_contract:
       - findings
-      - severity
-      - file_refs
+      - confidence
+      - evidence
       - test_gaps
-      - false_positive_notes
+      - proposed_next_steps
 
-  pi-parallel-workers:
-    purpose: "Bounded worker pool for independent read-only research/review tasks."
-    packages:
-      - npm:pi-subagents
-      - npm:@gjczone/pi-swarm
-    sandbox_policy: read-only
-    concurrency:
-      initial: 3
-      max_without_review: 5
-      max_runtime_minutes: 20
+  pi-research-advisor:
+    purpose: "Research public package or library sources without receiving project source."
+    packages: []
+    sandbox_policy: research-network
     allowed:
-      - fan out independent analysis tasks
-      - summarize per-worker evidence
+      - public web and package-registry research
+      - source and license review in a disposable directory
+      - version-specific comparison tables
     forbidden:
-      - shared write access
-      - production access
-      - unbounded research
+      - private source uploads
+      - credentials or authenticated consoles
+      - implicit package installation
+      - package activation
     output_contract:
-      - worker_summaries
-      - consensus
-      - disagreements
-      - verified_next_steps
+      - sources
+      - reviewed_versions
+      - evidence
+      - risks
+      - recommendations
 
-  pi-browser-lab:
-    purpose: "Disposable browser automation for local/staging UI QA."
-    packages:
-      - npm:@lebronj/pi-playwright
+  pi-browser-advisor:
+    purpose: "Describe a disposable local or staging browser-QA task after explicit approval."
+    packages: []
     sandbox_policy: browser-lab
     allowed:
-      - local browser QA
-      - screenshots
-      - accessibility smoke checks
+      - local or dedicated staging targets
+      - disposable screenshots and traces
     forbidden:
-      - bank/payment credentials
-      - customer OAuth tokens
-      - unattended authenticated third-party actions
+      - personal or customer authentication state
+      - unattended third-party actions
+      - production mutation
     output_contract:
       - scenario
-      - screenshots
       - failures
       - reproduction_steps
+      - artifact_paths
 
-deferred_profiles:
-  pi-memory:
-    packages:
-      - npm:gentle-engram
-      - npm:pi-nocturne-memory
-    reason: "Persistent memory needs an explicit retention, privacy, and deletion policy first."
-  pi-actors:
-    packages:
-      - npm:@llblab/pi-actors
-    reason: "Actor-based delegation should wait until read-only profiles have a measured baseline."
+package_gate:
+  require_exact_version: true
+  require_published_artifact_review: true
+  require_source_commit_or_tag: true
+  require_license_review: true
+  require_dependency_and_install_hook_review: true
+  require_filesystem_process_network_data_flow_review: true
+  require_prompt_and_context_mutation_review: true
+  require_disposable_workspace: true
+  max_packages_per_pilot: 1
+  default_network: false
+  default_write_access: false
+  default_recursive_delegation: false
+
+notes:
+  - "This file is agent-dev-kit policy metadata, not Pi settings and not an executable profile registry."
+  - "No third-party Pi package is approved or activated by this repository."

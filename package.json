@@ -1,6 +1,6 @@
 {
   "name": "agent-dev-kit",
-  "version": "0.10.0",
+  "version": "0.12.0",
   "private": true,
   "type": "module",
   "bin": {
@@ -10,7 +10,15 @@
     "doctor": "node scripts/agent-dev-kit.mjs doctor",
     "validate": "node scripts/agent-dev-kit.mjs validate",
     "inventory": "node scripts/agent-dev-kit.mjs inventory",
+    "test:java": "bash scripts/test-java-development.sh",
+    "test:hermes-workhorse": "bash scripts/test-hermes-workhorse.sh",
+    "test:personal-tutor": "bash scripts/test-personal-dev-tutor.sh",
+    "render:personal-tutor": "bash scripts/render-personal-tutor-diagrams.sh",
     "overnight:init": "node overnight-task-kit/scripts/overnight-runner.mjs init",
     "eval:semgrep": "node evals/run.mjs"
+  },
+  "dependencies": {
+    "sharp": "0.35.3",
+    "yaml": "2.9.0"
   }
 }

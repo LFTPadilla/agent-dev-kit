@@ -20,7 +20,8 @@
       "visibility": "public",
       "risk": "low",
       "dependencies": [
-        "node"
+        "node",
+        "sharp@0.35.3"
       ]
     },
     "drawio-skill": {
@@ -80,6 +81,16 @@
       "risk": "low",
       "dependencies": []
     },
+    "java-development": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "medium",
+      "dependencies": [
+        "JDK when compiling or running Java",
+        "Maven Wrapper or Gradle Wrapper when supplied by the project"
+      ]
+    },
     "knip": {
       "source": "tool-wrapper",
       "license": "MIT",
@@ -105,6 +116,24 @@
       "visibility": "public",
       "risk": "medium",
       "dependencies": []
+    },
+    "personal-development-mentor": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "medium",
+      "dependencies": [
+        "hermes",
+        "codex",
+        "tmux",
+        "gsd",
+        "graphifyy@0.9.25",
+        "uv when Graphify is not already installed",
+        "Context7 MCP over HTTPS",
+        "bubblewrap",
+        "d2",
+        "mermaid-cli"
+      ]
     },
     "pdf": {
       "source": "local",

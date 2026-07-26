@@ -12,13 +12,14 @@
    [external-deps.md](external-deps.md) and
    [how-it-fits-together.md](how-it-fits-together.md).
 
-## Skills (20)
+## Skills (22)
 
 ### Orchestration (agentic core)
 
 | Skill | Adds | Triggers on |
 |---|---|---|
 | `orchestrate` | Explicit planner/orchestrator mode: decompose, route to workers, verify independently. Keeps the expensive model on judgment. | "$orchestrate", "orchestrate", "delegate to subagents", "use cheaper models", "route through GSD with subagents" |
+| `personal-development-mentor` | Flagship GSD + Codex tutor-orchestrator: bounded implementation, independent verification, cognitive-debt checkpoints, proactive tool routing, Mermaid/D2 policy. | personal, portfolio, interview, or learning projects where the developer must understand what is built |
 | `ai-workflow-orchestrator` | Agent Tutor Orchestrator playbook: pure orchestrator that holds the picture, routes to tmux Claude windows or Hermes Kanban, audits on disk. Does not edit/test/commit itself. | guiding an AI-assisted workflow as orchestrator; Agent Tutor Orchestrator profile sessions |
 
 ### Documents & media
@@ -40,6 +41,12 @@
 | `knip` | Find dead code / unused exports / unused deps (TS/JS) | "clean up bloat", "find unused code", before a refactor |
 | `improve` | Senior-advisor audit (read-only) → writes prioritized implementation plans for *other* agents to execute. Pairs your most-capable model (audit) with cheaper executors. | "audit this codebase", "where should this project go", "write a plan for X" |
 | `git-essentials` | Git command/workflow reference | git workflow questions |
+
+### Languages & frameworks
+
+| Skill | Adds | Triggers on |
+|---|---|---|
+| `java-development` | Repository-first Java workflow: wrapper/JDK/toolchain discovery, focused-to-broad Maven or Gradle verification, JUnit/integration-test discipline, debugging, quality/security gates, and a read-only detector. | Java, Maven, Gradle, JUnit, Mockito, Testcontainers, Spring Boot, JVM toolchains, Java build/test failures |
 
 ### Security
 
@@ -82,13 +89,14 @@
 | Piece | Role |
 |---|---|
 | `overnight-task-kit/` | Local overnight protocol + templates; prefer **gnhf** as the runner |
+| Personal Dev Tutor profile | Flagship GSD + Codex tutor-orchestrator: `personal-tutor-install`; see [personal-dev-tutor.md](personal-dev-tutor.md) |
 | Agent Tutor Orchestrator profile | Pure orchestrator: `tutor-install` + `tutor-doctor`; see [agent-tutor-orchestrator.md](agent-tutor-orchestrator.md) |
 | vercel-labs/skills + addyosmani/agent-skills | External skill distribution / lifecycle packs — [external-deps.md](external-deps.md) |
 
 ## A typical session
 
-1. Plan with GSD (`/gsd:plan-phase` → execute → verify).
-2. Build a feature (ponytail keeps it minimal; context7 for current library docs).
+1. Plan with GSD (`/gsd:plan-phase` → execute → verify), optionally through Personal Dev Tutor.
+2. Use a bounded Codex lane and learning checkpoint for unfamiliar or consequential concepts.
 3. Isolate parallel agents with treehouse when fan-out is needed.
 4. `/knip` + `/semgrep` (or the lefthook gate) before committing.
 5. `/live-qa` to walk the flow like a user on the running app.

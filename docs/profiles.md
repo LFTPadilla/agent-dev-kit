@@ -1,6 +1,6 @@
 # Profiles & multi-runtime layout
 
-How to run one set of skills across several Claude profiles / runtimes without
+How to run one set of skills across several Hermes, Codex, Claude, and other runtimes without
 copying files around by hand.
 
 ## The idea
@@ -35,13 +35,29 @@ ln -s ~/.claude/agents  ~/.claude-work/agents
 Then only `~/.claude` links into the registry. `jean-claude` (npm) automates
 this profile setup if you'd rather not do it by hand.
 
+## Flagship Hermes + Codex profile
+
+[`personal-dev-tutor.yml`](../profiles/personal-dev-tutor.yml) is the flagship
+profile contract. Its installer links 19 capabilities into the blank Hermes
+profile (excluding alternate orchestrators and dynamic discovery), installs a
+filtered implementation/review set into a profile-owned isolated Codex home,
+and links the six public GSD core workflow skills from `~/.hermes/skills/gsd`.
+Workers started with `personal-tutor-codex` run in tmux session `personal` by
+default. It also installs the pinned Graphify skill for both runtimes, links
+Graphify into the isolated Hermes profile, and configures Context7 for current
+library-documentation retrieval. GSD remains the only lifecycle authority.
+
+See [`personal-dev-tutor.md`](personal-dev-tutor.md) for installation, runtime
+commands, cognitive-debt checkpoints, and Mermaid/D2 diagram policy.
+
 ## What NOT to link this way
 
 - **Plugins** (caveman, ponytail, this kit's marketplace) — installed via
   `/plugin`, managed by Claude. Don't symlink them into `skills/`.
-- **GSD** — installs per-runtime via `pi-gsd`; it has its own `/gsd:update
-  --sync` to align runtimes. Don't symlink GSD into the registry — it fights
-  the installer.
+- **GSD in a shared cross-runtime registry** — install the authoritative Hermes
+  pack with `get-shit-done-cc`. Do not mirror it into Claude/Codex registries.
+  The Personal Dev Tutor installer intentionally links only six core GSD skills
+  from that installation into its isolated Hermes profile.
 
 See [`external-deps.md`](external-deps.md).
 

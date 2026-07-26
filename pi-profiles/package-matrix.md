@@ -1,28 +1,63 @@
-# Pi Package Matrix
+# Pi Package Candidate Matrix
 
-| Package | Profile | Use | Default Policy |
-| --- | --- | --- | --- |
-| `npm:context-mode` | `pi-diagnose`, `pi-sre-research` | Give delegated agents tighter task context. | `read-only` / `research-network` |
-| `npm:@bacnh85/pi-serena` | `pi-diagnose`, `pi-code-review` | Semantic code navigation and repository-aware review. | `read-only` |
-| `npm:@bacnh85/pi-plan` | `pi-code-review` | Review plans and break work into bounded steps. | `read-only` |
-| `npm:@braintrust/pi-extension` | `pi-diagnose`, `pi-code-review` | Evaluation-oriented review and rubric thinking. | `read-only` |
-| `npm:pi-web-access` | `pi-sre-research` | Current documentation and web research. | `research-network` |
-| `npm:pi-all-search` | `pi-sre-research` | Broader package/source discovery. | `research-network` |
-| `npm:pi-subagents` | `pi-parallel-workers` | Fan out bounded tasks. | `read-only` |
-| `npm:@gjczone/pi-swarm` | `pi-parallel-workers` | Coordinate multiple short-lived worker agents. | `read-only` |
-| `npm:@lebronj/pi-playwright` | `pi-browser-lab` | Browser automation and screenshot capture. | `browser-lab` |
+Snapshot: **2026-07-22**. These are research candidates, not dependencies or
+recommendations to install. The complete Pi catalog inventory is kept outside
+the repository; this matrix contains the candidates most relevant to context,
+code intelligence, verification, debugging, testing, review, durable state, and
+safe delegation.
 
-## Deferred
+Activity below is the latest npm publication age shown by the Pi catalog at the
+snapshot. Dependency/data notes are metadata triage unless the row explicitly
+says **source-audited**. Every package still requires the gates in
+[`pilot-plan.md`](pilot-plan.md).
 
-| Package | Reason |
-| --- | --- |
-| `npm:gentle-engram` | Needs a retention/deletion policy before persistent memory is acceptable. |
-| `npm:pi-nocturne-memory` | Same persistent-memory concern. |
-| `npm:@llblab/pi-actors` | Actor systems are useful after simpler delegation profiles have baseline evals. |
+| Candidate (reviewed version) | Purpose / expected value | Source, license, activity | Runtime and data behavior | Existing-stack overlap | Decision |
+| --- | --- | --- | --- | --- | --- |
+| [`context-mode@1.0.169`](https://pi.dev/packages/context-mode) | Reduce raw tool output; FTS5 retrieval and compaction continuity | [source](https://github.com/mksglu/context-mode), Elastic-2.0, published 23d ago; **source-audited** | 8 direct deps including MCP SDK and SQLite; postinstall; captures session/tool/prompt metadata; persistent DBs; arbitrary subprocesses with network; URL fetch; optional event forwarding | High: Hermes context/memory, Context7 retrieval, Graphify navigation | **Do not pilot**; see [deep audit](context-mode-audit.md) |
+| [`pi-lean-ctx@3.9.12`](https://pi.dev/packages/pi-lean-ctx) | Compress Bash/read/search output and cache unchanged reads | [source](https://github.com/yvgude/lean-ctx), Apache-2.0, 5d | Intercepts core tools; persistent cache; embedded MCP bridge; source and tool output may enter cache | High: Hermes context control; some Context7 retrieval overlap | Defer pending source/retention audit |
+| [`pi-distill@1.1.0`](https://pi.dev/packages/pi-distill) | Narrow file-first tool-output distillation | [source](https://github.com/maplezzk/pi-extensions), MIT, published 2026-07-23; **source-audited and fixture-tested** | Mutates tool schemas/system context; sends prompt + tool output to a model; reads result-detail paths; writes 0664 config/summaries; large resolved Pi/model graph | Direct Hermes context shaping; deterministic output helper is narrower | **Reject**; see [remaining audits](remaining-candidates-audit.md) |
+| [`pi-goosedump@0.11.3`](https://pi.dev/packages/pi-goosedump) | Session-history search, expansion, and compaction | [source](https://github.com/jarkkojs/goosedump), Apache-2.0, 18h | TUI + goosedump runtime; conversation persistence/search | High: Hermes memory and context authority | Defer |
+| [`pi-observational-memory@3.0.3`](https://pi.dev/packages/pi-observational-memory) | Tiered observations/reflections across compaction | [source](https://github.com/elpapi42/pi-observational-memory), MIT, 19d | Rewrites context; stores sensitive conversation state | Direct Hermes memory/context duplication | Reject for default stack |
+| [`pi-hermes-memory@0.8.2`](https://pi.dev/packages/pi-hermes-memory) | Pi memory, session search, secret scanning | [source](https://github.com/chandra447/pi-hermes-memory), MIT, 1d | SQLite FTS5 + TUI; persistent sensitive state and consolidation | Directly duplicates Hermes | Reject |
+| [`gentle-engram@0.1.10`](https://pi.dev/packages/gentle-engram) | Local/cloud cross-session memory | [source](https://github.com/Gentleman-Programming/engram), MIT, 16d | Persistent local-or-cloud state; network and deletion policy required | Hermes memory; possible provider boundary | Reject for default stack |
+| [`pi-memory@0.4.0`](https://pi.dev/packages/pi-memory) | Daily/long-term/scratchpad semantic memory | [source](https://github.com/jayzeng/pi-memory), MIT, 2d | Install hook; qmd execution and persistent sensitive data | Hermes memory; GSD state | Reject for default stack |
+| [`pi-lens@3.8.71`](https://pi.dev/packages/pi-lens) | LSP, lint, format, typecheck, structural feedback | [source](https://github.com/apmantza/pi-lens), MIT, 2d | 8 direct deps including ast-grep; install hook; starts analyzers and may autofix/install tools | Graphify; existing linters/Semgrep; mutation exceeds advisory role | Do not pilot read-only; reassess only for isolated QA fixture |
+| [`pi-readseek@0.8.5`](https://pi.dev/packages/pi-readseek) | Hash-anchored reads/edits and structural search | [source](https://github.com/jarkkojs/readseek), Apache-2.0, 3h | readseek runtime, diff, xxhash-wasm; filesystem mutation and indexing | Graphify; Codex edit contract | Source-audit candidate only if safe-edit gap is measured |
+| [`pi-shazam@0.30.0`](https://pi.dev/packages/pi-shazam) | Seven structural code-awareness tools | [source](https://github.com/gjczone/pi-shazam), MIT, 10d | Large tree-sitter/LSP/MCP dependency surface; local parsers/processes/index | High Graphify and Context7 overlap | Defer; no demonstrated unique value |
+| [`@mrclrchtr/supi-code-intelligence@2.5.0`](https://pi.dev/packages/@mrclrchtr/supi-code-intelligence) | Architecture, caller/callee, impact, pattern search | [source](https://github.com/mrclrchtr/supi), MIT, 3d | Four SuPi runtime/LSP/tree-sitter packages; process and index behavior needs review | High Graphify overlap | Defer |
+| [`@bacnh85/pi-serena@0.9.2`](https://pi.dev/packages/@bacnh85/pi-serena) | Serena semantic navigation/editing | [source](https://github.com/bacnh85/pi-extensions), MIT, 3h | Spawns/integrates Serena and registers mutation as well as navigation tools | High Graphify overlap; violates advisory-only worker boundary | Remove from default proposal; defer |
+| [`pi-simplify@0.2.3`](https://pi.dev/packages/pi-simplify) | Review changed code for clarity and maintainability | [source](https://github.com/MattDevy/pi-extensions), MIT, 5d | No direct runtime deps; prompt/extension directs edits and tests | `improve`, ponytail, `/pr-review`, GSD verification | Reject as duplicative and not read-only |
+| [`@zephyrdeng/pi-review@0.11.0`](https://pi.dev/packages/@zephyrdeng/pi-review) | Isolated code/plan second opinion | [source](https://github.com/ZephyrDeng/pi-review), MIT, 20h | Install hook; subprocess/model routing; source/prompts may cross model boundary | GSD plan review and existing reviewers | Defer pending routing/data audit |
+| [`pi-pr-review@1.11.3`](https://pi.dev/packages/pi-pr-review) | Parallel PR review, verification, optional GitHub comments | [source](https://github.com/10ego/pi-pr-review), MIT, 10h | Subprocesses/network; reads PR/source; can publish comments when enabled | Direct `/pr-review` and reviewer-stack duplication | Reject unless benchmark proves a specific gap |
+| [`@vigolium/piolium@0.0.13`](https://pi.dev/packages/@vigolium/piolium) | Resumable multi-specialist security audits | [source](https://github.com/vigolium/piolium), MIT, 1d | Subagents, durable state, model peer deps, possible network/source disclosure | GSD verification, Semgrep, Hermes orchestration | Defer; nested orchestration conflict |
+| [`pi-sandbox@0.6.0`](https://pi.dev/packages/pi-sandbox) | OS-level sandbox with permission prompts | [source](https://github.com/carderne/pi-sandbox), MIT; runtime Apache-2.0; **source/artifact-audited** | Strong native boundaries, but shipped Pi policy allows broad network/local/Unix-socket/browser behavior; persisted approvals; custom-tool mediation incomplete | Containment pattern is valuable; package surface is not default-safe | **Do not enable**; extracted smaller offline `bwrap` pattern; see [remaining audits](remaining-candidates-audit.md) |
+| [`@gotgenes/pi-permission-system@20.10.0`](https://pi.dev/packages/@gotgenes/pi-permission-system) | Bash permission enforcement | [source](https://github.com/gotgenes/pi-packages), MIT; **source-audited and fixture-tested** | Good fail-closed/path behavior, but interpreter/script/package/function/alias indirection defeats command-name deny rules unless separately policy-covered; persistent logs/forwarding | Useful only as defense in depth, never an OS boundary | **Do not install by default**; see [remaining audits](remaining-candidates-audit.md) |
+| [`pi-landstrip@0.17.34`](https://pi.dev/packages/pi-landstrip) | Sandbox-aware subagents and command permissions | [source](https://github.com/landstrip/landstrip), Apache-2.0, 22h | Subprocesses, delegation, permissions, possible network | Hermes/Codex delegation and sandbox policy | Defer; too much combined authority |
+| [`pi-subagents@0.35.1`](https://pi.dev/packages/pi-subagents) | Chains and parallel subagents | [source](https://github.com/nicobailon/pi-subagents), MIT, 5d | jiti/YAML; subprocess/model calls; durable config and fan-out | Direct Hermes/Codex orchestration overlap | Reject for default stack |
+| [`@gjczone/pi-swarm@0.9.5`](https://pi.dev/packages/@gjczone/pi-swarm) | Coordinate short-lived worker agents | [source](https://github.com/gjczone/pi-swarm), MIT, 12d | Nested fan-out, subprocesses, model/network behavior | Direct bounded-worker overlap | Reject |
+| [`@quintinshaw/pi-dynamic-workflows@3.4.1`](https://pi.dev/packages/@quintinshaw/pi-dynamic-workflows) | Workflows, worktrees, resume, cost and large fan-out | [source](https://github.com/QuintinShaw/pi-dynamic-workflows), MIT, 4h | Durable workflow state, model routing, subprocess/git/network, recursive fan-out | Direct GSD/Hermes/Codex authority conflict | Reject |
+| [`@bacnh85/pi-plan@0.6.2`](https://pi.dev/packages/@bacnh85/pi-plan) | Plan/implement/verify/review workflow | [source](https://github.com/bacnh85/pi-extensions), MIT, 11h | Writes plans/specs, changes tools, persists workflow, includes rewind/stash paths | Direct GSD lifecycle conflict | Reject |
+| [`@plannotator/pi-extension@0.24.2`](https://pi.dev/packages/@plannotator/pi-extension) | Planning approval and execution state machine | [source](https://github.com/backnotprop/plannotator), MIT OR Apache-2.0, 1d | Planning/executing state; changes active write tools | Direct GSD lifecycle conflict | Reject |
+| [`@braintrust/pi-extension@0.10.0`](https://pi.dev/packages/@braintrust/pi-extension) | Braintrust observability/tracing | [source](https://github.com/braintrustdata/braintrust-pi-extension), MIT, 5d | Credentialed network telemetry of session/model/tool inputs and outputs | Not evaluation logic; duplicates observability concerns | Reject absent explicit DPA/retention/data policy |
+| [`pi-all-search@1.0.18`](https://pi.dev/packages/pi-all-search) | Exa/Tavily/AnySearch/Firecrawl/Context7 search | [source](https://github.com/RealAlexandreAI/pi-all-search), MIT, 21d | Provider credentials, broad network and query disclosure | Direct Context7 duplication | Reject |
+| [`pi-web-access@0.13.0`](https://pi.dev/packages/pi-web-access) | Search, fetch, clone, PDF, YouTube and video analysis | [source](https://github.com/nicobailon/pi-web-access), MIT, 27d | Broad network; cloning; media parsing; provider keys; local subprocesses | Context7 plus existing web/browser tooling | Reject for default stack |
+| [`@mrclrchtr/supi-web@2.5.0`](https://pi.dev/packages/@mrclrchtr/supi-web) | Markdown fetch and Context7 library docs | [source](https://github.com/mrclrchtr/supi), MIT, 3d | Network fetch plus readability/DOM parsing | Direct Context7 duplication | Reject |
+| [`@lebronj/pi-playwright@0.0.1`](https://pi.dev/packages/@lebronj/pi-playwright) | Browser automation and screenshots | Source repository not declared in npm metadata, MIT, 23d | Browser processes, network, screenshots, possible auth state | Existing Playwright MCP, Stagehand, browser-lab | Reject as duplicative and insufficiently attributable |
+| [`@hypabolic/pi-hypa@0.1.11`](https://pi.dev/packages/@hypabolic/pi-hypa) | Local deterministic shell-output compression | [source](https://github.com/Hypabolic/Hypa), FSL-1.1-ALv2, 9d | Rewrites shell commands; install hook; Hypa runtime; possible MCP proxy/network | Existing documented Hypa infrastructure | No Pi package integration; use audited Hypa separately if desired |
 
-## Review Checklist
+## Inventory scope and limitations
 
-- Does the profile need network access?
-- Can it run in a disposable workspace?
-- Is its output structured enough for the primary agent to verify?
-- Does the prompt exclude secrets, production consoles, and customer data?
+The official catalog said **5,371** packages across **108** pages; all pages and
+all corresponding npm metadata records were retrieved successfully. A conservative
+name/source heuristic classified three entries as upstream-publisher packages:
+`@earendil-works/pi-radius`, `@earendil-works/pi-radius-work`, and
+`pi-status-bar`. That heuristic is not a registry trust badge, and “official” is
+not automatic suitability; none adds priority workflow value here.
+
+The complete inventory records, for every package: purpose/description, Pi and
+npm URLs, repository when declared, license, versions, publish timestamp and
+monthly downloads, resource types, direct/optional/peer dependencies, Pi
+manifest, metadata-derived filesystem/process/network/privacy signals, overlap
+signals, risk tier, and expected workflow recommendation. Signals marked
+`possible`, `likely`, `unknown`, or `none-observed` are triage—not proof from
+source. A package must not be installed based on the inventory alone.

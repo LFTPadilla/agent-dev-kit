@@ -36,6 +36,14 @@ Requires [Hermes Agent](https://github.com/NousResearch/hermes-agent) on `PATH`.
 hermes --profile agent-tutor-orchestrator
 ```
 
+For a local installation whose existing tmux session or worklog directory has
+different names, pass them explicitly instead of editing the public scripts:
+
+```bash
+./scripts/tutor-install.sh --session team-tutor \
+  --worklog-dir /absolute/path/to/worklogs
+```
+
 Public skills only (cold-clone ready):
 
 1. `ai-workflow-orchestrator`
@@ -43,10 +51,10 @@ Public skills only (cold-clone ready):
 
 Defaults:
 
-1. tmux session name: `tutor` (`AGENT_TUTOR_SESSION`)
+1. tmux session name: `tutor` (`AGENT_TUTOR_SESSION`; installer override: `--session`)
 2. profile: `agent-tutor-orchestrator` (`AGENT_TUTOR_PROFILE`)
 3. optional clone source: `AGENT_TUTOR_CLONE_FROM` / `--clone-from` (no org default)
-4. worklogs: under the tutor profile, or `AGENT_TUTOR_WORKLOG_DIR`
+4. worklogs: under the tutor profile, or `AGENT_TUTOR_WORKLOG_DIR` / installer `--worklog-dir`
 
 Canonical list: `profiles/agent-tutor-orchestrator.yml` → `include_skills`.
 
@@ -66,6 +74,7 @@ repo. Missing them on a cold clone is expected. Compose later:
 | Install / doctor (front door) | `scripts/tutor-install.sh`, `scripts/tutor-doctor.sh` | B |
 | Internal helpers | `scripts/tutor-{smoke,status,bootstrap,delegate,audit,…}.sh` | B |
 | Default tmux session | `tutor` (override with `AGENT_TUTOR_SESSION`) | B |
+| Operator-local skills overlay | outside this tree only — install via your org overlay | C |
 | Optional profile clone | `AGENT_TUTOR_CLONE_FROM` / `--clone-from` (no org default) | B |
 | Worklogs | under the tutor profile, or `AGENT_TUTOR_WORKLOG_DIR` | B |
 | Private overlay skills | outside this tree only | C |

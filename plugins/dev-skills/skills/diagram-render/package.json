@@ -4,6 +4,6 @@
   "description": "Render network diagrams and infrastructure as PNG via SVG+sharp",
   "main": "scripts/diagram-render.js",
   "dependencies": {
-    "sharp": "*"
+    "sharp": "0.35.3"
   }
 }

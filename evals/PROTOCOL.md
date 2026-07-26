@@ -53,8 +53,21 @@ Original 5-case smoke. Expanded cases 06–15 were not in this table.
 
 | Tool | 01 sql | 02 auth | 03 n+1 | 04 deps | 05 clean | Recall | FP |
 |---|---|---|---|---|---|---|---|
-| semgrep `p/owasp+js+ts+nodejs-scan` | ✗ | ✗ | ✗ | ✗ | — | **0/4** | 0 |
+| semgrep `p/owasp+js+ts+nodejs` | ✗ | ✗ | ✗ | ✗ | — | **0/4** | 0 |
 | LLM single-pass review (Claude, manual) | ✓ | ✓ | ✓ | ✓ | — | **4/4** | 0 |
+
+### Deterministic Semgrep full-suite rerun — 2026-07-22
+
+Command: `npm run eval:semgrep` with public packs `p/owasp-top-ten`,
+`p/javascript`, `p/typescript`, and `p/nodejs`.
+
+| Tool | Planted caught | Recall | Clean FP | FP rate |
+|---|---|---|---|---|
+| Semgrep public packs | 1 / 12 (case 10, overbroad credentialed CORS) | **8%** | 0 / 3 | **0** |
+
+The previously documented `p/nodejs-scan` registry name returned HTTP 404 and
+was replaced with `p/nodejs`. The runner now exits with status 2 on scan/config
+failure instead of silently turning a failed scan into a zero-finding score.
 
 ### `/pr-review` protocol smoke (cases 01–05) — 2026-07-20
 
