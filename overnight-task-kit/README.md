@@ -29,6 +29,10 @@ cd overnight-task-kit
 ./install.sh
 ```
 
+Codex links are installed in `~/.agents/skills`. Existing unmanaged entries at
+those destinations are reported and left unchanged; the other harness targets
+are still installed.
+
 Also install the preferred runner (EXTERNAL, not vendored):
 
 ```bash

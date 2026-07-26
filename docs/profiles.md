@@ -1,6 +1,6 @@
 # Profiles & multi-runtime layout
 
-How to run one set of skills across several Hermes, Codex, Claude, and other runtimes without
+How to run one set of skills across Hermes, Codex, Claude, Pi, and other runtimes without
 copying files around by hand.
 
 ## The idea
@@ -15,6 +15,7 @@ registry (git)                 runtime config
 ─────────────                  ──────────────
 dev-skills/git-essentials  ──▶ ~/.claude/skills/git-essentials   (symlink)
 dev-skills/pdf             ──▶ ~/.claude/skills/pdf              (symlink)
+dev-skills/knip            ──▶ ~/.agents/skills/knip             (Codex global)
 personal/my-thing          ──▶ ~/.claude/skills/my-thing         (symlink)
 ```
 
@@ -52,12 +53,15 @@ commands, cognitive-debt checkpoints, and Mermaid/D2 diagram policy.
 
 ## What NOT to link this way
 
-- **Plugins** (caveman, ponytail, this kit's marketplace) — installed via
-  `/plugin`, managed by Claude. Don't symlink them into `skills/`.
-- **GSD in a shared cross-runtime registry** — install the authoritative Hermes
-  pack with `get-shit-done-cc`. Do not mirror it into Claude/Codex registries.
-  The Personal Dev Tutor installer intentionally links only six core GSD skills
-  from that installation into its isolated Hermes profile.
+- **External plugins** (caveman, ponytail, this kit's marketplace) — Claude
+  manages them through `/plugin`; Codex receives their pinned upstream skill
+  packs through `scripts/install-codex-workhorse.sh`. Do not vendor either
+  project here, and don't symlink them into `skills/`.
+- **GSD** — use `get-shit-done-cc` for the authoritative Hermes pack; `pi-gsd`
+  is only the optional Pi-native helper. Don't mirror GSD into the shared
+  Claude/Codex registry because that fights the runtime installers. The
+  Personal Dev Tutor installer intentionally links only six core GSD skills
+  from the Hermes installation into its isolated profile.
 
 See [`external-deps.md`](external-deps.md).
 

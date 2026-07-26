@@ -46,7 +46,7 @@ Notes:
 - `tags` is for grep-ability, not agent-decision.
 - Body should be lean — extract large content to `references/` siblings.
 
-## Codex (`~/.codex/skills/<name>/SKILL.md`)
+## Codex (`~/.agents/skills/<name>/SKILL.md`)
 
 **Same format as Claude.** Codex's skill loader is Claude-compatible. Keep the file identical to the Claude version.
 

@@ -6,7 +6,7 @@
 # After running, the canonical SKILL.md (in skills/<name>/SKILL.md) is
 # reachable from all 4 agents:
 #   - Claude:   ~/.claude/skills/<name>/SKILL.md
-#   - Codex:    ~/.codex/skills/<name>/SKILL.md
+#   - Codex:    ~/.agents/skills/<name>/SKILL.md
 #   - Pi:       ~/.pi/skills/<name>/SKILL.md
 #   - OpenCode: ~/.config/opencode/command/<name>.md  (uses *.opencode.md source variant)
 #
@@ -21,9 +21,10 @@ set -euo pipefail
 KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$KIT_DIR/skills"
 CLAUDE_DIR="$HOME/.claude/skills"
-CODEX_DIR="$HOME/.codex/skills"
+CODEX_DIR="$HOME/.agents/skills"
 PI_DIR="$HOME/.pi/skills"
 OPENCODE_DIR="$HOME/.config/opencode/command"
+install_failed=0
 
 mode="install"
 target_skill=""
@@ -42,6 +43,20 @@ done
 # Helper: list canonical skills (each skill is a subdir of skills/)
 list_canonical() {
     [ -d "$SKILLS_DIR" ] && find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort
+}
+
+link_codex_skill() {
+    local source="$1"
+    local target="$2"
+
+    if [ -e "$target" ] || [ -L "$target" ]; then
+        if [ ! -L "$target" ] || [ "$(readlink "$target")" != "$source" ]; then
+            echo "✗  Codex skill conflict at $target; existing entry left unchanged" >&2
+            return 1
+        fi
+    fi
+
+    ln -sfn "$source" "$target"
 }
 
 case "$mode" in
@@ -125,8 +140,11 @@ for skill in "${skills[@]}"; do
     # The skill dir contains SKILL.md + any references/ siblings.
     ln -sfn "$src_dir" "$CLAUDE_DIR/$skill"
     echo "  ✓  $CLAUDE_DIR/$skill -> $src_dir"
-    ln -sfn "$src_dir" "$CODEX_DIR/$skill"
-    echo "  ✓  $CODEX_DIR/$skill -> $src_dir"
+    if link_codex_skill "$src_dir" "$CODEX_DIR/$skill"; then
+        echo "  ✓  $CODEX_DIR/$skill -> $src_dir"
+    else
+        install_failed=1
+    fi
     ln -sfn "$src_dir" "$PI_DIR/$skill"
     echo "  ✓  $PI_DIR/$skill -> $src_dir"
 
@@ -145,4 +163,8 @@ for skill in "${skills[@]}"; do
 done
 
 echo
+if [ "$install_failed" -ne 0 ]; then
+    echo "Install completed with Codex conflicts. Other harness targets were installed." >&2
+    exit 1
+fi
 echo "Done. Run './install.sh --list' to verify, or './install.sh --uninstall' to remove."

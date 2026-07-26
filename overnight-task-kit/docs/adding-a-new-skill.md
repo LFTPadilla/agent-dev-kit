@@ -141,7 +141,7 @@ ln -sf "$KIT/skills/<name>/<name>.opencode.md" "$HOME/.config/opencode/command/<
 
 # Verify symlinks
 readlink -f ~/.claude/skills/<name>
-readlink -f ~/.codex/skills/<name>
+readlink -f ~/.agents/skills/<name>
 readlink -f ~/.pi/skills/<name>
 readlink -f ~/.config/opencode/command/<name>.md
 ```

@@ -354,7 +354,7 @@ function runtimeTargets() {
   return [
     ['Claude', path.join(homedir(), '.claude/skills')],
     ['Claude secondary', path.join(homedir(), '.claude-very/skills')],
-    ['Codex', path.join(homedir(), '.codex/skills')],
+    ['Codex', path.join(homedir(), '.agents/skills')],
     ['Pi', path.join(homedir(), '.pi/agent/skills')],
     ['OpenCode commands', path.join(homedir(), '.config/opencode/command')]
   ]

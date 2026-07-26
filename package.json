@@ -12,6 +12,7 @@
     "inventory": "node scripts/agent-dev-kit.mjs inventory",
     "test:java": "bash scripts/test-java-development.sh",
     "test:hermes-workhorse": "bash scripts/test-hermes-workhorse.sh",
+    "test:codex-workhorse": "bash scripts/test-codex-workhorse.sh",
     "test:personal-tutor": "bash scripts/test-personal-dev-tutor.sh",
     "render:personal-tutor": "bash scripts/render-personal-tutor-diagrams.sh",
     "overnight:init": "node overnight-task-kit/scripts/overnight-runner.mjs init",

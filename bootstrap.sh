@@ -3,7 +3,7 @@
 #
 # Two layers:
 #   1. External tools (this script installs the npm core).
-#   2. Claude Code marketplaces + plugins (printed — run them inside Claude Code).
+#   2. Global Codex skills plus Claude Code marketplaces/plugins.
 #
 # Optional day-to-day toolchain (gnhf, gh-axi, no-mistakes, treehouse, skills CLI)
 # is EXTERNAL — this script prints a copy-paste block; it does not prompt y/N.
@@ -73,7 +73,7 @@ hypa init --agent claude
 hypa init --agent codex
 
 echo
-echo "==> Linking dev-skills to Claude Code + PI"
+echo "==> Linking dev-skills to Claude Code + Codex + PI"
 bash "$ROOT/sync.sh"
 
 if command -v hermes >/dev/null 2>&1; then
@@ -81,6 +81,10 @@ if command -v hermes >/dev/null 2>&1; then
   echo "==> Installing caveman + ponytail for all Hermes profiles"
   bash "$ROOT/scripts/install-hermes-workhorse.sh" --all-profiles
 fi
+
+echo
+echo "==> Installing pinned caveman + ponytail skills for Codex"
+bash "$(dirname "$0")/scripts/install-codex-workhorse.sh"
 
 echo
 echo "==> Running public kit validation"

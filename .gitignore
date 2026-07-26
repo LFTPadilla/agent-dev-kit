@@ -19,6 +19,9 @@ playwright/.auth/
 test-results/
 playwright-report/
 
+# Generated local code-graph output
+/graphify-out/
+
 # OpenClaw/clawhub vendoring artifacts (in case a skill is copied in with them)
 .clawhub/
 .clawbot/
