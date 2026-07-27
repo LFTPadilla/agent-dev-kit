@@ -60,6 +60,20 @@ exit 2
 SH
 chmod +x "$FAKE_BIN/hermes"
 
+export HERMES_TEST_REAL_LN="$(command -v ln)"
+cat > "$FAKE_BIN/ln" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+target="${!#}"
+"$HERMES_TEST_REAL_LN" "$@"
+if [ -n "${HERMES_TEST_SIGNAL_PROFILE_LINK:-}" ] &&
+   [[ "$target" == */profiles/*/skills/external/* ]]; then
+  kill -TERM "$PPID"
+  sleep 0.2
+fi
+SH
+chmod +x "$FAKE_BIN/ln"
+
 export HERMES_TEST_LOG="$FIXTURE/hermes.log"
 export AGENT_DEV_KIT_HERMES_HOME="$HERMES_HOME"
 export PATH="$FAKE_BIN:$PATH"
@@ -72,6 +86,8 @@ fixture_skill_sha() {
 
 default_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.1/skills/caveman/SKILL.md"
 default_ponytail_source="https://raw.githubusercontent.com/DietrichGebert/ponytail/v4.8.4/skills/ponytail/SKILL.md"
+export AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$default_caveman_source"
+export AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$default_ponytail_source"
 export AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$default_caveman_source")"
 export AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$(fixture_skill_sha ponytail "$default_ponytail_source")"
 
@@ -98,6 +114,20 @@ grep -q '^--profile default skills install ' "$HERMES_TEST_LOG"
 first_install_count="$(wc -l < "$HERMES_TEST_LOG")"
 "$ROOT/scripts/install-hermes-workhorse.sh" --all-profiles >/dev/null
 test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$first_install_count"
+
+override_error="$FIXTURE/override-error"
+if env -u AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE \
+  "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>"$override_error"; then
+  echo "FAIL installer accepted a SHA-only caveman override"
+  exit 1
+fi
+grep -q 'source and SHA-256 overrides must be set together' "$override_error"
+if env -u AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256 \
+  "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>"$override_error"; then
+  echo "FAIL installer accepted a source-only caveman override"
+  exit 1
+fi
+grep -q 'source and SHA-256 overrides must be set together' "$override_error"
 
 printf '\nmanaged drift\n' >> "$HERMES_HOME/skills/caveman/SKILL.md"
 drifted_install_count="$(wc -l < "$HERMES_TEST_LOG")"
@@ -174,6 +204,12 @@ test ! -e "$HERMES_HOME/profiles/beta/skills/external/caveman"
 test ! -e "$HERMES_HOME/profiles/beta/skills/external/ponytail"
 test ! -e "$HERMES_HOME/profiles/link-collision/skills/external/caveman"
 test -d "$HERMES_HOME/profiles/link-collision/skills/external/ponytail"
+
+mkdir -p "$HERMES_HOME/profiles/signal-link/skills"
+HERMES_TEST_SIGNAL_PROFILE_LINK=1 \
+  "$ROOT/scripts/install-hermes-workhorse.sh" --profile signal-link >/dev/null
+test -L "$HERMES_HOME/profiles/signal-link/skills/external/caveman"
+test -L "$HERMES_HOME/profiles/signal-link/skills/external/ponytail"
 
 updated_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.2/skills/caveman/SKILL.md"
 AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$updated_caveman_source" \

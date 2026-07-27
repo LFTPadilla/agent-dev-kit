@@ -2,6 +2,17 @@
 # Install the pinned caveman + ponytail baseline for Hermes and expose it to profiles.
 set -euo pipefail
 
+if [ "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE+x}" != \
+     "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256+x}" ]; then
+  echo "caveman source and SHA-256 overrides must be set together" >&2
+  exit 2
+fi
+if [ "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE+x}" != \
+     "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256+x}" ]; then
+  echo "ponytail source and SHA-256 overrides must be set together" >&2
+  exit 2
+fi
+
 HERMES_ROOT="${AGENT_DEV_KIT_HERMES_HOME:-${HERMES_HOME:-${HOME:?HOME is required}/.hermes}}"
 CAVEMAN_SOURCE="${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:-https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.1/skills/caveman/SKILL.md}"
 PONYTAIL_SOURCE="${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:-https://raw.githubusercontent.com/DietrichGebert/ponytail/v4.8.4/skills/ponytail/SKILL.md}"
@@ -335,9 +346,15 @@ link_profile_skill() {
     echo "refusing to overwrite unmanaged skill directory: $target" >&2
     exit 1
   fi
-  ln -s "$source" "$target"
+  trap '' HUP INT TERM
+  if ! ln -s "$source" "$target"; then
+    restore_workhorse_signal_traps
+    echo "unable to create profile skill link: $target" >&2
+    exit 1
+  fi
   CREATED_PROFILE_LINKS+=("$target")
   CREATED_PROFILE_LINK_SOURCES+=("$source")
+  restore_workhorse_signal_traps
 }
 
 acquire_workhorse_lock
