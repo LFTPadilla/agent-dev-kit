@@ -37,11 +37,15 @@ for value in repo branch goal allowed criteria concept verification; do
 done
 printf '%s' "$criteria" | grep -q '[^|[:space:]]' || { echo "--criteria must contain at least one criterion"; exit 2; }
 printf '%s' "$verification" | grep -q '[^[:space:]]' || { echo "--verification must contain a command"; exit 2; }
-repo="$(cd "$repo" && pwd)"
+repo="$(cd "$repo" && pwd -P)"
 [ -d "$repo/.git" ] || git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git repository: $repo"; exit 2; }
+repo="$(git -C "$repo" rev-parse --show-toplevel)"
+repo="$(cd "$repo" && pwd -P)"
 worktree="${worktree:-$repo}"
-worktree="$(cd "$worktree" && pwd)"
+worktree="$(cd "$worktree" && pwd -P)"
 git -C "$worktree" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git worktree: $worktree"; exit 2; }
+worktree="$(git -C "$worktree" rev-parse --show-toplevel)"
+worktree="$(cd "$worktree" && pwd -P)"
 repo_common="$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)"
 worktree_common="$(git -C "$worktree" rev-parse --path-format=absolute --git-common-dir)"
 [ "$(readlink -f "$repo_common")" = "$(readlink -f "$worktree_common")" ] || {

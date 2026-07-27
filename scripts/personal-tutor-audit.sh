@@ -32,6 +32,8 @@ for value in allowed criteria evidence verification; do
 done
 repo="$(cd "$repo" && pwd -P)"
 git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git repository: $repo"; exit 2; }
+repo="$(git -C "$repo" rev-parse --show-toplevel)"
+repo="$(cd "$repo" && pwd -P)"
 actual_branch="$(git -C "$repo" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 branch_ok=1
 [ "$actual_branch" = "$branch" ] || branch_ok=0
@@ -60,11 +62,22 @@ import sys
 state_path, repo, allowed, changed_path, violations_path = sys.argv[1:]
 state = json.loads(Path(state_path).read_text())
 repo = str(Path(repo).resolve())
-if state.get("schema") != 1 or state.get("worktree") != repo:
-    raise SystemExit("baseline does not belong to this worktree")
 
 def git(*args):
     return subprocess.check_output(["git", "-C", repo, *args])
+
+if state.get("schema") != 1 or state.get("worktree") != repo:
+    raise SystemExit("baseline does not belong to this worktree")
+current_branch = git("rev-parse", "--abbrev-ref", "HEAD").decode().strip()
+current_head = git("rev-parse", "HEAD").decode().strip()
+if state.get("branch") != current_branch:
+    raise SystemExit(
+        f"baseline branch changed: recorded={state.get('branch')} current={current_branch}"
+    )
+if state.get("head") != current_head:
+    raise SystemExit(
+        f"baseline HEAD changed: recorded={state.get('head')} current={current_head}"
+    )
 
 def paths_now():
     paths = set()

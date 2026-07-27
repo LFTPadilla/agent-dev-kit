@@ -169,6 +169,7 @@ git -C "$fixture" add example.txt
 git -C "$fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
   commit --no-gpg-sign -q -m baseline
 fixture_branch="$(git -C "$fixture" rev-parse --abbrev-ref HEAD)"
+fixture_head="$(git -C "$fixture" rev-parse HEAD)"
 
 output_cache="$failure_root/output-cache"
 PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$output_cache" \
@@ -352,7 +353,14 @@ printf 'writable-baseline\n' > "$sandbox_fixture/writable/result.txt"
 git -C "$sandbox_fixture" add .
 git -C "$sandbox_fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
   commit --no-gpg-sign -q -m baseline
-"$SANDBOX" --doctor --repo "$sandbox_fixture" >/dev/null
+if "$SANDBOX" --doctor --repo "$sandbox_fixture" >/dev/null 2>&1; then
+  sandbox_available=1
+else
+  sandbox_available=0
+  echo "SKIP optional Bubblewrap sandbox unavailable or inoperable"
+fi
+
+if [ "$sandbox_available" -eq 1 ]; then
 fake_boundary_bin="$failure_root/fake-boundary-bin"
 mkdir -p "$fake_boundary_bin"
 printf '#!/usr/bin/env sh\nprintf fake-bwrap-ran > "%s"\nexit 0\n' \
@@ -431,6 +439,7 @@ if "$SANDBOX" --repo "$sandbox_fixture" --write .git/../writable -- true >/dev/n
   echo "FAIL sandbox accepted Git metadata traversal in a write path"
   exit 1
 fi
+fi
 
 failing_bin="$failure_root/failing-bin"
 failure_tmp="$failure_root/failure-tmp"
@@ -478,6 +487,35 @@ if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-
   echo "FAIL audit approved a unit with no changed files"
   exit 1
 fi
+
+printf 'committed after baseline\n' > "$fixture/committed.txt"
+git -C "$fixture" add committed.txt
+git -C "$fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
+  commit --no-gpg-sign -q -m post-baseline
+printf 'dirty after commit\n' >> "$fixture/example.txt"
+if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+  --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
+  --criteria "The file changes" --evidence "diff evidence" \
+  --verification "test -s example.txt" >/dev/null 2>&1; then
+  echo "FAIL audit approved a baseline after HEAD changed"
+  exit 1
+fi
+git -C "$fixture" reset --hard -q "$fixture_head"
+
+alternate_branch="personal-tutor-baseline-mismatch"
+git -C "$fixture" switch -q -c "$alternate_branch"
+printf 'dirty on another branch\n' >> "$fixture/example.txt"
+if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+  --repo "$fixture" --branch "$alternate_branch" --allowed "example.txt" \
+  --criteria "The file changes" --evidence "diff evidence" \
+  --verification "test -s example.txt" >/dev/null 2>&1; then
+  echo "FAIL audit approved a baseline recorded on another branch"
+  exit 1
+fi
+git -C "$fixture" reset --hard -q "$fixture_head"
+git -C "$fixture" switch -q "$fixture_branch"
+git -C "$fixture" branch -D "$alternate_branch" >/dev/null
+
 printf 'changed\n' >> "$fixture/example.txt"
 if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
@@ -527,6 +565,34 @@ PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tut
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes|Verification passes" \
   --evidence "example.txt differs from baseline|test -s example.txt exits zero" \
+  --verification "test -s example.txt" >/dev/null
+
+mkdir -p "$fixture/nested"
+if PERSONAL_TUTOR_LANE_CACHE_ROOT="$fixture/in-worktree-lanes" \
+  "$ROOT/scripts/personal-tutor-delegate.sh" nested-cache-bypass \
+  --repo "$fixture/nested" --branch "$fixture_branch" --concept "cache boundary" \
+  --goal "This must not record state inside the worktree." --allowed "example.txt" \
+  --criteria "The cache is rejected" --verification "test -s example.txt" \
+  --dry-run >/dev/null 2>&1; then
+  echo "FAIL nested --repo bypassed the lane-cache worktree boundary"
+  exit 1
+fi
+
+nested_delegate_output="$(PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/nested-lanes" \
+  "$ROOT/scripts/personal-tutor-delegate.sh" nested-repo-audit \
+  --repo "$fixture/nested" --branch "$fixture_branch" --concept "repository normalization" \
+  --goal "Record a baseline from a nested repository path." --allowed "example.txt" \
+  --criteria "Root-relative changes are attributed" --verification "test -s example.txt" \
+  --dry-run)"
+nested_prompt_path="${nested_delegate_output#*prompt=}"
+nested_prompt_path="${nested_prompt_path%% concept=*}"
+rm -f "$nested_prompt_path"
+printf 'nested invocation change\n' >> "$fixture/example.txt"
+PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/nested-lanes" \
+  "$ROOT/scripts/personal-tutor-audit.sh" nested-repo-audit \
+  --repo "$fixture/nested" --branch "$fixture_branch" --allowed "example.txt" \
+  --criteria "Root-relative changes are attributed" \
+  --evidence "example.txt differs from the nested-path baseline" \
   --verification "test -s example.txt" >/dev/null
 
 # Public examples must remain neutral. Repository-specific deny patterns belong

@@ -56,21 +56,49 @@ install_global_skill() {
   local name="$1" source="$2"
   local target="$HERMES_ROOT/skills/$name"
   local marker="$target/.agent-dev-kit-source"
+  local backup=""
 
-  if healthy_skill "$target" "$name" && [ -f "$marker" ] && \
+  if healthy_skill "$target" "$name" && [ -f "$marker" ] && [ ! -L "$marker" ] && \
      [ "$(cat "$marker")" = "$source" ]; then
     return
   fi
 
   mkdir -p "$HERMES_ROOT/skills"
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    [ ! -L "$target" ] || {
+      echo "refusing to replace symlinked global skill: $target" >&2
+      exit 1
+    }
+    [ -f "$marker" ] && [ ! -L "$marker" ] || {
+      echo "refusing to overwrite unmanaged global skill: $target" >&2
+      exit 1
+    }
+    backup="$(mktemp -d "$HERMES_ROOT/skills/.${name}.backup.XXXXXX")"
+    rmdir "$backup"
+    mv "$target" "$backup"
+  fi
+
   # Hermes may have a sticky active profile. Explicitly selecting `default`
   # keeps the canonical copy under HERMES_ROOT/skills instead of that profile.
-  HERMES_HOME="$HERMES_ROOT" hermes --profile default skills install "$source" --yes
-  healthy_skill "$target" "$name" || {
+  if ! HERMES_HOME="$HERMES_ROOT" hermes --profile default skills install "$source" --yes; then
+    rm -rf "$target"
+    [ -z "$backup" ] || mv "$backup" "$target"
+    echo "Hermes failed to install $name from its pinned source" >&2
+    exit 1
+  fi
+  if ! healthy_skill "$target" "$name"; then
+    rm -rf "$target"
+    [ -z "$backup" ] || mv "$backup" "$target"
     echo "Hermes installed an invalid or missing $name skill at $target" >&2
     exit 1
-  }
-  printf '%s\n' "$source" > "$marker"
+  fi
+  if ! printf '%s\n' "$source" > "$marker"; then
+    rm -rf "$target"
+    [ -z "$backup" ] || mv "$backup" "$target"
+    echo "unable to record managed source for $name" >&2
+    exit 1
+  fi
+  [ -z "$backup" ] || rm -rf "$backup"
 }
 
 link_profile_skill() {
