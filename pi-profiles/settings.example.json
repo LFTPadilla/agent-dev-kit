@@ -1,3 +1,24 @@
 {
-  "packages": []
+  "profiles": {
+    "pi-code-review": {
+      "extensions": [
+        "npm:@bacnh85/pi-serena@0.9.2",
+        "npm:@bacnh85/pi-plan@0.6.2",
+        "npm:@braintrust/pi-extension@0.10.0"
+      ],
+      "policy": "read-only"
+    },
+    "pi-sre-research": {
+      "extensions": [
+        "npm:pi-web-access@0.13.0",
+        "npm:pi-all-search@1.0.18",
+        "npm:context-mode@1.0.169"
+      ],
+      "policy": "research-network"
+    }
+  },
+  "notes": [
+    "Profiles are explicit opt-in examples; agent-dev-kit never installs them automatically.",
+    "Keep project-specific profiles in a private overlay."
+  ]
 }

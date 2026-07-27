@@ -69,6 +69,14 @@ repo="$(cd "$repo" && pwd -P)"
 
 git_entry="$repo/.git"
 [ -e "$git_entry" ] || { echo "Git metadata entry is missing: $git_entry"; exit 2; }
+git_dir="$(git -C "$repo" rev-parse --absolute-git-dir)"
+git_dir="$(readlink -f "$git_dir")"
+git_common_dir="$(git -C "$repo" rev-parse --git-common-dir)"
+case "$git_common_dir" in
+  /*) ;;
+  *) git_common_dir="$repo/$git_common_dir" ;;
+esac
+git_common_dir="$(readlink -f "$git_common_dir")"
 
 mounts=(
   --die-with-parent
@@ -92,6 +100,20 @@ mounts=(
   --dir /workspace
   --ro-bind "$repo" /workspace
 )
+
+if [ -f "$git_entry" ]; then
+  [ ! -L "$git_entry" ] || { echo "refusing symlinked Git metadata: $git_entry"; exit 2; }
+  [ -d "$git_dir" ] || { echo "linked-worktree Git directory is missing: $git_dir"; exit 2; }
+  [ -d "$git_common_dir" ] || { echo "linked-worktree common Git directory is missing: $git_common_dir"; exit 2; }
+  case "$git_common_dir" in
+    "$repo"|"$repo"/*) ;;
+    *) mounts+=(--ro-bind "$git_common_dir" "$git_common_dir") ;;
+  esac
+  case "$git_dir" in
+    "$repo"|"$repo"/*|"$git_common_dir"|"$git_common_dir"/*) ;;
+    *) mounts+=(--ro-bind "$git_dir" "$git_dir") ;;
+  esac
+fi
 
 # Mount only runtime/toolchain trees, not the real home. /bin and /lib are
 # normally usr-merge symlinks, so recreate those links inside the empty root.

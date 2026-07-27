@@ -224,10 +224,18 @@ function validatePiPackageResearch(checks) {
   const remainingAuditFile = path.join(dir, 'remaining-candidates-audit.md')
 
   const settings = readJson(settingsFile, checks)
-  if (!settings || !Array.isArray(settings.packages)) {
-    checks.push(fail('pi-profiles/settings.example.json must define a packages array'))
-  } else if (settings.packages.length !== 0) {
-    checks.push(fail('pi-profiles/settings.example.json must remain inert with an empty packages array'))
+  const requiredExamples = ['pi-code-review', 'pi-sre-research']
+  if (!settings || !settings.profiles || typeof settings.profiles !== 'object') {
+    checks.push(fail('pi-profiles/settings.example.json must define usable profiles'))
+  } else {
+    for (const profileName of requiredExamples) {
+      const extensions = settings.profiles[profileName]?.extensions
+      if (!Array.isArray(extensions) || extensions.length === 0) {
+        checks.push(fail(`pi-profiles/settings.example.json must preserve ${profileName} extensions`))
+      } else if (extensions.some(extension => !/^npm:(?:@[^/]+\/)?[^@]+@\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(extension))) {
+        checks.push(fail(`pi-profiles/settings.example.json must pin every ${profileName} extension`))
+      }
+    }
   }
 
   for (const file of [profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile]) {
@@ -241,14 +249,17 @@ function validatePiPackageResearch(checks) {
   const audit = readFileSync(auditFile, 'utf8')
   const remainingAudit = readFileSync(remainingAuditFile, 'utf8')
 
-  if (!profiles.includes('status: research-only') || !profiles.includes('runtime_activation: none')) {
-    checks.push(fail('pi-profiles/profiles.yaml must remain research-only with no runtime activation'))
+  if (!profiles.includes('status: opt-in-examples') ||
+      !profiles.includes('runtime_activation: explicit-profile-selection')) {
+    checks.push(fail('pi-profiles/profiles.yaml must preserve explicit profile activation'))
   }
-  if (/(?:npm|git|https?):[^\s"']+/.test(profiles)) {
-    checks.push(fail('pi-profiles/profiles.yaml must not activate or name package sources'))
+  for (const profileName of requiredExamples) {
+    if (!profiles.includes(`  ${profileName}:`)) {
+      checks.push(fail(`pi-profiles/profiles.yaml must preserve ${profileName}`))
+    }
   }
-  if (!readme.includes('enables no') || !readme.includes('third-party package')) {
-    checks.push(fail('pi-profiles/README.md must state that no third-party package is enabled'))
+  if (!readme.includes('does not automatically enable') || !readme.includes('explicit opt-in')) {
+    checks.push(fail('pi-profiles/README.md must explain explicit package activation'))
   }
   if (!matrix.includes('context-mode@1.0.169') || !audit.includes('do not install, enable, or pilot')) {
     checks.push(fail('Pi package research must preserve the reviewed context-mode pin and no-pilot decision'))
@@ -266,7 +277,7 @@ function validatePiPackageResearch(checks) {
     checks.push(fail('remaining Pi audits must state that no Pi package is enabled'))
   }
 
-  checks.push(ok('Pi package research is inert and preserves authority boundaries'))
+  checks.push(ok('Pi package examples preserve opt-in functionality and authority boundaries'))
 }
 
 function validatePolicies(checks) {

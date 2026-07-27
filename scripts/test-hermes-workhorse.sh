@@ -55,6 +55,9 @@ for name in caveman ponytail; do
   test -f "$HERMES_HOME/skills/$name/SKILL.md"
   grep -q "^name: $name$" "$HERMES_HOME/skills/$name/SKILL.md"
   test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-source"
+  test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256"
+  test "$(cat "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256")" = \
+    "$(sha256sum "$HERMES_HOME/skills/$name/SKILL.md" | cut -d' ' -f1)"
   for profile in alpha personal-dev-tutor; do
     target="$HERMES_HOME/profiles/$profile/skills/external/$name"
     test -L "$target"
@@ -69,6 +72,14 @@ grep -q '^--profile default skills install ' "$HERMES_TEST_LOG"
 first_install_count="$(wc -l < "$HERMES_TEST_LOG")"
 "$ROOT/scripts/install-hermes-workhorse.sh" --all-profiles >/dev/null
 test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$first_install_count"
+
+printf '\nmanaged drift\n' >> "$HERMES_HOME/skills/caveman/SKILL.md"
+drifted_install_count="$(wc -l < "$HERMES_TEST_LOG")"
+"$ROOT/scripts/install-hermes-workhorse.sh" --all-profiles >/dev/null
+test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$((drifted_install_count + 1))"
+grep -q '^description: test fixture$' "$HERMES_HOME/skills/caveman/SKILL.md"
+test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-sha256")" = \
+  "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
 
 managed_caveman="$HERMES_HOME/skills/caveman.managed-test-backup"
 mv "$HERMES_HOME/skills/caveman" "$managed_caveman"
@@ -128,8 +139,12 @@ if compgen -G "$HERMES_HOME/skills/.caveman.backup.*" >/dev/null; then
   exit 1
 fi
 
+grep -q 'AGENT_DEV_KIT_HERMES_HOME="\$PERSONAL_TUTOR_USER_HOME/.hermes"' \
+  "$ROOT/scripts/personal-tutor-install.sh"
 grep -q 'install-hermes-workhorse.sh.*--profile.*PROFILE' \
   "$ROOT/scripts/personal-tutor-install.sh"
+grep -q 'AGENT_DEV_KIT_HERMES_HOME="\$USER_HOME/.hermes"' \
+  "$ROOT/scripts/tutor-install.sh"
 grep -q 'install-hermes-workhorse.sh.*--profile.*PROFILE' \
   "$ROOT/scripts/tutor-install.sh"
 grep -q 'Hermes baseline skill:.*baseline_skill' "$ROOT/scripts/tutor-smoke.sh"

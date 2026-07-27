@@ -97,9 +97,10 @@ npm run validate
 ```
 
 `bootstrap.sh` installs the npm core (GSD, hypa), links bundled skills globally
-for Codex and into detected Claude/Pi/Hermes profiles, installs pinned caveman +
-ponytail packs for Codex and Hermes, validates, and prints copy-paste install
-blocks for optional tools and Claude Code plugins.
+for Codex and into detected Claude/Pi profiles, installs pinned caveman +
+ponytail packs for Codex and Hermes, links only those two packs into existing
+Hermes profiles, validates, and prints copy-paste install blocks for optional
+tools and Claude Code plugins.
 Tutor scripts may be present in `scripts/`; Hermes profile install is optional.
 When Hermes is installed, `bootstrap.sh` installs pinned caveman and ponytail
 skills globally and links them into every existing Hermes profile. Re-run

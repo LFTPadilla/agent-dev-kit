@@ -292,7 +292,8 @@ for stale in "$GRAPHIFY_PROFILE_SKILLS"/*; do
   [ -L "$stale" ] && rm "$stale"
 done
 link_skill "$GRAPHIFY_HERMES_SKILL" "$GRAPHIFY_PROFILE_SKILLS/graphify"
-"$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE"
+AGENT_DEV_KIT_HERMES_HOME="$PERSONAL_TUTOR_USER_HOME/.hermes" \
+  "$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE"
 
 printf '[6/8] Isolated Codex worker home\n'
 CODEX_AGENT_STATE="$PROFILE_DIR/state/codex-agent-links"

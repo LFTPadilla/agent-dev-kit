@@ -56,11 +56,15 @@ install_global_skill() {
   local name="$1" source="$2"
   local target="$HERMES_ROOT/skills/$name"
   local marker="$target/.agent-dev-kit-source"
+  local checksum_marker="$target/.agent-dev-kit-sha256"
   local backup=""
+  local skill_checksum=""
 
   if healthy_skill "$target" "$name" && [ -f "$marker" ] && [ ! -L "$marker" ] && \
-     [ "$(cat "$marker")" = "$source" ]; then
-    return
+     [ "$(cat "$marker")" = "$source" ] && [ -f "$checksum_marker" ] && \
+     [ ! -L "$checksum_marker" ]; then
+    skill_checksum="$(sha256sum "$target/SKILL.md" | cut -d' ' -f1)"
+    [ "$(cat "$checksum_marker")" != "$skill_checksum" ] || return 0
   fi
 
   mkdir -p "$HERMES_ROOT/skills"
@@ -92,10 +96,12 @@ install_global_skill() {
     echo "Hermes installed an invalid or missing $name skill at $target" >&2
     exit 1
   fi
-  if ! printf '%s\n' "$source" > "$marker"; then
+  skill_checksum="$(sha256sum "$target/SKILL.md" | cut -d' ' -f1)"
+  if ! printf '%s\n' "$source" > "$marker" ||
+     ! printf '%s\n' "$skill_checksum" > "$checksum_marker"; then
     rm -rf "$target"
     [ -z "$backup" ] || mv "$backup" "$target"
-    echo "unable to record managed source for $name" >&2
+    echo "unable to record managed metadata for $name" >&2
     exit 1
   fi
   [ -z "$backup" ] || rm -rf "$backup"

@@ -122,7 +122,8 @@ if [ -f "$SOURCE/plugins/dev-skills/skills/orchestrate/SKILL.md" ]; then
 fi
 cp -f "$SOURCE/profiles/agent-tutor-orchestrator.yml" \
       "$USER_HOME/.hermes/profiles/$PROFILE/agent-tutor-orchestrator.yml"
-"$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE" || exit 1
+AGENT_DEV_KIT_HERMES_HOME="$USER_HOME/.hermes" \
+  "$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE" || exit 1
 
 # The public manifest stays generic. A local installation may select its own
 # long-lived tmux session without baking that organization's name into git.

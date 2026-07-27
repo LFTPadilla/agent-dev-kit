@@ -394,6 +394,16 @@ if "$SANDBOX" --repo "$sandbox_fixture" --write . -- python3 -c \
   exit 1
 fi
 grep -q '^nested-metadata$' "$sandbox_fixture/nested/.git/HEAD"
+linked_sandbox_fixture="$failure_root/sandbox-linked-worktree"
+git -C "$sandbox_fixture" worktree add --detach -q "$linked_sandbox_fixture" HEAD
+"$SANDBOX" --repo "$linked_sandbox_fixture" -- git rev-parse --is-inside-work-tree |
+  grep -q '^true$'
+if "$SANDBOX" --repo "$linked_sandbox_fixture" -- \
+  git config personal-tutor-sandbox.write-test enabled >/dev/null 2>&1; then
+  echo "FAIL linked-worktree Git metadata was writable"
+  exit 1
+fi
+test -z "$(git -C "$sandbox_fixture" config --get personal-tutor-sandbox.write-test || true)"
 PERSONAL_TUTOR_SANDBOX_SECRET_SENTINEL=must-not-cross \
   "$SANDBOX" --repo "$sandbox_fixture" -- python3 -c \
   'import os; assert "PERSONAL_TUTOR_SANDBOX_SECRET_SENTINEL" not in os.environ'
