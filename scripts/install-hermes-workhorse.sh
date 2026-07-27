@@ -2,15 +2,21 @@
 # Install the pinned caveman + ponytail baseline for Hermes and expose it to profiles.
 set -euo pipefail
 
-if [ "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE+x}" != \
-     "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256+x}" ]; then
-  echo "caveman source and SHA-256 overrides must be set together" >&2
-  exit 2
+if [ -n "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:+x}" ] ||
+   [ -n "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:+x}" ]; then
+  if [ -z "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:+x}" ] ||
+     [ -z "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:+x}" ]; then
+    echo "caveman source and SHA-256 overrides must be set together" >&2
+    exit 2
+  fi
 fi
-if [ "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE+x}" != \
-     "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256+x}" ]; then
-  echo "ponytail source and SHA-256 overrides must be set together" >&2
-  exit 2
+if [ -n "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:+x}" ] ||
+   [ -n "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:+x}" ]; then
+  if [ -z "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:+x}" ] ||
+     [ -z "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:+x}" ]; then
+    echo "ponytail source and SHA-256 overrides must be set together" >&2
+    exit 2
+  fi
 fi
 
 HERMES_ROOT="${AGENT_DEV_KIT_HERMES_HOME:-${HERMES_HOME:-${HOME:?HOME is required}/.hermes}}"

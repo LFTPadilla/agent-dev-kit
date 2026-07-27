@@ -42,8 +42,6 @@ if [ "${1:-}" = skills ] && [ "${2:-}" = install ]; then
     : > "$HERMES_TEST_BLOCK_STARTED"
     while [ ! -e "$HERMES_TEST_BLOCK_RELEASE" ]; do sleep 0.05; done
   fi
-  # Match Hermes' existing-install behavior: a successful invocation may be a
-  # no-op unless the caller first establishes a safe managed refresh path.
   [ ! -f "$target/SKILL.md" ] || exit 0
   mkdir -p "$target"
   cat > "$target/SKILL.md" <<EOF
@@ -60,19 +58,27 @@ exit 2
 SH
 chmod +x "$FAKE_BIN/hermes"
 
-export HERMES_TEST_REAL_LN="$(command -v ln)"
-cat > "$FAKE_BIN/ln" <<'SH'
+write_fake_ln() {
+  export HERMES_TEST_REAL_LN="$(command -v ln)"
+  cat > "$FAKE_BIN/ln" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 target="${!#}"
 "$HERMES_TEST_REAL_LN" "$@"
 if [ -n "${HERMES_TEST_SIGNAL_PROFILE_LINK:-}" ] &&
    [[ "$target" == */profiles/*/skills/external/* ]]; then
-  kill -TERM "$PPID"
+  sig="${HERMES_TEST_SIGNAL_PROFILE_LINK}"
+  case "$sig" in
+    HUP|INT|TERM) kill -"$sig" "$PPID" ;;
+    *) echo "unknown signal: $sig" >&2; exit 2 ;;
+  esac
   sleep 0.2
 fi
 SH
-chmod +x "$FAKE_BIN/ln"
+  chmod +x "$FAKE_BIN/ln"
+}
+
+write_fake_ln
 
 export HERMES_TEST_LOG="$FIXTURE/hermes.log"
 export AGENT_DEV_KIT_HERMES_HOME="$HERMES_HOME"
@@ -86,10 +92,12 @@ fixture_skill_sha() {
 
 default_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.1/skills/caveman/SKILL.md"
 default_ponytail_source="https://raw.githubusercontent.com/DietrichGebert/ponytail/v4.8.4/skills/ponytail/SKILL.md"
+default_caveman_sha="$(fixture_skill_sha caveman "$default_caveman_source")"
+default_ponytail_sha="$(fixture_skill_sha ponytail "$default_ponytail_source")"
 export AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$default_caveman_source"
 export AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$default_ponytail_source"
-export AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$default_caveman_source")"
-export AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$(fixture_skill_sha ponytail "$default_ponytail_source")"
+export AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$default_caveman_sha"
+export AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$default_ponytail_sha"
 
 "$ROOT/scripts/install-hermes-workhorse.sh" --all-profiles >/dev/null
 
@@ -116,18 +124,49 @@ first_install_count="$(wc -l < "$HERMES_TEST_LOG")"
 test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$first_install_count"
 
 override_error="$FIXTURE/override-error"
-if env -u AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE \
-  "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>"$override_error"; then
-  echo "FAIL installer accepted a SHA-only caveman override"
-  exit 1
-fi
-grep -q 'source and SHA-256 overrides must be set together' "$override_error"
-if env -u AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256 \
-  "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>"$override_error"; then
-  echo "FAIL installer accepted a source-only caveman override"
-  exit 1
-fi
-grep -q 'source and SHA-256 overrides must be set together' "$override_error"
+assert_override_pair() {
+  local skill="$1" present_var="$2" missing_var="$3" expected_kind="$4"
+  local source_var sha_var other_source_var other_sha_var other_source other_sha
+  case "$skill" in
+    caveman)
+      source_var=AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE
+      sha_var=AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256
+      other_source_var=AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE
+      other_sha_var=AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256
+      other_source="$default_ponytail_source"
+      other_sha="$default_ponytail_sha"
+      ;;
+    ponytail)
+      source_var=AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE
+      sha_var=AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256
+      other_source_var=AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE
+      other_sha_var=AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256
+      other_source="$default_caveman_source"
+      other_sha="$default_caveman_sha"
+      ;;
+    *) echo "unknown skill: $skill" >&2; exit 2 ;;
+  esac
+  if env -u "$missing_var" \
+      "$other_source_var"="$other_source" "$other_sha_var"="$other_sha" \
+      "$present_var"="$(eval "printf '%s' \"\$$present_var\"")" \
+      "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>"$override_error"; then
+      echo "FAIL installer accepted a $expected_kind-only $skill override"
+      exit 1
+    fi
+  if ! grep -q 'source and SHA-256 overrides must be set together' "$override_error"; then
+    echo "FAIL installer did not reject partial $expected_kind-only $skill override with the expected error"
+    printf 'override_error: %s\n' "$(cat "$override_error")" >&2
+    exit 1
+  fi
+}
+for skill in caveman ponytail; do
+  assert_override_pair "$skill" \
+    "AGENT_DEV_KIT_${skill^^}_HERMES_SOURCE" \
+    "AGENT_DEV_KIT_${skill^^}_HERMES_SHA256" "source"
+  assert_override_pair "$skill" \
+    "AGENT_DEV_KIT_${skill^^}_HERMES_SHA256" \
+    "AGENT_DEV_KIT_${skill^^}_HERMES_SOURCE" "SHA-256"
+done
 
 printf '\nmanaged drift\n' >> "$HERMES_HOME/skills/caveman/SKILL.md"
 drifted_install_count="$(wc -l < "$HERMES_TEST_LOG")"
@@ -205,11 +244,42 @@ test ! -e "$HERMES_HOME/profiles/beta/skills/external/ponytail"
 test ! -e "$HERMES_HOME/profiles/link-collision/skills/external/caveman"
 test -d "$HERMES_HOME/profiles/link-collision/skills/external/ponytail"
 
-mkdir -p "$HERMES_HOME/profiles/signal-link/skills"
-HERMES_TEST_SIGNAL_PROFILE_LINK=1 \
-  "$ROOT/scripts/install-hermes-workhorse.sh" --profile signal-link >/dev/null
-test -L "$HERMES_HOME/profiles/signal-link/skills/external/caveman"
-test -L "$HERMES_HOME/profiles/signal-link/skills/external/ponytail"
+for sig in TERM HUP INT; do
+  rm -rf "$HERMES_HOME/profiles/signal-$sig"
+  mkdir -p "$HERMES_HOME/profiles/signal-$sig/skills"
+  HERMES_TEST_SIGNAL_PROFILE_LINK="$sig" \
+    "$ROOT/scripts/install-hermes-workhorse.sh" --profile "signal-$sig" >/dev/null
+  test -L "$HERMES_HOME/profiles/signal-$sig/skills/external/caveman"
+  test -L "$HERMES_HOME/profiles/signal-$sig/skills/external/ponytail"
+done
+{ test ! -e "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" &&
+  test ! -L "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock"; } || {
+  echo "FAIL signal-mid-install left a workhorse lock behind"
+  exit 1
+}
+
+mkdir -p "$HERMES_HOME/profiles/ln-failure/skills"
+cat > "$FAKE_BIN/ln" <<'SH'
+#!/usr/bin/env bash
+echo "fake ln forced failure" >&2
+exit 1
+SH
+chmod +x "$FAKE_BIN/ln"
+ln_failure_log="$FIXTURE/ln-failure.log"
+if "$ROOT/scripts/install-hermes-workhorse.sh" --profile ln-failure \
+    >/dev/null 2>"$ln_failure_log"; then
+  echo "FAIL installer accepted an ln failure"
+  exit 1
+fi
+grep -q 'unable to create profile skill link' "$ln_failure_log"
+test ! -e "$HERMES_HOME/profiles/ln-failure/skills/external/caveman"
+test ! -e "$HERMES_HOME/profiles/ln-failure/skills/external/ponytail"
+{ test ! -e "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" &&
+  test ! -L "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock"; } || {
+  echo "FAIL ln failure left a workhorse lock behind"
+  exit 1
+}
+write_fake_ln
 
 updated_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.2/skills/caveman/SKILL.md"
 AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$updated_caveman_source" \
@@ -257,6 +327,8 @@ failed_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v
 before_failed_refresh_sha="$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
 if HERMES_TEST_FAIL_SOURCE="$failed_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$failed_caveman_source" \
+  AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$default_ponytail_source" \
+  AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$default_ponytail_sha" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>&1; then
   echo "FAIL installer accepted a failed managed skill refresh"
   exit 1
@@ -279,6 +351,8 @@ before_signal_refresh_sha="$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | 
 set +e
 HERMES_TEST_SIGNAL_SOURCE="$signal_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$signal_caveman_source" \
+  AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$default_ponytail_source" \
+  AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$default_ponytail_sha" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>&1
 signal_refresh_status=$?
 set -e
@@ -304,6 +378,8 @@ HERMES_TEST_BLOCK_SOURCE="$concurrent_caveman_source" \
   HERMES_TEST_BLOCK_RELEASE="$block_release" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$concurrent_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$concurrent_caveman_source")" \
+  AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$default_ponytail_source" \
+  AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$default_ponytail_sha" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>&1 &
 concurrent_pid=$!
 for _ in $(seq 1 200); do
@@ -318,6 +394,8 @@ if [ ! -e "$block_started" ]; then
 fi
 if AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$concurrent_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$concurrent_caveman_source")" \
+  AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$default_ponytail_source" \
+  AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$default_ponytail_sha" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>&1; then
   : > "$block_release"
   wait "$concurrent_pid" 2>/dev/null || true
