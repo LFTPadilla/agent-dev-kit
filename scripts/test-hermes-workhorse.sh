@@ -59,7 +59,9 @@ SH
 chmod +x "$FAKE_BIN/hermes"
 
 write_fake_ln() {
-  export HERMES_TEST_REAL_LN="$(command -v ln)"
+  if [ -z "${HERMES_TEST_REAL_LN:-}" ]; then
+    export HERMES_TEST_REAL_LN="$(command -v ln)"
+  fi
   cat > "$FAKE_BIN/ln" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -261,8 +263,13 @@ done
 mkdir -p "$HERMES_HOME/profiles/ln-failure/skills"
 cat > "$FAKE_BIN/ln" <<'SH'
 #!/usr/bin/env bash
-echo "fake ln forced failure" >&2
-exit 1
+set -euo pipefail
+target="${!#}"
+if [[ "$target" == */profiles/*/skills/external/* ]]; then
+  echo "fake ln forced failure" >&2
+  exit 1
+fi
+exec "$HERMES_TEST_REAL_LN" "$@"
 SH
 chmod +x "$FAKE_BIN/ln"
 ln_failure_log="$FIXTURE/ln-failure.log"
