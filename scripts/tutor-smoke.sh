@@ -6,7 +6,7 @@
 #
 # IMPORTANT: when invoked from a symlink under ~/.hermes/profiles/<p>/home/,
 # Hermes exports HOME to the profile dir. We resolve USER_HOME via the
-# parent of /home/felipe/.hermes so we always read the real user home.
+# parent of the real user's ~/.hermes so we always read the real user home.
 set -uo pipefail
 
 # Resolve real user home. We don't trust $HOME because under Hermes-cron or
@@ -14,7 +14,7 @@ set -uo pipefail
 # script (or its realpath) to derive the canonical user home.
 SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then SELF_PATH="$(readlink -f "$SELF_PATH")"; fi
-# SELF_PATH is something like /home/felipe/.hermes/profiles/agent-tutor-orchestrator/scripts/tutor-smoke.sh
+# SELF_PATH is something like ~/.hermes/profiles/agent-tutor-orchestrator/scripts/tutor-smoke.sh
 # Walk up until we find a dir named .hermes, then USER_HOME is its parent.
 # Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
 HERMES_DIR=""
@@ -29,9 +29,9 @@ done
 if [ -n "$HERMES_DIR" ]; then
   USER_HOME="$(dirname "$HERMES_DIR")"
 else
-  USER_HOME="${HOME:-/home/felipe}"
+  USER_HOME="${HOME:?HOME is required}"
 fi
-[ -d "$USER_HOME" ] || USER_HOME="${HOME:-/home/felipe}"
+[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 SESSION="${AGENT_TUTOR_SESSION:-tutor}"

@@ -136,7 +136,7 @@ for skill in "${skills[@]}"; do
 
     # Claude, Codex, Pi: symlink the WHOLE skill directory (not just SKILL.md).
     # This matches the convention used by the vault-symlinked skills
-    # (e.g., ~/.claude/skills/caveman -> /home/felipe/vault/Resources/AI/Skills/shared/caveman).
+    # (e.g., ~/.claude/skills/caveman -> ~/vault/Resources/AI/Skills/shared/caveman).
     # The skill dir contains SKILL.md + any references/ siblings.
     ln -sfn "$src_dir" "$CLAUDE_DIR/$skill"
     echo "  ✓  $CLAUDE_DIR/$skill -> $src_dir"

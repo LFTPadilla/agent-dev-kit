@@ -1,8 +1,8 @@
 # Pi Package Research Profiles
 
-This directory combines opt-in Pi profile examples with a policy surface for
-evaluating Pi packages. Agent-dev-kit does not automatically enable a
-third-party package from these files. Pi packages execute with the user's permissions; the
+This directory is a **research-only policy surface** for evaluating Pi packages.
+It is not runtime configuration, no installer consumes it, and it enables no
+third-party package. Pi packages execute with the user's permissions; the
 [upstream package documentation](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md#install-and-manage)
 requires source review before installation.
 
@@ -10,25 +10,24 @@ requires source review before installation.
 
 | File | Purpose |
 | --- | --- |
-| `profiles.yaml` | Advisory delegation contracts and profile-scoped activation policy. |
+| `profiles.yaml` | Package-free advisory contracts, including the legacy profile names. |
 | `package-matrix.md` | Point-in-time candidate decisions and reviewed versions. |
 | `context-mode-audit.md` | Source audit of `context-mode@1.0.169`. |
 | `remaining-candidates-audit.md` | Exact audits of sandbox, distill, and permission candidates plus top-queue decisions. |
 | `pilot-plan.md` | Gates a future one-package, disposable-workspace pilot. |
-| `settings.example.json` | Pinned, usable `pi-code-review` and `pi-sre-research` examples. |
+| `settings.example.json` | Valid inert Pi settings: an empty `packages` list. |
 
 `profiles.yaml` is agent-dev-kit metadata, **not** a `.pi/settings.json` schema.
-The Pi-shaped `settings.example.json` retains the established review and
-research profiles. Copying either profile into active Pi settings is an
-explicit opt-in to its pinned extensions; the repository never performs that
-activation.
+The `pi-code-review` and `pi-sre-research` names remain as package-free advisory
+contracts so existing delegation vocabulary is preserved. The only Pi-shaped
+example is `settings.example.json`; it deliberately installs nothing.
 
 ## Authority and safety
 
 - GSD remains the only lifecycle authority.
 - Hermes remains the context owner, tutor, and orchestrator.
 - Codex remains a bounded implementation/review worker.
-- Pi and any Pi package in these examples may return advisory evidence only.
+- Pi and any Pi package may return advisory evidence only.
 - Do not install or enable a package until the exact version and published
   artifact have passed source, license, dependency, install-hook, data-flow,
   network, filesystem, process, and prompt-mutation review.
@@ -39,8 +38,7 @@ activation.
 
 ## Current result
 
-The examples are preserved for compatibility, not endorsed as part of the
-default Hermes/Codex stack. `context-mode@1.0.169` remains
+No package is approved for activation. `context-mode@1.0.169` remains
 **do-not-pilot** for this architecture: its useful output reduction comes
 with persistent session capture, context injection, arbitrary subprocesses with
 network access, install-time mutation, and substantial overlap with Hermes,
@@ -52,6 +50,6 @@ and declined to enable `pi-sandbox@0.6.0`. The last audit did justify a smaller
 local offline `bwrap` verification helper with no Pi activation. See
 [the remaining candidate audits](remaining-candidates-audit.md).
 
-A future package addition must pin one exact version and follow
+A future pilot must pin one exact package version and follow
 [`pilot-plan.md`](pilot-plan.md). Do not use an unpinned `pi -e npm:<name>` or
 bundle multiple packages into one trial.

@@ -1,6 +1,6 @@
 # Per-agent skill/command locations — quick reference
 
-> Where each of the 4 agents Felipe uses looks for skills. Use this when
+> Where each of the 4 agents supported by this kit looks for skills. Use this when
 > installing a new skill or verifying an existing one.
 
 ## Claude (`~/.claude/skills/`)
@@ -9,12 +9,12 @@
 ~/.claude/skills/
 ├── <skill-name>/
 │   └── SKILL.md          # frontmatter + body
-└── ... (~100 skills, mostly symlinks to vault/Resources/AI/Skills/shared)
+└── ... (additional installed skills or symlinks)
 ```
 
 **Format:** YAML frontmatter (`name`, `tags`, `description`, `metadata.openclaw.{emoji,side_effect,invocation}`) + Markdown body.
 
-**Source of truth examples:** `/home/felipe/vault/Resources/AI/Skills/shared/caveman/SKILL.md`, `agent-constraints/SKILL.md`.
+**Source of truth examples:** `<repo-root>/overnight-task-kit/skills/<name>/SKILL.md` or another explicitly managed source directory.
 
 ## Codex (`~/.agents/skills/`)
 
@@ -23,7 +23,7 @@
 ├── <skill-name>/
 │   ├── SKILL.md          # frontmatter + body
 │   └── agents/           # optional: sub-agents
-└── ... (~80+ skills, mostly symlinks to vault/Resources/AI/Skills/shared)
+└── ... (additional installed skills or symlinks)
 ```
 
 **Format:** **Same as Claude.** Codex's skill loader is Claude-compatible.
@@ -34,7 +34,7 @@
 ~/.pi/skills/
 ├── <skill-name>/
 │   └── SKILL.md          # frontmatter + body (Claude-compatible)
-└── ... (symlinks to vault/Resources/AI/Skills/shared)
+└── ... (additional installed skills or symlinks)
 ```
 
 **Format:** **Same as Claude.** Pi's skill loader is also Claude-compatible.
@@ -47,7 +47,7 @@
 ├── opencode.json         # model + provider + MCP config
 ├── command/              # commands (opencode's skills)
 │   ├── <command-name>.md
-│   └── ... (~80 GSD commands)
+│   └── ... (additional commands)
 ├── agents/               # agent definitions
 ├── hooks/                # lifecycle hooks
 └── get-shit-done/        # GSD workflow definitions
@@ -61,18 +61,18 @@
 
 ## The symlink pattern
 
-Most skills in the agent dirs are **symlinks** to the global vault:
+Skills in the agent directories may be **symlinks** to an explicitly managed source:
 
 ```bash
 # Example: ~/.claude/skills/caveman
-caveman -> /home/felipe/vault/Resources/AI/Skills/shared/caveman
+caveman -> <source-root>/caveman
 ```
 
-When you install a new skill via the kit, the symlinks point to `~/programming/agent-dev-kit/overnight-task-kit/skills/<name>/`, not the vault.
+When you install a new skill via the kit, the symlinks point to `<repo-root>/overnight-task-kit/skills/<name>/`.
 
 ```bash
 # Example: ~/.claude/skills/overnight-task (after install)
-overnight-task -> /home/felipe/programming/agent-dev-kit/overnight-task-kit/skills/overnight-task
+overnight-task -> <repo-root>/overnight-task-kit/skills/overnight-task
 ```
 
 Edit the source once; the symlinks pick it up everywhere.
@@ -81,10 +81,10 @@ Edit the source once; the symlinks pick it up everywhere.
 
 | Source file | Symlink target |
 |---|---|
-| `~/programming/agent-dev-kit/overnight-task-kit/skills/<name>/SKILL.md` | `~/.claude/skills/<name>/SKILL.md` |
+| `<repo-root>/overnight-task-kit/skills/<name>/SKILL.md` | `~/.claude/skills/<name>/SKILL.md` |
 | same | `~/.agents/skills/<name>/SKILL.md` |
 | same | `~/.pi/skills/<name>/SKILL.md` |
-| `~/programming/agent-dev-kit/overnight-task-kit/skills/<name>/<name>.opencode.md` | `~/.config/opencode/command/<name>.md` |
+| `<repo-root>/overnight-task-kit/skills/<name>/<name>.opencode.md` | `~/.config/opencode/command/<name>.md` |
 
 The `install.sh` script (in the kit root) creates all 4 symlinks per skill. Idempotent.
 
@@ -94,7 +94,7 @@ The `install.sh` script (in the kit root) creates all 4 symlinks per skill. Idem
 |---|---|---|
 | Claude `AGENTS.md` | (none global; per-project) | n/a — Claude loads from the working dir |
 | Codex `AGENTS.md` | (none global) | n/a |
-| Codex `auth.json` | `~/.codex/auth.json` | API keys; not in vault |
+| Codex `auth.json` | `~/.codex/auth.json` | local API credentials |
 | OpenCode `opencode.json` | `~/.config/opencode/opencode.json` | model, provider, MCP config |
 | OpenCode `AGENTS.md` | `~/.config/opencode/AGENTS.md` | system prompt + context7 reminder |
 | Pi `models.json` | `~/.pi/agent/models.json` | model list |
@@ -105,10 +105,10 @@ The `install.sh` script (in the kit root) creates all 4 symlinks per skill. Idem
 ```bash
 # After running install.sh
 readlink -f ~/.claude/skills/overnight-task
-# → /home/felipe/programming/agent-dev-kit/overnight-task-kit/skills/overnight-task/SKILL.md
+# → <repo-root>/overnight-task-kit/skills/overnight-task
 
 readlink -f ~/.config/opencode/command/overnight-task.md
-# → /home/felipe/programming/agent-dev-kit/overnight-task-kit/skills/overnight-task/overnight-task.opencode.md
+# → <repo-root>/overnight-task-kit/skills/overnight-task/overnight-task.opencode.md
 ```
 
 ## See also

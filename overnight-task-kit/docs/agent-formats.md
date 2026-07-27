@@ -18,7 +18,7 @@ The body should be **agent-agnostic prose** wherever possible (the frontmatter i
 
 ## Claude (`~/.claude/skills/<name>/SKILL.md`)
 
-Standard frontmatter + body. Source-of-truth examples: `/home/felipe/vault/Resources/AI/Skills/shared/caveman/SKILL.md`, `agent-constraints/SKILL.md`, `acp-triage/SKILL.md`.
+Standard frontmatter + body. Source-of-truth examples: `~/vault/Resources/AI/Skills/shared/caveman/SKILL.md`, `agent-constraints/SKILL.md`, `acp-triage/SKILL.md`.
 
 ```markdown
 ---
@@ -80,7 +80,7 @@ tools:
 </objective>
 
 <execution_context>
-@/home/felipe/.config/opencode/get-shit-done/workflows/<workflow>.md
+@/home/example/.config/opencode/get-shit-done/workflows/<workflow>.md
 </execution_context>
 
 <context>

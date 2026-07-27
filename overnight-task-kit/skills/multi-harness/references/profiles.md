@@ -54,5 +54,5 @@ After editing, run:
 ```bash
 python3 scripts/delegate.py --list-profiles
 python3 scripts/delegate.py --diagnose
-python3 /home/felipe/.codex/skills/.system/skill-creator/scripts/quick_validate.py .
+python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py .
 ```

@@ -23,8 +23,8 @@ while [ "$dir" != "/" ]; do
   dir="$parent"
 done
 if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:-/home/felipe}"; fi
-[ -d "$USER_HOME" ] || USER_HOME="${HOME:-/home/felipe}"
+else USER_HOME="${HOME:?HOME is required}"; fi
+[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 STATE_DIR="$USER_HOME/.hermes/profiles/$PROFILE/state"

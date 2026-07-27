@@ -1,7 +1,7 @@
 version: 2
 scope: public-safe
-status: opt-in-examples
-runtime_activation: explicit-profile-selection
+status: research-only
+runtime_activation: none
 default_policy: read-only
 
 authority:
@@ -13,11 +13,9 @@ authority:
 profiles:
   pi-code-review:
     purpose: "Read-only code review with semantic navigation and false-positive control."
-    packages:
-      - npm:@bacnh85/pi-serena@0.9.2
-      - npm:@bacnh85/pi-plan@0.6.2
-      - npm:@braintrust/pi-extension@0.10.0
-    runtime_activation: explicit-profile-selection
+    packages: []
+    runtime_activation: metadata-only
+    package_reason: "The compatibility contract remains, but no extension passed the activation gate."
     sandbox_policy: read-only
     allowed:
       - inspect changed files
@@ -36,11 +34,9 @@ profiles:
 
   pi-sre-research:
     purpose: "Current public documentation and package research for infrastructure or SDK questions."
-    packages:
-      - npm:pi-web-access@0.13.0
-      - npm:pi-all-search@1.0.18
-      - npm:context-mode@1.0.169
-    runtime_activation: explicit-profile-selection
+    packages: []
+    runtime_activation: metadata-only
+    package_reason: "The compatibility contract remains, but no extension passed the activation gate."
     sandbox_policy: research-network
     allowed:
       - public web research
@@ -137,4 +133,4 @@ package_gate:
 
 notes:
   - "This file is agent-dev-kit policy metadata, not Pi settings and not an executable profile registry."
-  - "Pinned legacy examples remain available through explicit profile selection; no repository installer activates them."
+  - "Legacy profile names remain as package-free advisory contracts; no third-party Pi package is approved or activated."

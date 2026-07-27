@@ -353,14 +353,19 @@ printf 'writable-baseline\n' > "$sandbox_fixture/writable/result.txt"
 git -C "$sandbox_fixture" add .
 git -C "$sandbox_fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
   commit --no-gpg-sign -q -m baseline
-if "$SANDBOX" --doctor --repo "$sandbox_fixture" >/dev/null 2>&1; then
+if ! command -v bwrap >/dev/null 2>&1; then
+  sandbox_available=0
+  echo "SKIP optional Bubblewrap sandbox is not installed"
+elif timeout 10 bwrap --die-with-parent --unshare-user --unshare-pid --unshare-net \
+  --ro-bind / / --proc /proc --dev /dev -- /bin/true >/dev/null 2>&1; then
   sandbox_available=1
 else
   sandbox_available=0
-  echo "SKIP optional Bubblewrap sandbox unavailable or inoperable"
+  echo "SKIP optional Bubblewrap sandbox is not operable on this host"
 fi
 
 if [ "$sandbox_available" -eq 1 ]; then
+"$SANDBOX" --doctor --repo "$sandbox_fixture" >/dev/null
 fake_boundary_bin="$failure_root/fake-boundary-bin"
 mkdir -p "$fake_boundary_bin"
 printf '#!/usr/bin/env sh\nprintf fake-bwrap-ran > "%s"\nexit 0\n' \
