@@ -311,7 +311,7 @@ rm -f "$CODEX_AGENT_STATE"
 printf '  Codex home: %s\n' "$CODEX_HOME"
 
 printf '[7/8] Runtime helpers and launchers\n'
-rm -f "$PROFILE_DIR/scripts/render-personal-tutor-diagrams.sh"
+rm -f "$PROFILE_DIR/scripts/render-diagrams.sh"
 cp -f "$SOURCE"/scripts/personal-tutor-*.sh "$PROFILE_DIR/scripts/"
 chmod +x "$PROFILE_DIR/scripts/"*.sh
 mkdir -p "$PERSONAL_TUTOR_USER_HOME/.local/bin"

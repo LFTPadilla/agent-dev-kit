@@ -1,0 +1,200 @@
+# Hero diagram — the full AI-development stack this kit assembles.
+# Left column: what the agent can do.  Right column: how it stays honest.
+# Render: npm run render:diagrams
+
+vars: {
+  d2-config: {
+    layout-engine: dagre
+    theme-id: 200
+    dark-theme-id: 200
+    sketch: false
+    pad: 24
+  }
+}
+
+classes: {
+  band: {
+    style: {
+      fill: "#0b1220"
+      stroke: "#1e293b"
+      stroke-width: 2
+      border-radius: 16
+      font-color: "#8598b0"
+      font-size: 20
+    }
+  }
+  tool: {
+    style: {
+      fill: "#111c31"
+      stroke: "#334155"
+      stroke-width: 2
+      border-radius: 10
+      font-color: "#e2e8f0"
+      font-size: 16
+    }
+  }
+  mine: {
+    style: {
+      fill: "#1e1b4b"
+      stroke: "#818cf8"
+      stroke-width: 2
+      border-radius: 10
+      font-color: "#e0e7ff"
+      font-size: 16
+    }
+  }
+  star: {
+    style: {
+      fill: "#3b0764"
+      stroke: "#d8b4fe"
+      stroke-width: 3
+      border-radius: 10
+      font-color: "#f5d0fe"
+      font-size: 16
+      bold: true
+    }
+  }
+  gate: {
+    style: {
+      fill: "#0f2a22"
+      stroke: "#34d399"
+      stroke-width: 2
+      border-radius: 10
+      font-color: "#d1fae5"
+      font-size: 16
+    }
+  }
+  run: {
+    style: {
+      fill: "#2a1d07"
+      stroke: "#f59e0b"
+      stroke-width: 2
+      border-radius: 10
+      font-color: "#fef3c7"
+      font-size: 16
+    }
+  }
+  ctx: {
+    style: {
+      fill: "#082f36"
+      stroke: "#22d3ee"
+      stroke-width: 2
+      border-radius: 10
+      font-color: "#cffafe"
+      font-size: 16
+    }
+  }
+}
+
+grid-rows: 4
+grid-columns: 2
+grid-gap: 26
+
+# ── left column: capability ───────────────────────────────────────────
+harness: "RUNTIMES — where the agent runs" {
+  class: band
+  grid-columns: 2
+  grid-gap: 16
+  cc: "Claude Code\nplugins · commands · MCP"
+  cx: "Codex CLI\nbounded implementation"
+  hm: "Hermes Agent\ntutor profiles"
+  pi: "Pi\npi-gsd runtime"
+  oc: "OpenCode\nalternate harness"
+  tx: "tmux worker lanes\nparallel and watchable"
+  cc.class: run; cx.class: run; hm.class: run; pi.class: run; oc.class: run; tx.class: run
+}
+
+context: "CONTEXT — what the agent knows" {
+  class: band
+  grid-columns: 2
+  grid-gap: 16
+  gfy: "Graphify\nlocal AST code graph"
+  c7:  "Context7 MCP\ncurrent library docs"
+  sen: "Sentry MCP\nprod errors in-loop"
+  pw:  "Playwright MCP\nlive browser"
+  wb:  "web-browse\ndynamic pages"
+  fs:  "find-skills\ndiscover capabilities"
+  gfy.class: ctx; c7.class: ctx; sen.class: ctx; pw.class: ctx; wb.class: ctx; fs.class: ctx
+}
+
+behavior: "BEHAVIOR — how it talks and builds" {
+  class: band
+  grid-columns: 2
+  grid-gap: 16
+  gsd: "GSD\nplan → execute → verify"
+  cav: "caveman\nterse output"
+  pon: "ponytail\nminimal diffs, YAGNI"
+  hyp: "hypa\ntoken-efficient shell"
+  gsd.class: tool; cav.class: tool; pon.class: tool; hyp.class: tool
+}
+
+contracts: "CONTRACTS — agent-to-agent plumbing" {
+  class: band
+  grid-columns: 2
+  grid-gap: 16
+  toon: "TOON\ntoken-lean structured output"
+  axi:  "gh-axi\nagent-shaped GitHub CLI"
+  prov: "skill-provenance.json\nsource · license · risk"
+  pol:  "policies/\nsandbox contracts"
+  toon.class: tool; axi.class: tool; prov.class: mine; pol.class: mine
+}
+
+orch: "ORCHESTRATION — who does the work" {
+  class: band
+  grid-columns: 2
+  grid-gap: 16
+  pdt: "★ Personal Dev Tutor\nGSD + bounded Codex lanes\n+ learning gates"
+  orc: "orchestrate\nroute work to cheap workers"
+  ato: "ai-workflow-orchestrator\npure orchestrator, never edits"
+  tre: "treehouse\nworktree isolation"
+  gnh: "gnhf + overnight-task-kit\nunsupervised multi-hour runs"
+  jc:  "jean-claude\nmulti-machine sync"
+  pdt.class: star; orc.class: mine; ato.class: mine
+  tre.class: tool; gnh.class: tool; jc.class: tool
+}
+
+gates: "SHIP GATES — nothing merges unchecked" {
+  class: band
+  grid-columns: 2
+  grid-gap: 16
+  prr: "★ /pr-review\nmulti-lens + adversarial verify"
+  nom: "no-mistakes\nfinal ship gate"
+  ev:  "evals/\nplanted bugs + clean control"
+  lh:  "lefthook\ncommit / push hooks"
+  scan:"gitleaks · pip-audit\nsecrets + CVEs"
+  pd:  "prompt-injection defense\non every untrusted input"
+  prr.class: star
+  nom.class: gate; ev.class: gate; lh.class: gate; scan.class: gate; pd.class: gate
+}
+
+build: "CAPABILITIES — 22 skills shipped here" {
+  class: band
+  grid-columns: 2
+  grid-gap: 16
+  qual: "Quality\nknip · improve · git-essentials"
+  lang: "Languages\njava-development"
+  qa:   "QA / E2E\nlive-qa · stagehand\nplaywright-stability"
+  sec:  "Security\nsemgrep · security-checklist"
+  docs: "Docs & media\npdf · excel · word · tex\nimage-finalize"
+  diag: "Diagrams\ndiagram-render · drawio-skill"
+  writ: "Writing\nhuman-writing-style"
+  ment: "Mentoring\npersonal-development-mentor"
+  qual.class: mine; lang.class: mine; qa.class: mine; sec.class: mine
+  docs.class: mine; diag.class: mine; writ.class: mine; ment.class: mine
+}
+
+dist: "DISTRIBUTION & PROOF — how it travels" {
+  class: band
+  grid-columns: 2
+  grid-gap: 16
+  mk:  "Claude plugin marketplace\nthis repo IS one"
+  bs:  "bootstrap.sh\none script, cold clone"
+  sk:  "skills CLI (npx skills)\ncross-harness packs"
+  ov:  "private overlay\norg skills stay outside"
+  pf:  "profiles/\n7 runtime manifests"
+  tp:  "templates/\nlefthook · Playwright auth"
+  dc:  "docs/\n12 guides + rendered diagrams"
+  at:  "ATTRIBUTION · CURATION\nwhat is borrowed, what is cut"
+  mk.class: mine; bs.class: mine; pf.class: mine; tp.class: mine
+  sk.class: tool; ov.class: tool; dc.class: tool; at.class: tool
+}

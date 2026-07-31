@@ -1,0 +1,37 @@
+$ npm run validate
+> node scripts/agent-dev-kit.mjs validate
+
+OK JSON files parse
+OK YAML files parse with strict syntax checks
+OK plugin manifest checked
+OK release versions aligned at 0.12.0
+OK 22 skill frontmatters checked
+OK skill provenance covers all skills
+OK 7 profile manifests checked
+OK Pi package research is inert and preserves compatibility contracts
+OK sandbox policies checked
+OK eval suite checked (12 planted, 3 controls)
+OK relative markdown links checked
+OK privacy scan found no private project coupling
+
+12 checks: 0 failed, 0 warnings
+
+$ npm run eval:semgrep
+  -   01-sql-injection.ts
+  -   02-missing-auth.ts
+  -   03-n-plus-one.ts
+  -   04-react-stale-closure.tsx
+  -   05-clean-control.ts  (control)
+  -   06-ssrf-fetch.ts
+  -   07-path-traversal.ts
+  -   08-tenant-filter-missing.ts
+  -   09-race-condition.ts
+FLAG  10-overbroad-cors.ts
+  -   11-clean-react-control.tsx  (control)
+  -   12-secret-logging.ts
+  -   13-prompt-injection-tool.ts
+  -   14-missing-rate-limit.ts
+  -   15-clean-permission-control.ts  (control)
+
+semgrep floor: recall 8% (1/12 planted caught) · false positives 0/3 controls
+Misses are expected — they are the cases the LLM review layer must cover. See PROTOCOL.md.

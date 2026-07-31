@@ -28,7 +28,7 @@ required_files=(
   "$GRAPH"
   "$OUTPUT"
   "$SANDBOX"
-  "$ROOT/scripts/render-personal-tutor-diagrams.sh"
+  "$ROOT/scripts/render-diagrams.sh"
   "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
 )
 

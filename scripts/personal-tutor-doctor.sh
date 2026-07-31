@@ -227,7 +227,7 @@ for baseline_skill in "${PERSONAL_TUTOR_BASELINE_SKILLS[@]}"; do
   baseline_global="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/$baseline_skill"
   baseline_profile="$PERSONAL_TUTOR_PROFILE_DIR/skills/external/$baseline_skill"
   if [ -f "$baseline_global/SKILL.md" ] && \
-     grep -q "^name:[[:space:]]*$baseline_skill[[:space:]]*$" "$baseline_global/SKILL.md" && \
+     grep -q "^name:[[:space:]]*${baseline_skill}[[:space:]]*$" "$baseline_global/SKILL.md" && \
      [ -L "$baseline_profile" ] && \
      [ "$(readlink -f "$baseline_profile")" = "$(readlink -f "$baseline_global")" ]; then
     ok "baseline skill available: $baseline_skill"
