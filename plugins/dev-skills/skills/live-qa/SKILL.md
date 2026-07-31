@@ -34,6 +34,18 @@ Playwright regression specs — pair the two (see `playwright-stability`).
    evidence (console/network/screenshot), severity. End with a short "flows that
    worked cleanly" list so the pass is legible.
 
+## Escalation — remote session browser (optional)
+
+Playwright MCP is the default and covers almost everything. Escalate only when the
+flow needs a **persistent, headful, human-watchable** browser: a login/profile that
+must survive across runs, a site that blocks a fresh automated browser, or a step a
+human must finish (captcha, OTP, payment).
+
+If `scripts/lab-bridge.sh status` reports a browser rung up, that environment is
+reachable on localhost — use its own tool/REST surface, keep to one session under a
+dedicated owner id, hand the live URL to the human for human-only steps, and close
+the session when done. Nothing configured → say so and stay on Playwright.
+
 ## Rules
 
 - **Read-only intent on real data.** Never run destructive actions (delete,

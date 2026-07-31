@@ -10,9 +10,20 @@ capabilities:
   - visual-regression
   - browser-automation
   - exploratory-qa
+  - remote-session-browser   # optional, only when a lab bridge is configured
 limits:
   production: explicit-only
   secrets: never
   third_party_auth: disposable-only
+rungs:
+  - local-playwright: Default. Ephemeral headless/headed browser on this machine.
+  - remote-session: Persistent, headful, human-watchable browser session served by
+      an operator-run environment, reached over localhost by `scripts/lab-bridge.sh`.
+      Use for stateful logins, persistent profiles, anti-bot friction, or a flow a
+      human must finish (captcha/OTP/payment) — never for routine QA.
 notes:
   - Use local or staging targets unless the user explicitly authorizes otherwise.
+  - The remote rung is opt-in and machine-local; service map lives outside this repo
+    (see docs/private-overlays.md). A cold clone has no remote rung.
+  - Remote sessions are a shared, capped resource. Own a dedicated owner id, one
+    session at a time, and close it when done.
