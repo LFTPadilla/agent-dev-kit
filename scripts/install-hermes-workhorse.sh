@@ -118,7 +118,6 @@ rollback_managed_skill() {
     echo "$absent_error: $target" >&2
     return 1
   fi
-  return 0
 }
 
 reset_managed_skill_refresh() {
