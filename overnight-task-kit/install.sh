@@ -122,9 +122,7 @@ if [ ${#skills[@]} -eq 0 ]; then
 fi
 
 # Create agent dirs if missing
-for dir in "$CLAUDE_DIR" "$CODEX_DIR" "$PI_DIR" "$OPENCODE_DIR"; do
-    [ -d "$dir" ] || mkdir -p "$dir"
-done
+mkdir -p "$CLAUDE_DIR" "$CODEX_DIR" "$PI_DIR" "$OPENCODE_DIR"
 
 for skill in "${skills[@]}"; do
     src_dir="$SKILLS_DIR/$skill"
