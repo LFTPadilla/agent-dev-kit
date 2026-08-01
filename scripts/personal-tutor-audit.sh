@@ -114,9 +114,9 @@ Path(violations_path).write_bytes(b"".join(os.fsencode(path) + b"\0" for path in
 PY
 
 changed=()
-while IFS= read -r -d '' path; do changed+=("$path"); done < "$changed_file"
+mapfile -d '' changed < "$changed_file"
 violations=()
-while IFS= read -r -d '' path; do violations+=("$path"); done < "$violations_file"
+mapfile -d '' violations < "$violations_file"
 
 mapping_ok=1
 criteria_mapping="$(python3 - "$criteria" "$evidence" <<'PY'
