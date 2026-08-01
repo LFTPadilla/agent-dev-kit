@@ -275,7 +275,6 @@ repair_skill() {
   rm -rf "$target"
   ln -s "$best" "$target"
   checks_fixed+=("$name: -> $best")
-  return 0
 }
 
 clear_skill_results() {
