@@ -173,10 +173,11 @@ function validateReleaseVersions(checks) {
     [rel(codexFile), codexData.version],
   ])
   const expected = packageData.version
-  for (const [source, version] of versions) {
-    if (version !== expected) checks.push(fail(`${source} version ${version ?? 'missing'} does not match ${expected}`))
+  const mismatches = [...versions].filter(([, version]) => version !== expected)
+  for (const [source, version] of mismatches) {
+    checks.push(fail(`${source} version ${version ?? 'missing'} does not match ${expected}`))
   }
-  if ([...versions.values()].every((version) => version === expected)) {
+  if (!mismatches.length) {
     checks.push(ok(`release versions aligned at ${expected}`))
   }
 }
