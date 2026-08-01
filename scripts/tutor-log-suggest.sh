@@ -52,8 +52,8 @@ today="$(date +%Y-%m-%d)"
 
 prompt_required() {
   local initial_prompt="$1" retry_prompt="$2" value=""
-  read -r -p "$initial_prompt" value || true
-  while [ -z "$value" ]; do read -r -p "$retry_prompt" value || true; done
+  read -r -p "$initial_prompt" value
+  while [ -z "$value" ]; do read -r -p "$retry_prompt" value; done
   printf '%s' "$value"
 }
 
@@ -79,7 +79,7 @@ echo
 echo "Context: lane=$lane_id title=$title"
 echo "File:    $WORKLOG_DIR/worklog-$today.txt"
 echo
-read -r -p "Append? (yes/no) " ans || true
+read -r -p "Append? (yes/no) " ans
 if [ "$ans" != "yes" ]; then
   echo "cancelled"
   exit 0
