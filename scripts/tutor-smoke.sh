@@ -47,9 +47,8 @@ check() {
 # Find SKILL.md for a named skill anywhere under SKILLS_DIR (1 or 2 levels).
 find_skill() {
   local name="$1"
-  [ -f "$SKILLS_DIR/$name/SKILL.md" ] && return 0
-  for d in "$SKILLS_DIR"/*/; do
-    [ -f "$d/$name/SKILL.md" ] && return 0
+  for skill_md in "$SKILLS_DIR/$name/SKILL.md" "$SKILLS_DIR"/*/"$name/SKILL.md"; do
+    [ -f "$skill_md" ] && return 0
   done
   return 1
 }
