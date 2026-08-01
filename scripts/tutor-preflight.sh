@@ -42,7 +42,6 @@ ask() {
 repo=""
 branch=""
 strategy="single"
-lanes=""
 push_ok="no"
 force_push_ok="no"
 secrets_ok="no"
