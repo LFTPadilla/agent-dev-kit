@@ -121,6 +121,18 @@ read_yaml_list() {
   done
 }
 
+skill_frontmatter_field() {
+  local field="$1" file="$2"
+  awk -v field="$field" '
+    /^---/{c++;next}
+    c==1 && $0 ~ "^" field ":" {
+      sub("^" field ":[[:space:]]*", "")
+      print
+      exit
+    }
+  ' "$file"
+}
+
 declare -a declared=()
 declare -a overlay=()
 if [ -n "$MANIFEST" ] && [ -f "$MANIFEST" ]; then
@@ -193,8 +205,8 @@ check_skill() {
 
   # Parse frontmatter
   local fm_name fm_desc
-  fm_name="$(awk '/^---/{c++;next} c==1 && /^name:/{sub(/^name:[[:space:]]*/,""); print; exit}' "$skill_md")"
-  fm_desc="$(awk '/^---/{c++;next} c==1 && /^description:/{sub(/^description:[[:space:]]*/,""); print; exit}' "$skill_md")"
+  fm_name="$(skill_frontmatter_field name "$skill_md")"
+  fm_desc="$(skill_frontmatter_field description "$skill_md")"
   if [ -z "$fm_name" ]; then
     checks_broken+=("$name: frontmatter 'name:' missing or empty")
     return 1
@@ -220,7 +232,7 @@ is_healthy_source() {
   [ -d "$cand" ] || return 1
   [ -f "$cand/SKILL.md" ] || return 1
   local fm_name
-  fm_name="$(awk '/^---/{c++;next} c==1 && /^name:/{sub(/^name:[[:space:]]*/,""); print; exit}' "$cand/SKILL.md")"
+  fm_name="$(skill_frontmatter_field name "$cand/SKILL.md")"
   [ "$fm_name" = "$name" ] || return 1
   return 0
 }
