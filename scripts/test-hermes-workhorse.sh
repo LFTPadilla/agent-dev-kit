@@ -118,6 +118,11 @@ assert_skill_source() {
   test "$(cat "$HERMES_HOME/skills/$name/.agent-dev-kit-source")" = "$expected"
 }
 
+assert_skill_digest() {
+  local name="$1" expected="$2"
+  test "$(sha256sum "$HERMES_HOME/skills/$name/SKILL.md" | cut -d' ' -f1)" = "$expected"
+}
+
 fixture_skill_sha() {
   local name="$1" source="$2"
   printf '%s\n' '---' "name: $name" 'description: test fixture' \
@@ -327,8 +332,7 @@ if AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$mismatched_caveman_source" \
   exit 1
 fi
 assert_skill_source caveman "$updated_caveman_source"
-test "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)" = \
-  "$before_mismatch_sha"
+assert_skill_digest caveman "$before_mismatch_sha"
 
 transaction_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.2-bundle/skills/caveman/SKILL.md"
 transaction_ponytail_source="https://raw.githubusercontent.com/DietrichGebert/ponytail/v4.8.4-bundle/skills/ponytail/SKILL.md"
@@ -360,8 +364,7 @@ if HERMES_TEST_FAIL_SOURCE="$failed_caveman_source" \
   exit 1
 fi
 assert_skill_source caveman "$updated_caveman_source"
-test "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)" = \
-  "$before_failed_refresh_sha"
+assert_skill_digest caveman "$before_failed_refresh_sha"
 if compgen -G "$HERMES_HOME/skills/.caveman.backup.*" >/dev/null; then
   echo "FAIL failed refresh left a managed-skill backup behind"
   exit 1
@@ -383,8 +386,7 @@ if [ "$signal_refresh_status" -ne 143 ]; then
   exit 1
 fi
 assert_skill_source caveman "$updated_caveman_source"
-test "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)" = \
-  "$before_signal_refresh_sha"
+assert_skill_digest caveman "$before_signal_refresh_sha"
 assert_no_workhorse_lock "interrupted refresh left a workhorse lock behind"
 
 concurrent_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.5/skills/caveman/SKILL.md"
