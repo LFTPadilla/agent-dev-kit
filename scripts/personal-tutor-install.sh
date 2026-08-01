@@ -290,38 +290,44 @@ rm -f "$PROFILE_DIR/scripts/render-diagrams.sh"
 cp -f "$SOURCE"/scripts/personal-tutor-*.sh "$PROFILE_DIR/scripts/"
 chmod +x "$PROFILE_DIR/scripts/"*.sh
 mkdir -p "$PERSONAL_TUTOR_USER_HOME/.local/bin"
-python3 - "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE" "$PERSONAL_TUTOR_USER_HOME" "$PROFILE" "$SESSION" <<'PY'
+write_runtime_launcher() {
+  local path="$1" runtime="$2"
+  python3 - "$path" "$PERSONAL_TUTOR_USER_HOME" "$PROFILE" "$SESSION" "$CODEX_HOME" "$runtime" <<'PY'
 from pathlib import Path
 import shlex
 import sys
 
-path, home, profile, session = Path(sys.argv[1]), *sys.argv[2:]
-path.write_text(f'''#!/usr/bin/env bash
-export PATH={shlex.quote(home + "/.nix-profile/bin:" + home + "/.local/bin:")}"$PATH"
-[ -S "/run/user/$(id -u)/tmux-$(id -u)/default" ] && export TMUX_TMPDIR="/run/user/$(id -u)"
-export PERSONAL_TUTOR_PROFILE={shlex.quote(profile)}
-export PERSONAL_TUTOR_SESSION={shlex.quote(session)}
-exec hermes --profile {shlex.quote(profile)} "$@"
-''')
+path, home, profile, session, codex_home, runtime = Path(sys.argv[1]), *sys.argv[2:]
+lines = [
+    "#!/usr/bin/env bash",
+    f'export PATH={shlex.quote(home + "/.nix-profile/bin:" + home + "/.local/bin:")}"$PATH"',
+]
+if runtime == "hermes":
+    lines.extend([
+        '[ -S "/run/user/$(id -u)/tmux-$(id -u)/default" ] && export TMUX_TMPDIR="/run/user/$(id -u)"',
+        f"export PERSONAL_TUTOR_PROFILE={shlex.quote(profile)}",
+        f"export PERSONAL_TUTOR_SESSION={shlex.quote(session)}",
+        f'exec hermes --profile {shlex.quote(profile)} "$@"',
+    ])
+elif runtime == "codex":
+    lines.extend([
+        f"export CODEX_HOME={shlex.quote(codex_home)}",
+        f"export PERSONAL_TUTOR_PROFILE={shlex.quote(profile)}",
+        f"export PERSONAL_TUTOR_SESSION={shlex.quote(session)}",
+        'if [ -n "${TMUX_PANE:-}" ]; then',
+        '  tmux set-option -p -t "$TMUX_PANE" @personal_tutor_codex_home "$CODEX_HOME"',
+        "fi",
+        'exec codex "$@"',
+    ])
+else:
+    raise SystemExit(f"unsupported launcher runtime: {runtime}")
+path.write_text("\n".join(lines) + "\n")
 PY
+}
+
+write_runtime_launcher "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE" hermes
 chmod +x "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE"
-python3 - "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex" "$PERSONAL_TUTOR_USER_HOME" "$PROFILE" "$SESSION" "$CODEX_HOME" <<'PY'
-from pathlib import Path
-import shlex
-import sys
-
-path, home, profile, session, codex_home = Path(sys.argv[1]), *sys.argv[2:]
-path.write_text(f'''#!/usr/bin/env bash
-export PATH={shlex.quote(home + "/.nix-profile/bin:" + home + "/.local/bin:")}"$PATH"
-export CODEX_HOME={shlex.quote(codex_home)}
-export PERSONAL_TUTOR_PROFILE={shlex.quote(profile)}
-export PERSONAL_TUTOR_SESSION={shlex.quote(session)}
-if [ -n "${{TMUX_PANE:-}}" ]; then
-  tmux set-option -p -t "$TMUX_PANE" @personal_tutor_codex_home "$CODEX_HOME"
-fi
-exec codex "$@"
-''')
-PY
+write_runtime_launcher "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex" codex
 chmod +x "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex"
 for helper in doctor status delegate audit graph output sandbox install; do
   helper_target="$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-$helper"
