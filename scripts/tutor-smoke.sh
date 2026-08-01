@@ -54,6 +54,18 @@ find_skill() {
   return 1
 }
 
+check_required_skill() {
+  local required_skill="$1"
+  if find_skill "$required_skill"; then
+    printf '  OK   %s SKILL.md\n' "$required_skill"
+    pass=$((pass + 1))
+  else
+    printf '  FAIL %s SKILL.md\n' "$required_skill"
+    fail=$((fail + 1))
+    failures+=("$required_skill")
+  fi
+}
+
 section() { printf '\n[%s]\n' "$1"; }
 
 section "Profile"
@@ -101,31 +113,15 @@ for baseline_skill in caveman ponytail; do
   check "Hermes baseline skill: $baseline_skill" \
     "[ -f '$baseline_global/SKILL.md' ] && [ -L '$baseline_profile' ] && [ \"\$(readlink -f '$baseline_profile')\" = \"\$(readlink -f '$baseline_global')\" ]"
 done
-if find_skill ai-workflow-orchestrator; then
-  printf '  OK   ai-workflow-orchestrator SKILL.md\n'; pass=$((pass+1))
-else
-  printf '  FAIL ai-workflow-orchestrator SKILL.md\n'; fail=$((fail+1)); failures+=("ai-workflow-orchestrator")
-fi
+check_required_skill ai-workflow-orchestrator
 if [ -L "$SKILLS_DIR/worklog" ] || [ -f "$SKILLS_DIR/worklog/SKILL.md" ]; then
   printf '  OK   worklog available\n'; pass=$((pass+1))
 else
   printf '  FAIL worklog not found\n'; fail=$((fail+1)); failures+=("worklog")
 fi
-if find_skill delegating-to-tmux-claude; then
-  printf '  OK   delegating-to-tmux-claude SKILL.md\n'; pass=$((pass+1))
-else
-  printf '  FAIL delegating-to-tmux-claude SKILL.md\n'; fail=$((fail+1)); failures+=("delegating-to-tmux-claude")
-fi
-if find_skill kanban-orchestrator; then
-  printf '  OK   kanban-orchestrator SKILL.md\n'; pass=$((pass+1))
-else
-  printf '  FAIL kanban-orchestrator SKILL.md\n'; fail=$((fail+1)); failures+=("kanban-orchestrator")
-fi
-if find_skill kanban-worker; then
-  printf '  OK   kanban-worker SKILL.md\n'; pass=$((pass+1))
-else
-  printf '  FAIL kanban-worker SKILL.md\n'; fail=$((fail+1)); failures+=("kanban-worker")
-fi
+for required_skill in delegating-to-tmux-claude kanban-orchestrator kanban-worker; do
+  check_required_skill "$required_skill"
+done
 
 section "tmux delegate session"
 check "tmux server up"           "tmux list-sessions"
