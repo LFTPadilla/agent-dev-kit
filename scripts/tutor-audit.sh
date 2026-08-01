@@ -20,9 +20,6 @@ source "$TUTOR_SCRIPT_DIR/tutor-lib.sh"
 tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
-STATE_DIR="$USER_HOME/.hermes/profiles/$PROFILE/state"
-LANES="$STATE_DIR/lanes.json"
-prompt_file="/tmp/lane-${1:-}-prompt.md"
 
 lane_id="${1:-}"; shift || true
 repo=""; branch=""; allowed=""
