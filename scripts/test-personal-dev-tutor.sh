@@ -32,6 +32,13 @@ required_files=(
   "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
 )
 
+init_test_repo() {
+  local repo="$1" name="$2" email="$3"
+  git -C "$repo" init -q
+  git -C "$repo" config user.name "$name"
+  git -C "$repo" config user.email "$email"
+}
+
 for file in "${required_files[@]}"; do
   [[ -f "$file" ]] || { echo "FAIL missing ${file#$ROOT/}"; exit 1; }
 done
@@ -161,9 +168,7 @@ fixture="$(mktemp -d)"
 failure_root="$(mktemp -d)"
 cleanup() { rm -f "$prompt_path"; rm -rf "$fixture" "$failure_root" "$contract_lane_cache"; }
 trap cleanup EXIT
-git -C "$fixture" init -q
-git -C "$fixture" config user.name "Personal Tutor Test"
-git -C "$fixture" config user.email "personal-tutor-test@example.invalid"
+init_test_repo "$fixture" "Personal Tutor Test" "personal-tutor-test@example.invalid"
 printf 'baseline\n' > "$fixture/example.txt"
 git -C "$fixture" add example.txt
 git -C "$fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
@@ -305,9 +310,7 @@ graph_repo="$failure_root/graph-repo"
 graph_bin="$failure_root/graph-bin"
 graph_cache="$failure_root/graph-cache"
 mkdir -p "$graph_repo" "$graph_bin"
-git -C "$graph_repo" init -q
-git -C "$graph_repo" config user.name "Graph Contract Test"
-git -C "$graph_repo" config user.email "graph-test@example.invalid"
+init_test_repo "$graph_repo" "Graph Contract Test" "graph-test@example.invalid"
 printf 'class GraphFixture {}\n' > "$graph_repo/GraphFixture.java"
 git -C "$graph_repo" add GraphFixture.java
 git -C "$graph_repo" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
@@ -345,9 +348,7 @@ fi
 
 sandbox_fixture="$failure_root/sandbox-fixture"
 mkdir -p "$sandbox_fixture/writable"
-git -C "$sandbox_fixture" init -q
-git -C "$sandbox_fixture" config user.name "Sandbox Contract Test"
-git -C "$sandbox_fixture" config user.email "sandbox-test@example.invalid"
+init_test_repo "$sandbox_fixture" "Sandbox Contract Test" "sandbox-test@example.invalid"
 printf 'read-only-baseline\n' > "$sandbox_fixture/tracked.txt"
 printf 'writable-baseline\n' > "$sandbox_fixture/writable/result.txt"
 git -C "$sandbox_fixture" add .
