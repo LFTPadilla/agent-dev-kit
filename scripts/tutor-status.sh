@@ -36,13 +36,13 @@ except Exception as e:
 try:
     out = subprocess.check_output(
         ["tmux", "list-windows", "-t", session, "-F",
-         "#{window_index}|#{window_name}|#{pane_current_command}|#{pane_dead}"],
+         "#{window_index}|#{pane_current_command}|#{pane_dead}"],
         text=True, timeout=5,
     )
     panes = {}
     for line in out.splitlines():
-        wid, name, cmd, dead = line.split("|", 3)
-        panes[int(wid)] = {"name": name, "cmd": cmd, "dead": dead == "1"}
+        wid, cmd, dead = line.split("|", 2)
+        panes[int(wid)] = {"cmd": cmd, "dead": dead == "1"}
 except subprocess.CalledProcessError:
     panes = {}
 
