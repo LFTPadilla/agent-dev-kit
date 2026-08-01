@@ -91,7 +91,7 @@ else
 fi
 
 section "Model"
-model_line="$(hermes --profile "$PROFILE" profile show "$PROFILE" 2>/dev/null | grep -m1 '^Model:' || true)"
+model_line="$(hermes --profile "$PROFILE" profile show "$PROFILE" 2>/dev/null | grep -m1 '^Model:')"
 if [ -n "$model_line" ]; then
   printf '  OK   %s\n' "$model_line"
   pass=$((pass + 1))
@@ -124,7 +124,7 @@ done
 section "tmux delegate session"
 check "tmux server up"           "tmux list-sessions"
 check "session '$SESSION' exists" "tmux has-session -t $SESSION"
-claude_panes="$(tmux list-windows -t "$SESSION" -F '#{pane_current_command}' 2>/dev/null | grep -c '^claude$' || true)"
+claude_panes="$(tmux list-windows -t "$SESSION" -F '#{pane_current_command}' 2>/dev/null | grep -c '^claude$')"
 if [ "$claude_panes" -gt 0 ]; then
   printf '  OK   %d Claude pane(s) in %s\n' "$claude_panes" "$SESSION"
   pass=$((pass + 1))
