@@ -198,13 +198,14 @@ function validateProvenance(checks, { skillDirs: dirs }) {
   const file = path.join(root, 'skill-provenance.json')
   const data = readJson(file, checks)
   if (!data) return
+  const skills = data.skills || {}
   const actual = dirs.map((dir) => path.basename(dir)).sort()
-  const recorded = Object.keys(data.skills || {}).sort()
+  const recorded = Object.keys(skills).sort()
   const missing = actual.filter((name) => !recorded.includes(name))
   const stale = recorded.filter((name) => !actual.includes(name))
   for (const name of missing) checks.push(fail(`skill-provenance.json missing skill: ${name}`))
   for (const name of stale) checks.push(fail(`skill-provenance.json has stale skill: ${name}`))
-  for (const [name, item] of Object.entries(data.skills || {})) {
+  for (const [name, item] of Object.entries(skills)) {
     addMissingFieldFailures(checks, item, ['source', 'license', 'visibility', 'risk', 'dependencies'], `skill-provenance.json ${name}`)
   }
   if (!missing.length && !stale.length) checks.push(ok('skill provenance covers all skills'))
