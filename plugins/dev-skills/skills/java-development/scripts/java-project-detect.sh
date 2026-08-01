@@ -88,17 +88,18 @@ printf 'command.javac=%s\n' "$(command_path javac)"
 printf 'command.maven=%s\n' "$(command_path mvn)"
 printf 'command.gradle=%s\n' "$(command_path gradle)"
 
-if command -v java >/dev/null 2>&1; then
-  runtime_version="$(java -version 2>&1 | { IFS= read -r line; printf '%s' "$line"; })"
-  printf 'java.runtime=%s\n' "$runtime_version"
-else
-  printf 'java.runtime=unavailable\n'
-fi
-if command -v javac >/dev/null 2>&1; then
-  printf 'javac.runtime=%s\n' "$(javac -version 2>&1 | { IFS= read -r line; printf '%s' "$line"; })"
-else
-  printf 'javac.runtime=unavailable\n'
-fi
+print_runtime_version() {
+  local command_name="$1" runtime_version
+  if command -v "$command_name" >/dev/null 2>&1; then
+    runtime_version="$("$command_name" -version 2>&1 | { IFS= read -r line; printf '%s' "$line"; })"
+    printf '%s.runtime=%s\n' "$command_name" "$runtime_version"
+  else
+    printf '%s.runtime=unavailable\n' "$command_name"
+  fi
+}
+
+print_runtime_version java
+print_runtime_version javac
 
 maven_properties="$root/.mvn/wrapper/maven-wrapper.properties"
 gradle_properties="$root/gradle/wrapper/gradle-wrapper.properties"
