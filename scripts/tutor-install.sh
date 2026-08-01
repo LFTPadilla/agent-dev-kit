@@ -99,7 +99,8 @@ hermes --profile "$PROFILE" config set approvals.mode smart
 
 # Symlink skills
 echo "[5/6] skills"
-PROFILE_SKILLS="$USER_HOME/.hermes/profiles/$PROFILE/skills"
+PROFILE_DIR="$USER_HOME/.hermes/profiles/$PROFILE"
+PROFILE_SKILLS="$PROFILE_DIR/skills"
 mkdir -p "$PROFILE_SKILLS"
 
 # Orchestrator skill (copy so updates via tutor-update refresh it)
@@ -112,14 +113,14 @@ if [ -f "$SOURCE/plugins/dev-skills/skills/orchestrate/SKILL.md" ]; then
         "$PROFILE_SKILLS/software-development/orchestrate/SKILL.md"
 fi
 cp -f "$SOURCE/profiles/agent-tutor-orchestrator.yml" \
-      "$USER_HOME/.hermes/profiles/$PROFILE/agent-tutor-orchestrator.yml"
+      "$PROFILE_DIR/agent-tutor-orchestrator.yml"
 AGENT_DEV_KIT_HERMES_HOME="$USER_HOME/.hermes" \
   "$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE" || exit 1
 
 # The public manifest stays generic. A local installation may select its own
 # long-lived tmux session without baking that organization's name into git.
 if [ -n "$SESSION_OVERRIDE" ]; then
-  python3 - "$USER_HOME/.hermes/profiles/$PROFILE/agent-tutor-orchestrator.yml" "$SESSION" <<'PY'
+  python3 - "$PROFILE_DIR/agent-tutor-orchestrator.yml" "$SESSION" <<'PY'
 from pathlib import Path
 import sys
 
