@@ -104,20 +104,19 @@ maven_properties="$root/.mvn/wrapper/maven-wrapper.properties"
 gradle_properties="$root/gradle/wrapper/gradle-wrapper.properties"
 printf 'wrapper.maven.properties=%s\n' "$(bool_file "$maven_properties")"
 printf 'wrapper.gradle.properties=%s\n' "$(bool_file "$gradle_properties")"
-if [ -f "$maven_properties" ]; then
-  if grep -Eq '^[[:space:]]*distributionSha256Sum=' "$maven_properties"; then
-    printf 'wrapper.maven.distribution-sha256=declared\n'
+
+print_wrapper_checksum_status() {
+  local kind="$1" properties="$2"
+  [ -f "$properties" ] || return 0
+  if grep -Eq '^[[:space:]]*distributionSha256Sum=' "$properties"; then
+    printf 'wrapper.%s.distribution-sha256=declared\n' "$kind"
   else
-    printf 'wrapper.maven.distribution-sha256=not-declared\n'
+    printf 'wrapper.%s.distribution-sha256=not-declared\n' "$kind"
   fi
-fi
-if [ -f "$gradle_properties" ]; then
-  if grep -Eq '^[[:space:]]*distributionSha256Sum=' "$gradle_properties"; then
-    printf 'wrapper.gradle.distribution-sha256=declared\n'
-  else
-    printf 'wrapper.gradle.distribution-sha256=not-declared\n'
-  fi
-fi
+}
+
+print_wrapper_checksum_status maven "$maven_properties"
+print_wrapper_checksum_status gradle "$gradle_properties"
 
 print_evidence_section jdk-target 12 \
   'maven\.compiler\.(release|source|target)|<release>|<source>|<target>|<jdkToolchain>|<toolchain>|JavaLanguageVersion|languageVersion|sourceCompatibility|targetCompatibility|options\.release|java[._-]?version|^java[[:space:]]' \
