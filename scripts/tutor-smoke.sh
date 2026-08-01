@@ -14,24 +14,10 @@ set -uo pipefail
 # script (or its realpath) to derive the canonical user home.
 SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then SELF_PATH="$(readlink -f "$SELF_PATH")"; fi
-# SELF_PATH is something like ~/.hermes/profiles/agent-tutor-orchestrator/scripts/tutor-smoke.sh
-# Walk up until we find a dir named .hermes, then USER_HOME is its parent.
-# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  base="$(basename "$dir")"
-  if [ "$base" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then
-  USER_HOME="$(dirname "$HERMES_DIR")"
-else
-  USER_HOME="${HOME:?HOME is required}"
-fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+TUTOR_SCRIPT_DIR="$(cd "$(dirname "$SELF_PATH")" && pwd)"
+# shellcheck source=tutor-lib.sh
+source "$TUTOR_SCRIPT_DIR/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 SESSION="${AGENT_TUTOR_SESSION:-tutor}"

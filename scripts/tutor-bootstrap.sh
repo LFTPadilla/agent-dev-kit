@@ -34,25 +34,16 @@ SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then
   SELF_PATH="$(readlink -f "$SELF_PATH")"
 fi
-# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:?HOME is required}"; fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+script_dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
+# shellcheck source=tutor-lib.sh
+source "$script_dir/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 PROFILE_DIR="$USER_HOME/.hermes/profiles/$PROFILE"
 SKILLS_DIR="$PROFILE_DIR/skills"
 # Prefer the public kit manifest next to this script's repo checkout, then
 # a copied manifest under the profile, then config.yaml.
-script_dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
 MANIFEST=""
 for candidate in \
   "$script_dir/../profiles/agent-tutor-orchestrator.yml" \

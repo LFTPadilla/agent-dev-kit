@@ -13,19 +13,10 @@ set -uo pipefail
 
 SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then SELF_PATH="$(readlink -f "$SELF_PATH")"; fi
-# Resolve to an absolute directory so relative invocations (bash scripts/…)
-# cannot spin forever on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:?HOME is required}"; fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+TUTOR_SCRIPT_DIR="$(cd "$(dirname "$SELF_PATH")" && pwd)"
+# shellcheck source=tutor-lib.sh
+source "$TUTOR_SCRIPT_DIR/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="agent-tutor-orchestrator"
 SESSION="${AGENT_TUTOR_SESSION:-tutor}"
