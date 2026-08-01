@@ -56,21 +56,38 @@ assert_rejected() {
   fi
 }
 
+assert_contains() {
+  local file="$1" pattern
+  shift
+  for pattern; do
+    grep -q -- "$pattern" "$file"
+  done
+}
+
+assert_contains_i() {
+  local file="$1" pattern
+  shift
+  for pattern; do
+    grep -qi -- "$pattern" "$file"
+  done
+}
+
 for file in "${required_files[@]}"; do
   [[ -f "$file" ]] || { echo "FAIL missing ${file#$ROOT/}"; exit 1; }
 done
 
-grep -q '^profile: personal-dev-tutor$' "$PROFILE"
-grep -q 'delegate_session: personal' "$PROFILE"
-grep -q 'worker_runtime: codex' "$PROFILE"
-grep -q 'workflow: gsd' "$PROFILE"
-grep -q 'personal-development-mentor' "$PROFILE"
-grep -q 'gsd-new-project' "$PROFILE"
-grep -q 'gsd-progress' "$PROFILE"
-grep -q 'provider: graphify' "$PROFILE"
-grep -q 'provider: context7' "$PROFILE"
-grep -q 'default_mode: local-ast-code-only' "$PROFILE"
-grep -q '^  - java-development$' "$PROFILE"
+assert_contains "$PROFILE" \
+  '^profile: personal-dev-tutor$' \
+  'delegate_session: personal' \
+  'worker_runtime: codex' \
+  'workflow: gsd' \
+  'personal-development-mentor' \
+  'gsd-new-project' \
+  'gsd-progress' \
+  'provider: graphify' \
+  'provider: context7' \
+  'default_mode: local-ast-code-only' \
+  '^  - java-development$'
 python3 - "$PROFILE" <<'PY'
 from pathlib import Path
 import sys
@@ -95,58 +112,66 @@ if external_skills != ["graphify", "caveman", "ponytail"]:
     raise SystemExit(f"FAIL external baseline mismatch: {external_skills}")
 PY
 
-grep -q '^name: personal-development-mentor$' "$SKILL"
-grep -qi 'teach-back' "$SKILL"
-grep -qi 'cognitive debt' "$SKILL"
-grep -qi 'Mermaid' "$SKILL"
-grep -qi 'D2' "$SKILL"
-grep -qi 'Graphify' "$SKILL"
-grep -qi 'Context7' "$SKILL"
-grep -q 'personal:\*' "$SOUL"
-grep -q 'Never directly edit product source code' "$SOUL"
-grep -q 'personal-tutor-graph refresh' "$SOUL"
-grep -q 'Normal development runs directly on the trusted workstation' "$SOUL"
-grep -q 'Its absence or incompatibility must never' "$SOUL"
-grep -q 'Context7' "$PROMPT"
-grep -q 'Graphify' "$PROMPT"
-grep -q 'personal-tutor-output' "$PROMPT"
-grep -q 'Default to direct execution on the trusted workstation' "$PROMPT"
-grep -q 'continue through the trusted workstation path' "$PROMPT"
-grep -q 'Codex' "$PROMPT"
-grep -q 'Learning checkpoint' "$PROMPT"
-
-grep -q '```mermaid' "$DOC"
-grep -q 'personal-dev-tutor-architecture.d2' "$DOC"
-grep -q '^flowchart TB$' "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
-grep -q 'Graphify local AST cache' "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
-grep -q 'Context7 upstream library docs' "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
-grep -q 'graphify install --platform hermes' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'install --platform codex' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'install-hermes-workhorse.sh.*--profile.*PROFILE' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'PERSONAL_TUTOR_BASELINE_SKILLS' "$ROOT/scripts/personal-tutor-lib.sh"
-grep -q 'baseline skill available:.*baseline_skill' "$ROOT/scripts/personal-tutor-doctor.sh"
-grep -q 'graphifyy==\$PERSONAL_TUTOR_GRAPHIFY_VERSION' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'mcp_servers.context7.url' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'PERSONAL_TUTOR_GRAPH_CACHE_ROOT' "$GRAPH"
-grep -q -- '--code-only' "$GRAPH"
-grep -q 'GRAPHIFY_OUT=' "$GRAPH"
-grep -q 'XDG_CACHE_HOME' "$GRAPH"
-grep -q 'provider: bounded-command-evidence' "$PROFILE"
-grep -q 'context_mode_package: not-installed' "$PROFILE"
-grep -q 'provider: bubblewrap-offline-verification' "$PROFILE"
-grep -q '^sandbox_policy: trusted-development$' "$PROFILE"
-grep -q 'default_execution: trusted-host' "$PROFILE"
-grep -q 'trusted_workstation_network: allowed' "$PROFILE"
-grep -q 'PERSONAL_TUTOR_OUTPUT_CACHE_ROOT' "$OUTPUT"
-grep -q 'kind" = security' "$OUTPUT"
-grep -q 'bounded-critical-preview' "$OUTPUT"
-grep -q 'for helper in doctor status delegate audit graph output sandbox install' "$ROOT/scripts/personal-tutor-install.sh"
+assert_contains "$SKILL" '^name: personal-development-mentor$'
+assert_contains_i "$SKILL" \
+  'teach-back' \
+  'cognitive debt' \
+  'Mermaid' \
+  'D2' \
+  'Graphify' \
+  'Context7'
+assert_contains "$SOUL" \
+  'personal:\*' \
+  'Never directly edit product source code' \
+  'personal-tutor-graph refresh' \
+  'Normal development runs directly on the trusted workstation' \
+  'Its absence or incompatibility must never'
+assert_contains "$PROMPT" \
+  'Context7' \
+  'Graphify' \
+  'personal-tutor-output' \
+  'Default to direct execution on the trusted workstation' \
+  'continue through the trusted workstation path' \
+  'Codex' \
+  'Learning checkpoint'
+assert_contains "$DOC" '```mermaid' 'personal-dev-tutor-architecture.d2'
+assert_contains "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd" \
+  '^flowchart TB$' \
+  'Graphify local AST cache' \
+  'Context7 upstream library docs'
+assert_contains "$ROOT/scripts/personal-tutor-install.sh" \
+  'graphify install --platform hermes' \
+  'install --platform codex' \
+  'install-hermes-workhorse.sh.*--profile.*PROFILE'
+assert_contains "$ROOT/scripts/personal-tutor-lib.sh" 'PERSONAL_TUTOR_BASELINE_SKILLS'
+assert_contains "$ROOT/scripts/personal-tutor-doctor.sh" 'baseline skill available:.*baseline_skill'
+assert_contains "$ROOT/scripts/personal-tutor-install.sh" \
+  'graphifyy==\$PERSONAL_TUTOR_GRAPHIFY_VERSION' \
+  'mcp_servers.context7.url'
+assert_contains "$GRAPH" \
+  'PERSONAL_TUTOR_GRAPH_CACHE_ROOT' \
+  '--code-only' \
+  'GRAPHIFY_OUT=' \
+  'XDG_CACHE_HOME'
+assert_contains "$PROFILE" \
+  'provider: bounded-command-evidence' \
+  'context_mode_package: not-installed' \
+  'provider: bubblewrap-offline-verification' \
+  '^sandbox_policy: trusted-development$' \
+  'default_execution: trusted-host' \
+  'trusted_workstation_network: allowed'
+assert_contains "$OUTPUT" \
+  'PERSONAL_TUTOR_OUTPUT_CACHE_ROOT' \
+  'kind" = security' \
+  'bounded-critical-preview'
+assert_contains "$ROOT/scripts/personal-tutor-install.sh" \
+  'for helper in doctor status delegate audit graph output sandbox install'
 if grep -q '^for command in .*bwrap' "$ROOT/scripts/personal-tutor-install.sh"; then
   echo "FAIL optional Bubblewrap is still an installer prerequisite"
   exit 1
 fi
-grep -q 'optional offline sandbox unavailable; normal trusted-host development is unaffected' \
-  "$ROOT/scripts/personal-tutor-doctor.sh"
+assert_contains "$ROOT/scripts/personal-tutor-doctor.sh" \
+  'optional offline sandbox unavailable; normal trusted-host development is unaffected'
 
 for script in "$ROOT"/scripts/personal-tutor-*.sh; do
   bash -n "$script"
