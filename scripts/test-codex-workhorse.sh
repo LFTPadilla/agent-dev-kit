@@ -10,9 +10,14 @@ mkdir -p "$HOME"
 
 HOME="$HOME" bash "$ROOT/sync.sh" >/dev/null
 
+assert_skill_link_exists() {
+  local target="$1" label="$2" name="$3"
+  [ -L "$target" ] || { echo "missing $label skill link: $name"; exit 1; }
+}
+
 assert_skill_link() {
   local target="$1" source="$2" label="$3" name="$4"
-  [ -L "$target" ] || { echo "missing $label skill link: $name"; exit 1; }
+  assert_skill_link_exists "$target" "$label" "$name"
   [ "$(readlink -f "$target")" = "$(readlink -f "$source")" ] || {
     echo "incorrect $label skill link: $name"
     exit 1
@@ -116,14 +121,8 @@ for skill in overnight-task multi-harness; do
   OVERNIGHT_SOURCE="$ROOT/overnight-task-kit/skills/$skill"
   CODEX_TARGET="$OVERNIGHT_HOME/.agents/skills/$skill"
   assert_skill_link "$CODEX_TARGET" "$OVERNIGHT_SOURCE" "overnight Codex" "$skill"
-  [ -L "$OVERNIGHT_HOME/.claude/skills/$skill" ] || {
-    echo "missing overnight Claude skill link: $skill"
-    exit 1
-  }
-  [ -L "$OVERNIGHT_HOME/.pi/skills/$skill" ] || {
-    echo "missing overnight Pi skill link: $skill"
-    exit 1
-  }
+  assert_skill_link_exists "$OVERNIGHT_HOME/.claude/skills/$skill" "overnight Claude" "$skill"
+  assert_skill_link_exists "$OVERNIGHT_HOME/.pi/skills/$skill" "overnight Pi" "$skill"
 done
 [ ! -e "$OVERNIGHT_HOME/.codex/skills" ] || {
   echo "overnight installer created legacy Codex skill directory"
