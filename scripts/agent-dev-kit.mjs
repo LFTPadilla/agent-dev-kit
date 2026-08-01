@@ -233,10 +233,9 @@ function validatePiPackageResearch(checks) {
     checks.push(fail('pi-profiles/settings.example.json must remain inert with an empty packages array'))
   }
 
-  for (const file of requiredFiles) {
-    if (!existsSync(file)) checks.push(fail(`${rel(file)} is missing`))
-  }
-  if (!requiredFiles.every(existsSync)) return
+  const missingFiles = requiredFiles.filter((file) => !existsSync(file))
+  for (const file of missingFiles) checks.push(fail(`${rel(file)} is missing`))
+  if (missingFiles.length) return
 
   const profiles = readFileSync(profilesFile, 'utf8')
   const profilesDocument = parseDocument(profiles, { prettyErrors: true, strict: true })
