@@ -70,6 +70,22 @@ CRITICAL_SKILLS=(
   orchestrate
 )
 
+# Known Hermes skill categories, ordered by the existing lookup precedence.
+SKILL_CATEGORIES=(
+  software-development
+  devops
+  gsd
+  autonomous-ai-agents
+  creative
+  data-science
+  github
+  mcp
+  note-taking
+  productivity
+  research
+  social-media
+)
+
 # All GSD skills (these often get out of sync because there are 67 of them)
 GSD_SKILLS=()
 for d in "$SKILLS_DIR/gsd"/*/; do
@@ -126,9 +142,7 @@ source_candidates() {
   local cand=()
   # 1. Global ~/.hermes/skills/<name> and nested under known categories
   cand+=("$USER_HOME/.hermes/skills/$name")
-  for parent in software-development devops gsd autonomous-ai-agents creative \
-                data-science github mcp note-taking productivity research \
-                social-media; do
+  for parent in "${SKILL_CATEGORIES[@]}"; do
     cand+=("$USER_HOME/.hermes/skills/$parent/$name")
   done
   # 2. OTHER profiles only (not $PROFILE) — scan whatever exists locally
@@ -138,9 +152,7 @@ source_candidates() {
       p="$(basename "$pdir")"
       [ "$p" = "$PROFILE" ] && continue
       cand+=("$USER_HOME/.hermes/profiles/$p/skills/$name")
-      for parent in software-development devops gsd autonomous-ai-agents creative \
-                    data-science github mcp note-taking productivity research \
-                    social-media; do
+      for parent in "${SKILL_CATEGORIES[@]}"; do
         cand+=("$USER_HOME/.hermes/profiles/$p/skills/$parent/$name")
       done
     done
@@ -220,9 +232,7 @@ repair_skill() {
   local parent=""
   if [ ! -d "$target" ]; then
     # try depth-2 (parent categories)
-    for p in software-development devops gsd autonomous-ai-agents creative \
-             data-science github mcp note-taking productivity research \
-             social-media software-development devops devops; do
+    for p in "${SKILL_CATEGORIES[@]}"; do
       if [ -d "$SKILLS_DIR/$p/$name" ]; then
         target="$SKILLS_DIR/$p/$name"
         parent="$p"
