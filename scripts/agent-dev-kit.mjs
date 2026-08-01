@@ -71,6 +71,10 @@ function filesWithExtensions(files, extensions) {
   return files.filter((file) => extensions.some((extension) => file.endsWith(extension)))
 }
 
+function missingFields(value, fields) {
+  return fields.filter((field) => !(field in value))
+}
+
 function readJson(file, checks) {
   try {
     return JSON.parse(readFileSync(file, 'utf8'))
@@ -197,8 +201,8 @@ function validateProvenance(checks, { skillDirs: dirs }) {
   for (const name of missing) checks.push(fail(`skill-provenance.json missing skill: ${name}`))
   for (const name of stale) checks.push(fail(`skill-provenance.json has stale skill: ${name}`))
   for (const [name, item] of Object.entries(data.skills || {})) {
-    for (const field of ['source', 'license', 'visibility', 'risk', 'dependencies']) {
-      if (!(field in item)) checks.push(fail(`skill-provenance.json ${name} missing ${field}`))
+    for (const field of missingFields(item, ['source', 'license', 'visibility', 'risk', 'dependencies'])) {
+      checks.push(fail(`skill-provenance.json ${name} missing ${field}`))
     }
   }
   if (!missing.length && !stale.length) checks.push(ok('skill provenance covers all skills'))
@@ -289,8 +293,8 @@ function validatePolicies(checks) {
   const data = readJson(file, checks)
   if (!data) return
   for (const [name, policy] of Object.entries(data.policies || {})) {
-    for (const field of ['writes', 'network', 'secrets', 'production', 'git_push', 'destructive_ops']) {
-      if (!(field in policy)) checks.push(fail(`sandbox policy ${name} missing ${field}`))
+    for (const field of missingFields(policy, ['writes', 'network', 'secrets', 'production', 'git_push', 'destructive_ops'])) {
+      checks.push(fail(`sandbox policy ${name} missing ${field}`))
     }
   }
   checks.push(ok('sandbox policies checked'))
