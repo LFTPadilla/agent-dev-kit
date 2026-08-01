@@ -62,15 +62,6 @@ PERSONAL_TUTOR_GRAPHIFY_VERSION="0.9.25"
 PERSONAL_TUTOR_CONTEXT7_URL="https://mcp.context7.com/mcp"
 PERSONAL_TUTOR_BASELINE_SKILLS=(caveman ponytail)
 
-# The flagship profile intentionally excludes the two alternative orchestrators
-# and dynamic skill discovery. GSD is the only lifecycle authority here.
-PERSONAL_TUTOR_HERMES_SKILLS=(
-  personal-development-mentor diagram-render drawio-skill excel-xlsx
-  git-essentials human-writing-style image-finalize improve java-development
-  knip live-qa pdf playwright-stability security-checklist semgrep stagehand
-  tex-render web-browse word-docx
-)
-
 # Worker capabilities only. Tutor/orchestrator and skill-discovery skills remain
 # exclusive to Hermes so Codex cannot silently expand or redefine its role.
 PERSONAL_TUTOR_CODEX_SKILLS=(
@@ -78,6 +69,10 @@ PERSONAL_TUTOR_CODEX_SKILLS=(
   image-finalize improve java-development knip live-qa pdf playwright-stability
   security-checklist semgrep stagehand tex-render web-browse word-docx
 )
+
+# The flagship profile intentionally excludes the two alternative orchestrators
+# and dynamic skill discovery. GSD is the only lifecycle authority here.
+PERSONAL_TUTOR_HERMES_SKILLS=(personal-development-mentor "${PERSONAL_TUTOR_CODEX_SKILLS[@]}")
 
 export PATH="$PERSONAL_TUTOR_USER_HOME/.nix-profile/bin:$PERSONAL_TUTOR_USER_HOME/.local/bin:$PATH"
 personal_tutor_prepare_tmux
