@@ -145,15 +145,15 @@ for skill in "${skills[@]}"; do
     # This matches the convention used by the vault-symlinked skills
     # (e.g., ~/.claude/skills/caveman -> ~/vault/Resources/AI/Skills/shared/caveman).
     # The skill dir contains SKILL.md + any references/ siblings.
-    ln -sfn "$src_dir" "$CLAUDE_DIR/$skill"
-    echo "  ✓  $CLAUDE_DIR/$skill -> $src_dir"
+    for target_root in "$CLAUDE_DIR" "$PI_DIR"; do
+        ln -sfn "$src_dir" "$target_root/$skill"
+        echo "  ✓  $target_root/$skill -> $src_dir"
+    done
     if link_codex_skill "$src_dir" "$CODEX_DIR/$skill"; then
         echo "  ✓  $CODEX_DIR/$skill -> $src_dir"
     else
         install_failed=1
     fi
-    ln -sfn "$src_dir" "$PI_DIR/$skill"
-    echo "  ✓  $PI_DIR/$skill -> $src_dir"
 
     # OpenCode: symlink to the *.opencode.md variant if present, else the SKILL.md.
     src_opencode_md="$src_dir/$skill.opencode.md"
