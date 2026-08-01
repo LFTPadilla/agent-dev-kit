@@ -54,6 +54,15 @@ check_file_presence() {
   fi
 }
 
+check_command() {
+  local command="$1" success_message="$2" failure_message="$3"
+  if command -v "$command" >/dev/null 2>&1; then
+    ok "$success_message"
+  else
+    bad "$failure_message"
+  fi
+}
+
 check_skill_links() {
   local runtime="$1" target_root="$2" description="$3" skill name target
   local expected=0 linked=0
@@ -78,8 +87,7 @@ printf 'Personal Dev Tutor doctor\nProfile: %s\nSession: %s\nHome:    %s\n\n' \
 [ -n "$REPO" ] && printf 'Repository/worktree: %s\n\n' "$REPO"
 
 for command in hermes codex tmux git python3 gsd-sdk d2 mmdc graphify sha256sum; do
-  if command -v "$command" >/dev/null 2>&1; then ok "command available: $command"
-  else bad "required command missing: $command"; fi
+  check_command "$command" "command available: $command" "required command missing: $command"
 done
 if command -v bwrap >/dev/null 2>&1; then
   ok "optional offline sandbox command available: bwrap"
