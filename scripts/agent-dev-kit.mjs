@@ -40,8 +40,8 @@ function printChecks(checks) {
   return failures
 }
 
-function commandVersion(name, args = ['--version']) {
-  const result = spawnSync(name, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+function commandVersion(name) {
+  const result = spawnSync(name, ['--version'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
   if (result.error?.code === 'ENOENT') return null
   if (result.error || result.status !== 0) return 'installed'
   return (result.stdout ?? '').split('\n')[0].trim()
@@ -374,18 +374,8 @@ function runtimeTargets() {
 
 function doctor() {
   const checks = []
-  for (const [name, args] of [
-    ['node', ['--version']],
-    ['npm', ['--version']],
-    ['git', ['--version']],
-    ['rg', ['--version']],
-    ['hypa', ['--version']],
-    ['claude', ['--version']],
-    ['pi', ['--version']],
-    ['opencode', ['--version']],
-    ['semgrep', ['--version']]
-  ]) {
-    const version = commandVersion(name, args)
+  for (const name of ['node', 'npm', 'git', 'rg', 'hypa', 'claude', 'pi', 'opencode', 'semgrep']) {
+    const version = commandVersion(name)
     checks.push(version ? ok(`${name}: ${version}`) : warn(`${name}: not found`))
   }
   for (const [label, target] of runtimeTargets()) {
