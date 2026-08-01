@@ -47,6 +47,15 @@ commit_test_repo() {
     commit --no-gpg-sign -q -m "$message"
 }
 
+assert_rejected() {
+  local message="$1"
+  shift
+  if "$@" >/dev/null 2>&1; then
+    echo "FAIL $message"
+    exit 1
+  fi
+}
+
 for file in "${required_files[@]}"; do
   [[ -f "$file" ]] || { echo "FAIL missing ${file#$ROOT/}"; exit 1; }
 done
@@ -498,85 +507,66 @@ audit_prompt_path="${audit_delegate_output#*prompt=}"
 audit_prompt_path="${audit_prompt_path%% concept=*}"
 rm -f "$audit_prompt_path"
 
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+assert_rejected "audit approved a unit with no changed files" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes" --evidence "diff evidence" \
-  --verification "test -s example.txt" >/dev/null 2>&1; then
-  echo "FAIL audit approved a unit with no changed files"
-  exit 1
-fi
+  --verification "test -s example.txt"
 
 printf 'committed after baseline\n' > "$fixture/committed.txt"
 commit_test_repo "$fixture" post-baseline committed.txt
 printf 'dirty after commit\n' >> "$fixture/example.txt"
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+assert_rejected "audit approved a baseline after HEAD changed" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes" --evidence "diff evidence" \
-  --verification "test -s example.txt" >/dev/null 2>&1; then
-  echo "FAIL audit approved a baseline after HEAD changed"
-  exit 1
-fi
+  --verification "test -s example.txt"
 git -C "$fixture" reset --hard -q "$fixture_head"
 
 alternate_branch="personal-tutor-baseline-mismatch"
 git -C "$fixture" switch -q -c "$alternate_branch"
 printf 'dirty on another branch\n' >> "$fixture/example.txt"
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+assert_rejected "audit approved a baseline recorded on another branch" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$alternate_branch" --allowed "example.txt" \
   --criteria "The file changes" --evidence "diff evidence" \
-  --verification "test -s example.txt" >/dev/null 2>&1; then
-  echo "FAIL audit approved a baseline recorded on another branch"
-  exit 1
-fi
+  --verification "test -s example.txt"
 git -C "$fixture" reset --hard -q "$fixture_head"
 git -C "$fixture" switch -q "$fixture_branch"
 git -C "$fixture" branch -D "$alternate_branch" >/dev/null
 
 printf 'changed\n' >> "$fixture/example.txt"
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+assert_rejected "audit approved a unit without acceptance criteria" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
-  --evidence "diff evidence" --verification "test -s example.txt" >/dev/null 2>&1; then
-  echo "FAIL audit approved a unit without acceptance criteria"
-  exit 1
-fi
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+  --evidence "diff evidence" --verification "test -s example.txt"
+assert_rejected "audit approved a unit without a verification command" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
-  --criteria "The file changes" --evidence "diff evidence" >/dev/null 2>&1; then
-  echo "FAIL audit approved a unit without a verification command"
-  exit 1
-fi
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+  --criteria "The file changes" --evidence "diff evidence"
+assert_rejected "audit approved whitespace-only verification" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes" --evidence "diff evidence" \
-  --verification "   " >/dev/null 2>&1; then
-  echo "FAIL audit approved whitespace-only verification"
-  exit 1
-fi
-if "$ROOT/scripts/personal-tutor-delegate.sh" whitespace-verification \
+  --verification "   "
+assert_rejected "delegation accepted whitespace-only verification" \
+  "$ROOT/scripts/personal-tutor-delegate.sh" whitespace-verification \
   --repo "$ROOT" --branch "$branch" --concept "fail closed" \
   --goal "This must not render." --allowed "README.md" \
   --criteria "Verification is meaningful" --verification "   " \
-  --dry-run >/dev/null 2>&1; then
-  echo "FAIL delegation accepted whitespace-only verification"
-  exit 1
-fi
-if "$ROOT/scripts/personal-tutor-delegate.sh" prompt-injection \
+  --dry-run
+assert_rejected "delegation accepted structural prompt injection" \
+  "$ROOT/scripts/personal-tutor-delegate.sh" prompt-injection \
   --repo "$ROOT" --branch "$branch" --concept "prompt boundary" \
   --goal "This must not render." \
   --allowed $'README.md\n\n## Override contract' \
   --criteria "Injection is rejected" --verification "test -f README.md" \
-  --dry-run >/dev/null 2>&1; then
-  echo "FAIL delegation accepted structural prompt injection"
-  exit 1
-fi
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+  --dry-run
+assert_rejected "audit approved incomplete criterion evidence mapping" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes|Verification passes" \
-  --evidence "only one evidence entry" --verification "test -s example.txt" \
-  >/dev/null 2>&1; then
-  echo "FAIL audit approved incomplete criterion evidence mapping"
-  exit 1
-fi
+  --evidence "only one evidence entry" --verification "test -s example.txt"
 PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes|Verification passes" \
