@@ -17,6 +17,16 @@ root="$(cd "$requested" && pwd -P)"
 bool_file() { [ -f "$1" ] && printf 'yes' || printf 'no'; }
 command_path() { command -v "$1" 2>/dev/null || printf 'unavailable'; }
 
+print_evidence_matches() {
+  local file="$1" limit="$2" pattern="$3" matches line
+  matches="$(grep -nEim "$limit" "$pattern" "$file" 2>/dev/null || true)"
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    line="$(printf '%s' "$line" | tr '\t' ' ' | cut -c1-220)"
+    printf '%s:%s\n' "${file#$root/}" "$line"
+  done <<< "$matches"
+}
+
 maven_wrapper=no
 gradle_wrapper=no
 maven_wrapper_executable=no
@@ -108,28 +118,16 @@ for file in \
   "$root/.sdkmanrc" \
   "$root/.tool-versions"; do
   [ -f "$file" ] || continue
-  matches="$(grep -nEim 12 \
-    'maven\.compiler\.(release|source|target)|<release>|<source>|<target>|<jdkToolchain>|<toolchain>|JavaLanguageVersion|languageVersion|sourceCompatibility|targetCompatibility|options\.release|java[._-]?version|^java[[:space:]]' \
-    "$file" 2>/dev/null || true)"
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    line="$(printf '%s' "$line" | tr '\t' ' ' | cut -c1-220)"
-    printf '%s:%s\n' "${file#$root/}" "$line"
-  done <<< "$matches"
+  print_evidence_matches "$file" 12 \
+    'maven\.compiler\.(release|source|target)|<release>|<source>|<target>|<jdkToolchain>|<toolchain>|JavaLanguageVersion|languageVersion|sourceCompatibility|targetCompatibility|options\.release|java[._-]?version|^java[[:space:]]'
 done
 printf 'evidence.jdk-target.end\n'
 
 printf 'evidence.ci.begin\n'
 for ci in "$root"/.github/workflows/*.yml "$root"/.github/workflows/*.yaml "$root"/.gitlab-ci.yml "$root"/Jenkinsfile; do
   [ -f "$ci" ] || continue
-  matches="$(grep -nEim 20 \
-    'setup-java|java-version:|distribution:|(^|[[:space:]])\./mvnw([[:space:]]|$)|(^|[[:space:]])\./gradlew([[:space:]]|$)' \
-    "$ci" 2>/dev/null || true)"
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    line="$(printf '%s' "$line" | tr '\t' ' ' | cut -c1-220)"
-    printf '%s:%s\n' "${ci#$root/}" "$line"
-  done <<< "$matches"
+  print_evidence_matches "$ci" 20 \
+    'setup-java|java-version:|distribution:|(^|[[:space:]])\./mvnw([[:space:]]|$)|(^|[[:space:]])\./gradlew([[:space:]]|$)'
 done
 printf 'evidence.ci.end\n'
 
