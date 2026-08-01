@@ -239,7 +239,6 @@ resolve_command() {
 launch() {
   local executable="$1"; shift
   "$PYTHON_BIN" -c '
-import os
 import sys
 
 bwrap_bin = sys.argv[1]
@@ -247,10 +246,6 @@ timeout_seconds = float(sys.argv[2])
 mount_count = int(sys.argv[3])
 mounts = sys.argv[4:4 + mount_count]
 command = sys.argv[4 + mount_count:]
-try:
-    maximum = os.sysconf("SC_OPEN_MAX")
-except (ValueError, OSError):
-    maximum = 65536
 import subprocess
 try:
     process = subprocess.Popen([bwrap_bin, *mounts, "--", *command], close_fds=True)
