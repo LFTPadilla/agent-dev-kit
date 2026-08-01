@@ -156,9 +156,13 @@ for char in text:
 sys.stdout.write("".join(out))'
 }
 
-if [ "$force_full" -eq 1 ]; then
+print_sanitized_full() {
   printf 'display: sanitized-full\n--- sanitized display; transcript remains exact ---\n'
   safe_stream < "$transcript"
+}
+
+if [ "$force_full" -eq 1 ]; then
+  print_sanitized_full
 elif { [ "$kind" = security ] || [ "$status" -ne 0 ]; } && [ "$bytes" -gt "$preview_byte_limit" ]; then
   head_bytes=$((preview_byte_limit / 2))
   tail_bytes=$((preview_byte_limit - head_bytes))
@@ -172,11 +176,9 @@ elif { [ "$kind" = security ] || [ "$status" -ne 0 ]; } && [ "$bytes" -gt "$prev
   tail -c "$tail_bytes" "$transcript" | safe_stream
   printf '\n'
 elif [ "$kind" = security ] || [ "$status" -ne 0 ]; then
-  printf 'display: sanitized-full\n--- sanitized display; transcript remains exact ---\n'
-  safe_stream < "$transcript"
+  print_sanitized_full
 elif [ "$lines" -le "$preview_limit" ] && [ "$bytes" -le "$preview_byte_limit" ]; then
-  printf 'display: sanitized-full\n--- sanitized display; transcript remains exact ---\n'
-  safe_stream < "$transcript"
+  print_sanitized_full
 else
   printf 'display: bounded-success-preview\n'
   line_preview_bytes="$({
