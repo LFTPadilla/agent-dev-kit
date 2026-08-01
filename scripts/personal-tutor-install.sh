@@ -198,11 +198,11 @@ managed_name() {
   [[ "$1" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]
 }
 
-remove_source_skill_link() {
-  local target="$1" resolved
+remove_source_link() {
+  local target="$1" source_root="$2" resolved
   if [ -L "$target" ]; then
     resolved="$(readlink -f "$target")"
-    case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/*) rm "$target" ;; esac
+    case "$resolved" in "$source_root"/*) rm "$target" ;; esac
   fi
 }
 
@@ -218,14 +218,16 @@ if [ -f "$CODEX_MANAGED_STATE" ]; then
     managed_name "$name" || { echo "invalid managed Codex skill state entry"; exit 1; }
     # Migrate links made by the earlier global-home installer only if the link
     # still resolves into this exact source tree.
-    remove_source_skill_link "$PERSONAL_TUTOR_USER_HOME/.codex/skills/$name"
-    remove_source_skill_link "$CODEX_SKILLS/$name"
+    remove_source_link "$PERSONAL_TUTOR_USER_HOME/.codex/skills/$name" \
+      "$SOURCE/plugins/dev-skills/skills"
+    remove_source_link "$CODEX_SKILLS/$name" "$SOURCE/plugins/dev-skills/skills"
   done < "$CODEX_MANAGED_STATE"
 else
   # Migration from the first installer release: remove only links that resolve
   # into this source tree, then rebuild the filtered worker set.
   for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
-    remove_source_skill_link "$PERSONAL_TUTOR_USER_HOME/.codex/skills/$(basename "$skill")"
+    remove_source_link "$PERSONAL_TUTOR_USER_HOME/.codex/skills/$(basename "$skill")" \
+      "$SOURCE/plugins/dev-skills/skills"
   done
 fi
 : > "$CODEX_MANAGED_STATE"
@@ -275,10 +277,8 @@ if [ -f "$CODEX_AGENT_STATE" ]; then
   while IFS= read -r name; do
     managed_name "$name" || { echo "invalid managed Codex agent state entry"; exit 1; }
     target="$PERSONAL_TUTOR_USER_HOME/.codex/agents/$name"
-    if [ -L "$target" ]; then
-      resolved="$(readlink -f "$target")"
-      case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/orchestrate/assets/codex-agents/*) rm "$target" ;; esac
-    fi
+    remove_source_link "$target" \
+      "$SOURCE/plugins/dev-skills/skills/orchestrate/assets/codex-agents"
   done < "$CODEX_AGENT_STATE"
 fi
 rm -f "$CODEX_AGENT_STATE"
