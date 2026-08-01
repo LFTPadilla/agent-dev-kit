@@ -20,8 +20,6 @@ do
 done
 
 SKILLS=("$KIT"/*/)
-SKILL_NAMES=()
-for s in "${SKILLS[@]}"; do SKILL_NAMES+=("$(basename "$s")"); done
 
 is_managed_skill_destination() {
   local destination="${1%/}"
@@ -78,7 +76,7 @@ for target in "${RUNTIMES[@]}"; do
     fi
   done
 
-  msg="✓ $target  (${#SKILL_NAMES[@]} skills"
+  msg="✓ $target  (${#SKILLS[@]} skills"
   [[ $added   -gt 0 ]] && msg+=", +$added new/updated"
   [[ $pruned  -gt 0 ]] && msg+=", -$pruned pruned"
   echo "$msg)"
