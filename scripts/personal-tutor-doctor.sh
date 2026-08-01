@@ -36,6 +36,10 @@ context7_configured() {
     printf '%s\n' "$config" | grep -qiE 'enabled:[[:space:]]*(true|yes)'
 }
 
+paths_match() {
+  [ "$(readlink -f "$1")" = "$(readlink -f "$2")" ]
+}
+
 printf 'Personal Dev Tutor doctor\nProfile: %s\nSession: %s\nHome:    %s\n\n' \
   "$PERSONAL_TUTOR_PROFILE" "$PERSONAL_TUTOR_SESSION" "$PERSONAL_TUTOR_USER_HOME"
 [ -n "$REPO" ] && printf 'Repository/worktree: %s\n\n' "$REPO"
@@ -147,11 +151,11 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
     codex_target="$PERSONAL_TUTOR_CODEX_HOME/skills/$name"
     if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; then
       expected=$((expected + 1))
-      [ -e "$profile_target" ] && [ "$(readlink -f "$profile_target")" = "$(readlink -f "${skill%/}")" ] && linked=$((linked + 1))
+      [ -e "$profile_target" ] && paths_match "$profile_target" "${skill%/}" && linked=$((linked + 1))
     fi
     if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
       codex_expected=$((codex_expected + 1))
-      [ -e "$codex_target" ] && [ "$(readlink -f "$codex_target")" = "$(readlink -f "${skill%/}")" ] && codex_linked=$((codex_linked + 1))
+      [ -e "$codex_target" ] && paths_match "$codex_target" "${skill%/}" && codex_linked=$((codex_linked + 1))
     fi
   done
   [ "$linked" -eq "$expected" ] && ok "all $expected public skills linked into Hermes" || bad "Hermes skill links: $linked/$expected"
@@ -206,8 +210,7 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
         expected_external=""
         ;;
     esac
-    if [ -z "$expected_external" ] || \
-       [ "$(readlink -f "$installed")" != "$(readlink -f "$expected_external")" ]; then
+    if [ -z "$expected_external" ] || ! paths_match "$installed" "$expected_external"; then
       printf '  unexpected external profile skill: %s\n' "$(basename "$installed")"
       unexpected=$((unexpected + 1))
     fi
@@ -223,7 +226,7 @@ for baseline_skill in "${PERSONAL_TUTOR_BASELINE_SKILLS[@]}"; do
   if [ -f "$baseline_global/SKILL.md" ] && \
      grep -q "^name:[[:space:]]*${baseline_skill}[[:space:]]*$" "$baseline_global/SKILL.md" && \
      [ -L "$baseline_profile" ] && \
-     [ "$(readlink -f "$baseline_profile")" = "$(readlink -f "$baseline_global")" ]; then
+     paths_match "$baseline_profile" "$baseline_global"; then
     ok "baseline skill available: $baseline_skill"
   else
     bad "baseline skill missing or unmanaged: $baseline_skill"
@@ -234,7 +237,7 @@ gsd_unexpected=0
 for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   candidate="$PERSONAL_TUTOR_PROFILE_DIR/skills/gsd/$gsd_skill"
   expected_gsd="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/gsd/$gsd_skill"
-  if [ -f "$candidate/SKILL.md" ] && [ "$(readlink -f "$candidate")" = "$(readlink -f "$expected_gsd")" ]; then
+  if [ -f "$candidate/SKILL.md" ] && paths_match "$candidate" "$expected_gsd"; then
     ok "GSD core skill available: $gsd_skill"
   else
     bad "GSD core skill missing or unmanaged: $gsd_skill"
@@ -277,7 +280,7 @@ else
   bad "Graphify Codex skill missing or stale"
 fi
 if [ -f "$graphify_profile/SKILL.md" ] && \
-   [ "$(readlink -f "$graphify_profile")" = "$(readlink -f "$graphify_hermes")" ]; then
+   paths_match "$graphify_profile" "$graphify_hermes"; then
   ok "Graphify linked into the isolated tutor profile"
 else
   bad "Graphify is not linked into the isolated tutor profile"
