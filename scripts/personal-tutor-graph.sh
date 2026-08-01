@@ -62,7 +62,7 @@ fi
 umask 077
 cache_root="${PERSONAL_TUTOR_GRAPH_CACHE_ROOT:-${XDG_CACHE_HOME:-$PERSONAL_TUTOR_USER_HOME/.cache}/personal-dev-tutor/graphify}"
 [ ! -L "$cache_root" ] || { echo "refusing symlinked graph cache root: $cache_root"; exit 2; }
-cache_candidate="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$cache_root")"
+cache_candidate="$(personal_tutor_resolve_path "$cache_root")"
 if personal_tutor_path_is_within "$cache_candidate" "$repo"; then
   echo "graph cache must be outside the worktree: $cache_candidate"
   exit 2

@@ -41,7 +41,7 @@ branch_ok=1
 
 umask 077
 lane_state_root="${PERSONAL_TUTOR_LANE_CACHE_ROOT:-$PERSONAL_TUTOR_USER_HOME/.cache/personal-dev-tutor/lanes}"
-lane_state_root="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$lane_state_root")"
+lane_state_root="$(personal_tutor_resolve_path "$lane_state_root")"
 if personal_tutor_path_is_within "$lane_state_root" "$repo"; then
   echo "lane state cache must be outside the worktree"
   exit 2

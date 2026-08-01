@@ -40,6 +40,10 @@ personal_tutor_path_is_within() {
   esac
 }
 
+personal_tutor_resolve_path() {
+  python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$1"
+}
+
 personal_tutor_path_key() {
   printf '%s' "$1" | sha256sum | cut -c1-16
 }
