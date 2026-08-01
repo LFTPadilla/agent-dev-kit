@@ -62,6 +62,11 @@ PERSONAL_TUTOR_GRAPHIFY_VERSION="0.9.25"
 PERSONAL_TUTOR_CONTEXT7_URL="https://mcp.context7.com/mcp"
 PERSONAL_TUTOR_BASELINE_SKILLS=(caveman ponytail)
 
+PERSONAL_TUTOR_GSD_SKILLS=(
+  gsd-new-project gsd-discuss-phase gsd-plan-phase
+  gsd-execute-phase gsd-verify-work gsd-progress
+)
+
 # Worker capabilities only. Tutor/orchestrator and skill-discovery skills remain
 # exclusive to Hermes so Codex cannot silently expand or redefine its role.
 PERSONAL_TUTOR_CODEX_SKILLS=(

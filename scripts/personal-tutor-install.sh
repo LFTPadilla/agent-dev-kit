@@ -77,7 +77,7 @@ if [ ! -d "$GSD_SKILLS" ] || [ ! -d "$GSD_RUNTIME" ]; then
   echo "Install it first: npm i -g get-shit-done-cc && HOME=$PERSONAL_TUTOR_USER_HOME get-shit-done-cc --hermes --global"
   exit 1
 fi
-for gsd_skill in gsd-new-project gsd-discuss-phase gsd-plan-phase gsd-execute-phase gsd-verify-work gsd-progress; do
+for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   [ -f "$GSD_SKILLS/$gsd_skill/SKILL.md" ] || { echo "missing GSD core skill: $gsd_skill"; exit 1; }
 done
 if ! command -v graphify >/dev/null 2>&1; then
@@ -268,13 +268,7 @@ mkdir -p "$GSD_PROFILE_SKILLS"
 for stale in "$GSD_PROFILE_SKILLS"/gsd-*; do
   [ -L "$stale" ] && rm "$stale"
 done
-for gsd_skill in \
-  gsd-new-project \
-  gsd-discuss-phase \
-  gsd-plan-phase \
-  gsd-execute-phase \
-  gsd-verify-work \
-  gsd-progress; do
+for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   link_skill "$GSD_SKILLS/$gsd_skill" "$GSD_PROFILE_SKILLS/$gsd_skill"
 done
 

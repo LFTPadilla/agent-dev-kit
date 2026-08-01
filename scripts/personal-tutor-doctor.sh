@@ -235,7 +235,7 @@ for baseline_skill in "${PERSONAL_TUTOR_BASELINE_SKILLS[@]}"; do
 done
 
 gsd_unexpected=0
-for gsd_skill in gsd-new-project gsd-discuss-phase gsd-plan-phase gsd-execute-phase gsd-verify-work gsd-progress; do
+for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   candidate="$PERSONAL_TUTOR_PROFILE_DIR/skills/gsd/$gsd_skill"
   expected_gsd="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/gsd/$gsd_skill"
   if [ -f "$candidate/SKILL.md" ] && [ "$(readlink -f "$candidate")" = "$(readlink -f "$expected_gsd")" ]; then
@@ -251,10 +251,11 @@ for gsd_skill in gsd-new-project gsd-discuss-phase gsd-plan-phase gsd-execute-ph
 done
 for installed in "$PERSONAL_TUTOR_PROFILE_DIR/skills/gsd"/*; do
   [ -e "$installed" ] || continue
-  case "$(basename "$installed")" in
-    gsd-new-project|gsd-discuss-phase|gsd-plan-phase|gsd-execute-phase|gsd-verify-work|gsd-progress) ;;
-    *) printf '  unexpected GSD skill: %s\n' "$(basename "$installed")"; gsd_unexpected=$((gsd_unexpected + 1)) ;;
-  esac
+  gsd_skill="$(basename "$installed")"
+  if ! array_contains "$gsd_skill" "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; then
+    printf '  unexpected GSD skill: %s\n' "$gsd_skill"
+    gsd_unexpected=$((gsd_unexpected + 1))
+  fi
 done
 [ "$gsd_unexpected" -eq 0 ] && ok "GSD skill isolation is clean" || bad "$gsd_unexpected unexpected GSD skills"
 
