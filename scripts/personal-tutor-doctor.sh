@@ -29,6 +29,14 @@ pass=0 fail=0 warn=0
 ok() { printf 'OK   %s\n' "$1"; pass=$((pass + 1)); }
 bad() { printf 'FAIL %s\n' "$1"; fail=$((fail + 1)); }
 warning() { printf 'WARN %s\n' "$1"; warn=$((warn + 1)); }
+array_contains() {
+  local needle="$1" value
+  shift
+  for value in "$@"; do
+    [ "$value" = "$needle" ] && return 0
+  done
+  return 1
+}
 
 printf 'Personal Dev Tutor doctor\nProfile: %s\nSession: %s\nHome:    %s\n\n' \
   "$PERSONAL_TUTOR_PROFILE" "$PERSONAL_TUTOR_SESSION" "$PERSONAL_TUTOR_USER_HOME"
@@ -141,20 +149,14 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
     name="$(basename "$skill")"
     profile_target="$PERSONAL_TUTOR_PROFILE_DIR/skills/agent-dev-kit/$name"
     codex_target="$PERSONAL_TUTOR_CODEX_HOME/skills/$name"
-    for wanted in "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; do
-      if [ "$wanted" = "$name" ]; then
-        expected=$((expected + 1))
-        [ -e "$profile_target" ] && [ "$(readlink -f "$profile_target")" = "$(readlink -f "${skill%/}")" ] && linked=$((linked + 1))
-        break
-      fi
-    done
-    for wanted in "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; do
-      if [ "$wanted" = "$name" ]; then
-        codex_expected=$((codex_expected + 1))
-        [ -e "$codex_target" ] && [ "$(readlink -f "$codex_target")" = "$(readlink -f "${skill%/}")" ] && codex_linked=$((codex_linked + 1))
-        break
-      fi
-    done
+    if array_contains "$name" "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; then
+      expected=$((expected + 1))
+      [ -e "$profile_target" ] && [ "$(readlink -f "$profile_target")" = "$(readlink -f "${skill%/}")" ] && linked=$((linked + 1))
+    fi
+    if array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
+      codex_expected=$((codex_expected + 1))
+      [ -e "$codex_target" ] && [ "$(readlink -f "$codex_target")" = "$(readlink -f "${skill%/}")" ] && codex_linked=$((codex_linked + 1))
+    fi
   done
   [ "$linked" -eq "$expected" ] && ok "all $expected public skills linked into Hermes" || bad "Hermes skill links: $linked/$expected"
   [ "$codex_linked" -eq "$codex_expected" ] && ok "all $codex_expected worker skills linked into Codex" || bad "Codex worker skill links: $codex_linked/$codex_expected"
@@ -163,11 +165,7 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
     [ -e "$installed" ] || continue
     name="$(basename "$installed")"
     [ "$name" = graphify ] && continue
-    allowed=0
-    for wanted in "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; do
-      [ "$wanted" = "$name" ] && allowed=1 && break
-    done
-    if [ "$allowed" -eq 0 ]; then
+    if ! array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
       printf '  unexpected isolated Codex skill: %s\n' "$name"
       unexpected_codex=$((unexpected_codex + 1))
     fi
