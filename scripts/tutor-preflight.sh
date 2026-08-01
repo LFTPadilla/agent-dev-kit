@@ -46,7 +46,7 @@ push_ok="no"
 force_push_ok="no"
 secrets_ok="no"
 deploy_ok="no"
-expected_runtime_min=""
+expected_runtime_min="60"
 worklog_entry="yes"
 kanban_board=""
 
@@ -80,7 +80,7 @@ approvals:
   force_push: $force_push_ok
   secrets_edit: $secrets_ok
   deploy: $deploy_ok
-runtime_minutes: ${expected_runtime_min:-60}
+runtime_minutes: $expected_runtime_min
 worklog_suggest: $worklog_entry
 kanban_board: "${kanban_board:-}"
 lanes: []
