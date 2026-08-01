@@ -28,43 +28,39 @@ LANES="$STATE_DIR/lanes.json"
 mkdir -p "$STATE_DIR"
 [ -f "$LANES" ] || echo '[]' > "$LANES"
 
-if [ "${1:-}" = "--bump" ]; then
+mode="update"
+id="${1:-}"; title="${2:-}"; target="${3:-}"; branch="${4:-}"; state="${5:-ready}"
+if [ "$id" = "--bump" ]; then
+  mode="bump"
   id="${2:-}"
   if [ -z "$id" ]; then echo "usage: $0 --bump <id>"; exit 2; fi
-  python3 - "$LANES" "$id" <<'PY'
-import json, sys, time
-p, lane_id = sys.argv[1], sys.argv[2]
-lanes = json.load(open(p))
-for l in lanes:
-    if l.get("id") == lane_id:
-        l["last_activity_epoch"] = int(time.time())
-        break
-else:
-    lanes.append({"id": lane_id, "last_activity_epoch": int(time.time())})
-json.dump(lanes, open(p, "w"), indent=2)
-PY
-  exit 0
-fi
-
-id="${1:-}"; title="${2:-}"; target="${3:-}"; branch="${4:-}"; state="${5:-ready}"
-if [ -z "$id" ] || [ -z "$title" ]; then
+elif [ -z "$id" ] || [ -z "$title" ]; then
   echo "usage: $0 <id> <title> <tmux_target> <branch> <state>"
   exit 2
 fi
 
-python3 - "$LANES" "$id" "$title" "$target" "$branch" "$state" <<'PY'
+python3 - "$LANES" "$id" "$mode" "$title" "$target" "$branch" "$state" <<'PY'
 import json, sys, time
-p, lid, title, target, branch, state = sys.argv[1:]
+p, lane_id, mode, title, target, branch, state = sys.argv[1:]
 lanes = json.load(open(p))
 now = int(time.time())
-for l in lanes:
-    if l.get("id") == lid:
-        l.update({"title": title, "tmux_target": target, "branch": branch,
-                  "state": state, "last_activity_epoch": now})
+for lane in lanes:
+    if lane.get("id") == lane_id:
+        if mode == "bump":
+            lane["last_activity_epoch"] = now
+        else:
+            lane.update({"title": title, "tmux_target": target, "branch": branch,
+                         "state": state, "last_activity_epoch": now})
         break
 else:
-    lanes.append({"id": lid, "title": title, "tmux_target": target,
-                  "branch": branch, "state": state,
-                  "created_epoch": now, "last_activity_epoch": now})
+    if mode == "bump":
+        lanes.append({"id": lane_id, "last_activity_epoch": now})
+    else:
+        lanes.append({"id": lane_id, "title": title, "tmux_target": target,
+                      "branch": branch, "state": state,
+                      "created_epoch": now, "last_activity_epoch": now})
 json.dump(lanes, open(p, "w"), indent=2)
 PY
+python_status=$?
+[ "$mode" = "bump" ] && exit 0
+exit "$python_status"
