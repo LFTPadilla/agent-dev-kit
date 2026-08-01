@@ -1,0 +1,594 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Hallmark Themes Color Engine & Always-Sleek Dark Terminal Shell Variables */
+:root, [data-theme="brutal-dark"] {
+  --bg-page: #09090b;
+  --bg-surface: #18181b;
+  --bg-subtle: #27272a;
+  --bg-card: #18181b;
+  --border-color: #3f3f46;
+  --border-strong: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent: #ef4444;
+  --accent-light: rgba(239, 68, 68, 0.15);
+  --accent-text: #fca5a5;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --theme-name: "Brutal Dark";
+  --theme-ordinal: "01 / 07";
+
+  /* Terminal Shell Specifics (Always Authentic Deep Dark) */
+  --term-bg: #0d1117;
+  --term-header-bg: #161b22;
+  --term-sub-bg: #12161f;
+  --term-border: #30363d;
+  --term-text: #c9d1d9;
+  --term-text-muted: #8b949e;
+  --term-prompt: #58a6ff;
+  --term-input-bg: #161b22;
+}
+
+[data-theme="brutal-light"], [data-theme="brutal"] {
+  --bg-page: #ffffff;
+  --bg-surface: #f4f4f5;
+  --bg-subtle: #e4e4e7;
+  --bg-card: #ffffff;
+  --border-color: #000000;
+  --border-strong: #000000;
+  --text-primary: #000000;
+  --text-secondary: #27272a;
+  --text-muted: #52525b;
+  --accent: #dc2626;
+  --accent-light: #fee2e2;
+  --accent-text: #991b1b;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --theme-name: "Brutal Light";
+  --theme-ordinal: "02 / 07";
+
+  /* Terminal Shell Specifics (Always Authentic Deep Dark) */
+  --term-bg: #0d1117;
+  --term-header-bg: #161b22;
+  --term-sub-bg: #12161f;
+  --term-border: #30363d;
+  --term-text: #c9d1d9;
+  --term-text-muted: #8b949e;
+  --term-prompt: #58a6ff;
+  --term-input-bg: #161b22;
+}
+
+[data-theme="hum"] {
+  --bg-page: #f9f8f6;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f0eee9;
+  --bg-card: #ffffff;
+  --border-color: #e2ded4;
+  --border-strong: #1a1a1a;
+  --text-primary: #1a1918;
+  --text-secondary: #57534e;
+  --text-muted: #8c857b;
+  --accent: #c2410c;
+  --accent-light: #ffedd5;
+  --accent-text: #9a3412;
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Geist', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --theme-name: "Hum (Editorial)";
+  --theme-ordinal: "03 / 07";
+
+  /* Terminal Shell Specifics (Always Authentic Deep Dark) */
+  --term-bg: #0d1117;
+  --term-header-bg: #161b22;
+  --term-sub-bg: #12161f;
+  --term-border: #30363d;
+  --term-text: #c9d1d9;
+  --term-text-muted: #8b949e;
+  --term-prompt: #58a6ff;
+  --term-input-bg: #161b22;
+}
+
+[data-theme="midnight"] {
+  --bg-page: #0a0e17;
+  --bg-surface: #111827;
+  --bg-subtle: #1f2937;
+  --bg-card: #111827;
+  --border-color: #374151;
+  --border-strong: #60a5fa;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --accent: #3b82f6;
+  --accent-light: rgba(59, 130, 246, 0.15);
+  --accent-text: #93c5fd;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Geist', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --theme-name: "Midnight (Slate)";
+  --theme-ordinal: "04 / 07";
+
+  /* Terminal Shell Specifics (Always Authentic Deep Dark) */
+  --term-bg: #0d1117;
+  --term-header-bg: #161b22;
+  --term-sub-bg: #12161f;
+  --term-border: #30363d;
+  --term-text: #c9d1d9;
+  --term-text-muted: #8b949e;
+  --term-prompt: #58a6ff;
+  --term-input-bg: #161b22;
+}
+
+[data-theme="terminal"] {
+  --bg-page: #050b07;
+  --bg-surface: #0a140d;
+  --bg-subtle: #122417;
+  --bg-card: #0a140d;
+  --border-color: #1e3a24;
+  --border-strong: #22c55e;
+  --text-primary: #f0fdf4;
+  --text-secondary: #86efac;
+  --text-muted: #4ade80;
+  --accent: #22c55e;
+  --accent-light: rgba(34, 197, 94, 0.15);
+  --accent-text: #4ade80;
+  --font-display: 'Geist Mono', monospace;
+  --font-body: 'Geist Mono', monospace;
+  --font-mono: 'Geist Mono', monospace;
+  --theme-name: "Terminal (Matrix)";
+  --theme-ordinal: "05 / 07";
+
+  /* Terminal Shell Specifics (Always Authentic Deep Dark) */
+  --term-bg: #050b07;
+  --term-header-bg: #0a140d;
+  --term-sub-bg: #122417;
+  --term-border: #1e3a24;
+  --term-text: #f0fdf4;
+  --term-text-muted: #4ade80;
+  --term-prompt: #22c55e;
+  --term-input-bg: #0a140d;
+}
+
+[data-theme="garden"] {
+  --bg-page: #f4f6f0;
+  --bg-surface: #ffffff;
+  --bg-subtle: #e5e9dc;
+  --bg-card: #ffffff;
+  --border-color: #cfd6c3;
+  --border-strong: #2d5a27;
+  --text-primary: #1b3018;
+  --text-secondary: #3b5237;
+  --text-muted: #627a5e;
+  --accent: #15803d;
+  --accent-light: #dcfce7;
+  --accent-text: #166534;
+  --font-display: 'Newsreader', serif;
+  --font-body: 'Geist', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --theme-name: "Garden (Serif)";
+  --theme-ordinal: "06 / 07";
+
+  /* Terminal Shell Specifics (Always Authentic Deep Dark) */
+  --term-bg: #0d1117;
+  --term-header-bg: #161b22;
+  --term-sub-bg: #12161f;
+  --term-border: #30363d;
+  --term-text: #c9d1d9;
+  --term-text-muted: #8b949e;
+  --term-prompt: #58a6ff;
+  --term-input-bg: #161b22;
+}
+
+[data-theme="cobalt"] {
+  --bg-page: #030712;
+  --bg-surface: #0b1329;
+  --bg-subtle: #172554;
+  --bg-card: #0b1329;
+  --border-color: #1e3a8a;
+  --border-strong: #60a5fa;
+  --text-primary: #f0f9ff;
+  --text-secondary: #93c5fd;
+  --text-muted: #60a5fa;
+  --accent: #2563eb;
+  --accent-light: rgba(37, 99, 235, 0.2);
+  --accent-text: #93c5fd;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Geist', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --theme-name: "Cobalt (Blue)";
+  --theme-ordinal: "07 / 07";
+
+  /* Terminal Shell Specifics (Always Authentic Deep Dark) */
+  --term-bg: #030712;
+  --term-header-bg: #0b1329;
+  --term-sub-bg: #172554;
+  --term-border: #1e3a8a;
+  --term-text: #f0f9ff;
+  --term-text-muted: #93c5fd;
+  --term-prompt: #2563eb;
+  --term-input-bg: #0b1329;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Hallmark Banner Navbar */
+.hallmark-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--bg-page);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.6rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.brand-mark {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.brand-mark__slash {
+  color: var(--accent);
+}
+
+.banner__nav {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  list-style: none;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.banner__link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.banner__link:hover, .banner__link.active {
+  color: var(--accent);
+}
+
+.banner__theme-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.35rem 0.85rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.banner__theme-btn:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-subtle);
+}
+
+/* Page Layout */
+.page-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+
+/* Editorial Section Headers with Ordinals */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-label .num {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.section-label .divider {
+  color: var(--text-muted);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.section-intro {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 720px;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+
+/* Hallmark Cards (Tactile & Clean) */
+.hm-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1.8rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.hm-card:hover {
+  border-color: var(--border-strong);
+}
+
+/* Hallmark Code & Terminal Pills */
+.hm-terminal-pill {
+  font-family: var(--font-mono);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hm-terminal-pill .prompt-mark {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.code-block {
+  font-family: var(--font-mono);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+/* Hallmark Buttons */
+.hm-btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0.75rem 1.4rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  transition: opacity 0.2s ease;
+  text-decoration: none;
+}
+
+.hm-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.hm-btn-secondary {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0.75rem 1.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  text-decoration: none;
+}
+
+.hm-btn-secondary:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+/* DNA Metadata Tables */
+.dna-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-top: 1rem;
+}
+
+.dna-table tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dna-table td {
+  padding: 0.6rem 0;
+}
+
+.dna-table .dna-k {
+  color: var(--text-muted);
+  width: 130px;
+}
+
+.dna-table .dna-v {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Anti-Pattern Audit List */
+.audit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.audit-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.2rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  align-items: center;
+}
+
+.audit-num {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.audit-slop-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.audit-slop-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.audit-fix-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.audit-fix-body {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+/* Responsive Media Queries (Tablets & Mobile) */
+@media (max-width: 1024px) {
+  .page-container {
+    padding: 2rem 1.2rem 4rem;
+  }
+
+  .section-title {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hallmark-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.8rem 1rem;
+    gap: 0.8rem;
+  }
+
+  .banner__nav {
+    width: 100%;
+    gap: 1rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .section-title {
+    font-size: 1.85rem;
+  }
+
+  .section-intro {
+    font-size: 1rem;
+  }
+
+  .audit-row {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .hm-card {
+    padding: 1.2rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column !important;
+    width: 100%;
+  }
+
+  .hero-buttons .hm-btn-primary,
+  .hero-buttons .hm-btn-secondary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 1.55rem;
+  }
+
+  .hm-terminal-pill {
+    font-size: 0.78rem;
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes glossaryIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
