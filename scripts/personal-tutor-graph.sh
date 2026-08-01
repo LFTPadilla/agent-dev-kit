@@ -164,13 +164,9 @@ case "$action" in
     require_graph
     printf 'graph=%s\nstatus=%s\n' "$graph" "$(graph_freshness)"
     ;;
-  query)
+  query|affected)
     [ "${#args[@]}" -eq 1 ] || { usage; exit 2; }
-    run_graph_action query "${args[0]}"
-    ;;
-  affected)
-    [ "${#args[@]}" -eq 1 ] || { usage; exit 2; }
-    run_graph_action affected "${args[0]}"
+    run_graph_action "$action" "${args[0]}"
     ;;
   path)
     [ "${#args[@]}" -eq 2 ] || { usage; exit 2; }
