@@ -219,6 +219,7 @@ function validatePiPackageResearch(checks) {
   const matrixFile = path.join(dir, 'package-matrix.md')
   const auditFile = path.join(dir, 'context-mode-audit.md')
   const remainingAuditFile = path.join(dir, 'remaining-candidates-audit.md')
+  const requiredFiles = [profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile]
 
   const settings = readJson(settingsFile, checks)
   if (!settings || !Array.isArray(settings.packages)) {
@@ -227,10 +228,10 @@ function validatePiPackageResearch(checks) {
     checks.push(fail('pi-profiles/settings.example.json must remain inert with an empty packages array'))
   }
 
-  for (const file of [profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile]) {
+  for (const file of requiredFiles) {
     if (!existsSync(file)) checks.push(fail(`${rel(file)} is missing`))
   }
-  if (![profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile].every(existsSync)) return
+  if (!requiredFiles.every(existsSync)) return
 
   const profiles = readFileSync(profilesFile, 'utf8')
   const profilesDocument = parseDocument(profiles, { prettyErrors: true, strict: true })
