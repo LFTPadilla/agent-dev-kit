@@ -9,7 +9,9 @@ SCRIPT_DIR="$(cd "$(dirname "$SELF_PATH")" && pwd)"
 source "$SCRIPT_DIR/personal-tutor-lib.sh"
 
 lane_id="${1:-}"
-[ -n "$lane_id" ] && shift || true
+if [ -n "$lane_id" ]; then
+  shift
+fi
 repo="" branch="" allowed="" verification="" concept="" criteria="" evidence=""
 while [ $# -gt 0 ]; do
   case "$1" in
