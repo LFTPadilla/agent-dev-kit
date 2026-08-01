@@ -274,7 +274,7 @@ function validatePiPackageResearch(checks) {
       checks.push(fail(`Pi package research must preserve the reviewed decision for ${packagePin}`))
     }
   }
-  if (!remainingAudit.includes('No Pi') && !remainingAudit.includes('No Pi\n')) {
+  if (!remainingAudit.includes('No Pi')) {
     checks.push(fail('remaining Pi audits must state that no Pi package is enabled'))
   }
 
