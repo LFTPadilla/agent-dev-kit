@@ -68,7 +68,6 @@ else
 fi
 
 echo "[3/4] allowlist enforcement"
-allowed_set="$(printf '%s' "$allowed" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sort -u)"
 violations="$(echo "$status_out" | awk '{print $2}' | sort -u | while read -r f; do
   [ -z "$f" ] && continue
   case ",$allowed," in *,"$f",*) ;; *) printf '%s\n' "$f" ;; esac
