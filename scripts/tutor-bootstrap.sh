@@ -176,9 +176,8 @@ check_skill() {
   local name="$1"
   # Find all occurrences (depth 1 and depth 2) under SKILLS_DIR
   local candidates=()
-  [ -e "$SKILLS_DIR/$name" ] && candidates+=("$SKILLS_DIR/$name")
-  for d in "$SKILLS_DIR"/*/; do
-    [ -e "$d/$name" ] && candidates+=("$d/$name")
+  for candidate in "$SKILLS_DIR/$name" "$SKILLS_DIR"/*/"$name"; do
+    [ -e "$candidate" ] && candidates+=("$candidate")
   done
   if [ ${#candidates[@]} -eq 0 ]; then
     checks_broken+=("$name: directory missing")
