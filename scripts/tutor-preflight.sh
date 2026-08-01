@@ -13,9 +13,8 @@
 set -uo pipefail
 
 SELF_PATH="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
-TUTOR_SCRIPT_DIR="$(cd "$(dirname "$SELF_PATH")" && pwd)"
 # shellcheck source=tutor-lib.sh
-source "$TUTOR_SCRIPT_DIR/tutor-lib.sh"
+source "$(cd "$(dirname "$SELF_PATH")" && pwd)/tutor-lib.sh"
 tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
