@@ -121,6 +121,13 @@ rollback_managed_skill() {
   return 0
 }
 
+reset_managed_skill_refresh() {
+  REFRESH_ACTIVE=0
+  REFRESH_TARGET_WAS_ABSENT=1
+  REFRESH_TARGET=""
+  REFRESH_BACKUP=""
+}
+
 cleanup_managed_skill_refresh() {
   local status="${1:-0}" index target backup was_absent
   trap '' HUP INT TERM
@@ -138,10 +145,7 @@ cleanup_managed_skill_refresh() {
         "CRITICAL: unable to roll back newly installed skill" || status=1
     done
   fi
-  REFRESH_ACTIVE=0
-  REFRESH_TARGET_WAS_ABSENT=1
-  REFRESH_TARGET=""
-  REFRESH_BACKUP=""
+  reset_managed_skill_refresh
   UPDATED_SKILL_TARGETS=()
   UPDATED_SKILL_BACKUPS=()
   UPDATED_SKILL_WAS_ABSENT=()
@@ -159,10 +163,7 @@ finish_managed_skill_refresh() {
     UPDATED_SKILL_BACKUPS+=("$REFRESH_BACKUP")
     UPDATED_SKILL_WAS_ABSENT+=("$REFRESH_TARGET_WAS_ABSENT")
   fi
-  REFRESH_ACTIVE=0
-  REFRESH_TARGET_WAS_ABSENT=1
-  REFRESH_TARGET=""
-  REFRESH_BACKUP=""
+  reset_managed_skill_refresh
   restore_workhorse_signal_traps
 }
 
