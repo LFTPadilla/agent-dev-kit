@@ -293,8 +293,7 @@ if tmux has-session -t "$PERSONAL_TUTOR_SESSION" 2>/dev/null; then
   codex_count=0
   if [ -n "$REPO" ] && git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
     while IFS='|' read -r command dead path codex_home; do
-      [ "$command" = codex ] && [ "$dead" = 0 ] || continue
-      [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || continue
+      personal_tutor_is_live_codex_pane "$command" "$dead" "$codex_home" || continue
       if personal_tutor_path_is_within "$path" "$REPO"; then
         codex_count=$((codex_count + 1))
       fi

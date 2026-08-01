@@ -74,6 +74,11 @@ personal_tutor_array_contains() {
   return 1
 }
 
+personal_tutor_is_live_codex_pane() {
+  local command="$1" dead="$2" codex_home="$3"
+  [ "$command" = codex ] && [ "$dead" = 0 ] && [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ]
+}
+
 PERSONAL_TUTOR_USER_HOME="$(personal_tutor_real_home)"
 PERSONAL_TUTOR_INFERRED_PROFILE=""
 PERSONAL_TUTOR_LIB_PATH="${BASH_SOURCE[0]}"

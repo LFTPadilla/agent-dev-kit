@@ -144,9 +144,7 @@ PY
 if [ "$dry_run" -eq 0 ]; then
   if [ -z "$target" ]; then
     while IFS='|' read -r pane command path dead codex_home; do
-      [ "$command" = codex ] || continue
-      [ "$dead" = 0 ] || continue
-      [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || continue
+      personal_tutor_is_live_codex_pane "$command" "$dead" "$codex_home" || continue
       case "$path" in
         "$worktree"|"$worktree"/*) target="$PERSONAL_TUTOR_SESSION:$pane"; break ;;
       esac

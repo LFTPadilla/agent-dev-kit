@@ -35,8 +35,7 @@ printf '%-12s %-18s %-12s %-5s %s\n' TARGET WINDOW COMMAND DEAD REPOSITORY
 printf '%s\n' '--------------------------------------------------------------------------------'
 codex_count=0
 while IFS='|' read -r pane name command dead repository codex_home; do
-  [ "$command" = codex ] && [ "$dead" = 0 ] || continue
-  [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || continue
+  personal_tutor_is_live_codex_pane "$command" "$dead" "$codex_home" || continue
   personal_tutor_path_is_within "$repository" "$repo" || continue
   printf '%-12s %-18s %-12s %-5s %s\n' "$PERSONAL_TUTOR_SESSION:$pane" "$name" "$command" "$dead" "$repository"
   codex_count=$((codex_count + 1))
