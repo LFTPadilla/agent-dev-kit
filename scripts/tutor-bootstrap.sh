@@ -337,6 +337,15 @@ for s in "${overlay[@]}"; do
 done
 
 # Emit
+print_json_array() {
+  local first=1 value
+  for value in "$@"; do
+    [ "$first" -eq 0 ] && printf ','
+    printf '"%s"' "${value//\"/\\\"}"
+    first=0
+  done
+}
+
 ok_count=${#checks_ok[@]}
 fixed_count=${#checks_fixed[@]}
 broken_count=${#checks_broken[@]}
@@ -345,26 +354,11 @@ overlay_missing_count=${#overlay_missing[@]}
 if [ "$JSON" -eq 1 ]; then
   printf '{"ok":%d,"fixed":%d,"broken":%d,"overlay_missing":%d,"fixed_list":[' \
     "$ok_count" "$fixed_count" "$broken_count" "$overlay_missing_count"
-  first=1
-  for f in "${checks_fixed[@]}"; do
-    [ $first -eq 0 ] && printf ','
-    printf '"%s"' "${f//\"/\\\"}"
-    first=0
-  done
+  print_json_array "${checks_fixed[@]}"
   printf '],"broken_list":['
-  first=1
-  for b in "${checks_broken[@]}"; do
-    [ $first -eq 0 ] && printf ','
-    printf '"%s"' "${b//\"/\\\"}"
-    first=0
-  done
+  print_json_array "${checks_broken[@]}"
   printf '],"overlay_missing_list":['
-  first=1
-  for o in "${overlay_missing[@]}"; do
-    [ $first -eq 0 ] && printf ','
-    printf '"%s"' "${o//\"/\\\"}"
-    first=0
-  done
+  print_json_array "${overlay_missing[@]}"
   printf ']}\n'
 else
   printf 'OK:    %d\n' "$ok_count"
