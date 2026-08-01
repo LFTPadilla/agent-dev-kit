@@ -80,6 +80,14 @@ case "$git_common_dir" in
 esac
 git_common_dir="$(readlink -f "$git_common_dir")"
 
+path_is_within() {
+  local path="$1" root="$2"
+  case "$path" in
+    "$root"|"$root"/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 mounts=(
   --die-with-parent
   --new-session
@@ -107,14 +115,10 @@ if [ -f "$git_entry" ]; then
   [ ! -L "$git_entry" ] || { echo "refusing symlinked Git metadata: $git_entry"; exit 2; }
   [ -d "$git_dir" ] || { echo "linked-worktree Git directory is missing: $git_dir"; exit 2; }
   [ -d "$git_common_dir" ] || { echo "linked-worktree common Git directory is missing: $git_common_dir"; exit 2; }
-  case "$git_common_dir" in
-    "$repo"|"$repo"/*) ;;
-    *) mounts+=(--ro-bind "$git_common_dir" "$git_common_dir") ;;
-  esac
-  case "$git_dir" in
-    "$repo"|"$repo"/*|"$git_common_dir"|"$git_common_dir"/*) ;;
-    *) mounts+=(--ro-bind "$git_dir" "$git_dir") ;;
-  esac
+  path_is_within "$git_common_dir" "$repo" || \
+    mounts+=(--ro-bind "$git_common_dir" "$git_common_dir")
+  path_is_within "$git_dir" "$repo" || path_is_within "$git_dir" "$git_common_dir" || \
+    mounts+=(--ro-bind "$git_dir" "$git_dir")
 fi
 
 # Mount only runtime/toolchain trees, not the real home. /bin and /lib are
@@ -156,10 +160,10 @@ for requested in "${writes[@]}"; do
   write_source="$repo/$requested"
   [ -e "$write_source" ] || { echo "--write path must already exist: $requested"; exit 2; }
   write_source="$(readlink -f "$write_source")"
-  case "$write_source" in
-    "$repo"|"$repo"/*) ;;
-    *) echo "--write resolves outside the worktree: $requested"; exit 2 ;;
-  esac
+  path_is_within "$write_source" "$repo" || {
+    echo "--write resolves outside the worktree: $requested"
+    exit 2
+  }
   relative="${write_source#$repo}"
   mounts+=(--bind "$write_source" "/workspace$relative")
 done
