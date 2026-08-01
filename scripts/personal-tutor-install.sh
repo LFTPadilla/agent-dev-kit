@@ -326,12 +326,11 @@ else:
     raise SystemExit(f"unsupported launcher runtime: {runtime}")
 path.write_text("\n".join(lines) + "\n")
 PY
+  chmod +x "$path"
 }
 
 write_runtime_launcher "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE" hermes
-chmod +x "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE"
 write_runtime_launcher "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex" codex
-chmod +x "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex"
 for helper in doctor status delegate audit graph output sandbox install; do
   helper_target="$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-$helper"
   if [ -e "$helper_target" ] || [ -L "$helper_target" ]; then
