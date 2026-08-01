@@ -29,11 +29,11 @@ ask() {
   local prompt="$1" default="${2:-}"
   local ans
   if [ -n "$default" ]; then
-    read -r -p "$prompt [$default]: " ans || true
+    read -r -p "$prompt [$default]: " ans
     printf '%s' "${ans:-$default}"
   else
     while [ -z "${ans:-}" ]; do
-      read -r -p "$prompt: " ans || true
+      read -r -p "$prompt: " ans
     done
     printf '%s' "$ans"
   fi
