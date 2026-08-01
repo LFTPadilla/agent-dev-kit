@@ -248,7 +248,6 @@ repair_skill() {
   local target_inode=""
   [ -d "$target" ] && target_inode="$(stat -c %i "$target" 2>/dev/null || echo "")"
   while IFS= read -r cand; do
-    [ -d "$cand" ] || continue
     is_healthy_source "$cand" "$name" || continue
     local cand_inode; cand_inode="$(stat -c %i "$cand" 2>/dev/null || echo "")"
     [ -n "$target_inode" ] && [ "$cand_inode" = "$target_inode" ] && continue
