@@ -21,7 +21,7 @@ tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 
-lane_id="${1:-}"; shift || true
+lane_id="${1:-}"; shift
 repo=""; branch=""; allowed=""
 
 while [ $# -gt 0 ]; do
