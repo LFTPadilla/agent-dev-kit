@@ -114,8 +114,8 @@ function escapeLatex(str) {
 
 function parseNodes(text) {
   return text.split('\n').filter(l => l.trim()).map(line => {
-    const [id, label, type, col, row, icon] = line.split('|').map(s => s.trim());
-    return { id, label, type: type || 'server', col: parseInt(col) || 0, row: parseInt(row) || 0, icon };
+    const [id, label, type, col, row] = line.split('|').map(s => s.trim());
+    return { id, label, type: type || 'server', col: parseInt(col) || 0, row: parseInt(row) || 0 };
   });
 }
 
