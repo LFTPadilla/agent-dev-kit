@@ -232,13 +232,15 @@ repair_skill() {
   # Determine target dir
   local target="$SKILLS_DIR/$name"
   if [ ! -d "$target" ]; then
-    # try depth-2 (parent categories)
-    for p in "${SKILL_CATEGORIES[@]}"; do
-      if [ -d "$SKILLS_DIR/$p/$name" ]; then
-        target="$SKILLS_DIR/$p/$name"
+    # Try the direct path and depth-2 parent categories in the same order as
+    # source discovery.
+    local candidate
+    while IFS= read -r candidate; do
+      if [ -d "$candidate" ]; then
+        target="$candidate"
         break
       fi
-    done
+    done < <(skill_paths_for_root "$SKILLS_DIR" "$name")
     # If still not found and we have prior knowledge of where the source lived,
     # place it there
     if [ ! -d "$target" ]; then
