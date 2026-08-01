@@ -137,6 +137,10 @@ graph_freshness() {
   if [ -n "$recorded" ] && [ "$current" = "$recorded" ]; then printf 'fresh\n'; else printf 'stale\n'; fi
 }
 
+warn_if_graph_stale() {
+  [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
+}
+
 case "$action" in
   refresh)
     [ "${#args[@]}" -eq 0 ] || { usage; exit 2; }
@@ -158,19 +162,19 @@ case "$action" in
   query)
     [ "${#args[@]}" -eq 1 ] || { usage; exit 2; }
     require_graph
-    [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
+    warn_if_graph_stale
     personal_tutor_graphify query "${args[0]}" --graph "$graph"
     ;;
   affected)
     [ "${#args[@]}" -eq 1 ] || { usage; exit 2; }
     require_graph
-    [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
+    warn_if_graph_stale
     personal_tutor_graphify affected "${args[0]}" --graph "$graph"
     ;;
   path)
     [ "${#args[@]}" -eq 2 ] || { usage; exit 2; }
     require_graph
-    [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
+    warn_if_graph_stale
     personal_tutor_graphify path "${args[0]}" "${args[1]}" --graph "$graph"
     ;;
   *) echo "unknown action: $action"; usage; exit 2 ;;
