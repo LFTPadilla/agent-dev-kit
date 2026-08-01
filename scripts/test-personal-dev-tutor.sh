@@ -507,9 +507,7 @@ if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-
 fi
 
 printf 'committed after baseline\n' > "$fixture/committed.txt"
-git -C "$fixture" add committed.txt
-git -C "$fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
-  commit --no-gpg-sign -q -m post-baseline
+commit_test_repo "$fixture" post-baseline committed.txt
 printf 'dirty after commit\n' >> "$fixture/example.txt"
 if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
