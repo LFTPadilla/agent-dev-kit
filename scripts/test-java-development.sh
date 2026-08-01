@@ -15,6 +15,14 @@ done
 [ -x "$DETECT" ] || { echo 'FAIL Java detector is not executable'; exit 1; }
 bash -n "$DETECT"
 
+assert_report_contains() {
+  local report="$1" pattern
+  shift
+  for pattern in "$@"; do
+    printf '%s\n' "$report" | grep -q "$pattern"
+  done
+}
+
 grep -q '^name: java-development$' "$SKILL"
 grep -q 'Discover before executing' "$SKILL"
 grep -q 'Use the project wrapper' "$SKILL"
@@ -90,12 +98,13 @@ before="$(find "$fixture/maven" -type f -print0 | sort -z | xargs -0 sha256sum)"
 maven_report="$($DETECT "$fixture/maven")"
 after="$(find "$fixture/maven" -type f -print0 | sort -z | xargs -0 sha256sum)"
 [ "$before" = "$after" ] || { echo 'FAIL detector modified Maven fixture'; exit 1; }
-printf '%s\n' "$maven_report" | grep -q '^build.system=maven$'
-printf '%s\n' "$maven_report" | grep -q '^wrapper.maven.distribution-sha256=declared$'
-printf '%s\n' "$maven_report" | grep -q 'maven.compiler.release'
-printf '%s\n' "$maven_report" | grep -q 'setup-java'
-printf '%s\n' "$maven_report" | grep -q 'markers=.*junit-jupiter'
-printf '%s\n' "$maven_report" | grep -q "suggest.focused=./mvnw"
+assert_report_contains "$maven_report" \
+  '^build.system=maven$' \
+  '^wrapper.maven.distribution-sha256=declared$' \
+  'maven.compiler.release' \
+  'setup-java' \
+  'markers=.*junit-jupiter' \
+  'suggest.focused=./mvnw'
 
 mkdir -p "$fixture/gradle/gradle/wrapper"
 printf '#!/usr/bin/env sh\nexit 99\n' > "$fixture/gradle/gradlew"
@@ -114,34 +123,38 @@ dependencies { testImplementation("org.testcontainers:junit-jupiter:0") }
 tasks.test { useJUnitPlatform() }
 EOF
 gradle_report="$($DETECT "$fixture/gradle")"
-printf '%s\n' "$gradle_report" | grep -q '^build.system=gradle$'
-printf '%s\n' "$gradle_report" | grep -q '^wrapper.gradle.distribution-sha256=declared$'
-printf '%s\n' "$gradle_report" | grep -q 'JavaLanguageVersion'
-printf '%s\n' "$gradle_report" | grep -q 'markers=.*testcontainers'
-printf '%s\n' "$gradle_report" | grep -q "suggest.focused=./gradlew"
+assert_report_contains "$gradle_report" \
+  '^build.system=gradle$' \
+  '^wrapper.gradle.distribution-sha256=declared$' \
+  'JavaLanguageVersion' \
+  'markers=.*testcontainers' \
+  'suggest.focused=./gradlew'
 
 mkdir -p "$fixture/ambiguous"
 printf '#!/usr/bin/env sh\nexit 99\n' > "$fixture/ambiguous/mvnw"
 printf '#!/usr/bin/env sh\nexit 99\n' > "$fixture/ambiguous/gradlew"
 chmod +x "$fixture/ambiguous/mvnw" "$fixture/ambiguous/gradlew"
 ambiguous_report="$($DETECT "$fixture/ambiguous")"
-printf '%s\n' "$ambiguous_report" | grep -q '^build.system=ambiguous-both-wrappers$'
-printf '%s\n' "$ambiguous_report" | grep -q 'resolve the intended build root/system'
+assert_report_contains "$ambiguous_report" \
+  '^build.system=ambiguous-both-wrappers$' \
+  'resolve the intended build root/system'
 
 mkdir -p "$fixture/no-wrapper"
 printf '<project/>\n' > "$fixture/no-wrapper/pom.xml"
 no_wrapper_report="$($DETECT "$fixture/no-wrapper")"
-printf '%s\n' "$no_wrapper_report" | grep -q '^build.system=maven-no-wrapper$'
-printf '%s\n' "$no_wrapper_report" | grep -q 'do not create a wrapper implicitly'
+assert_report_contains "$no_wrapper_report" \
+  '^build.system=maven-no-wrapper$' \
+  'do not create a wrapper implicitly'
 
 mkdir -p "$fixture/non-executable-wrapper"
 printf '<project/>\n' > "$fixture/non-executable-wrapper/pom.xml"
 printf '#!/usr/bin/env sh\nexit 0\n' > "$fixture/non-executable-wrapper/mvnw"
 chmod 0644 "$fixture/non-executable-wrapper/mvnw"
 non_executable_report="$($DETECT "$fixture/non-executable-wrapper")"
-printf '%s\n' "$non_executable_report" | grep -q '^build.system=maven-wrapper-not-executable$'
-printf '%s\n' "$non_executable_report" | grep -q '^wrapper.maven.executable=no$'
-printf '%s\n' "$non_executable_report" | grep -q 'do not substitute a system build tool'
+assert_report_contains "$non_executable_report" \
+  '^build.system=maven-wrapper-not-executable$' \
+  '^wrapper.maven.executable=no$' \
+  'do not substitute a system build tool'
 
 if command -v javac >/dev/null 2>&1 && command -v java >/dev/null 2>&1; then
   mkdir -p "$fixture/plain/src/example" "$fixture/plain/classes"
