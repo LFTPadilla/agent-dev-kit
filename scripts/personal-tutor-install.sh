@@ -162,7 +162,7 @@ EOF
 fi
 
 printf '[3/8] Profile contract and persona\n'
-mkdir -p "$PROFILE_DIR/state" "$PROFILE_DIR/templates" "$PROFILE_DIR/scripts"
+mkdir -p "$PROFILE_DIR/templates" "$PROFILE_DIR/scripts"
 cp -f "$SOURCE/templates/personal-dev-tutor-SOUL.md" "$PROFILE_DIR/SOUL.md"
 cp -f "$SOURCE/templates/personal-codex-lane-prompt.md" "$PROFILE_DIR/templates/"
 cp -f "$SOURCE/profiles/personal-dev-tutor.yml" "$PROFILE_DIR/personal-dev-tutor.yml"
@@ -268,7 +268,6 @@ done
 
 printf '[5/8] External Graphify skill\n'
 personal_tutor_graphify install --platform hermes >/dev/null
-mkdir -p "$CODEX_USER_HOME"
 (cd "$CODEX_USER_HOME" && HOME="$CODEX_USER_HOME" command graphify install --platform codex >/dev/null)
 GRAPHIFY_HERMES_SKILL="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/graphify"
 GRAPHIFY_CODEX_SKILL="$CODEX_SKILLS/graphify"
