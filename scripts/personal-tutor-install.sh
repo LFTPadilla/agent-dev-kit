@@ -331,8 +331,9 @@ PY
 
 write_runtime_launcher "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE" hermes
 write_runtime_launcher "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex" codex
-for helper in doctor status delegate audit graph output sandbox install; do
-  helper_target="$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-$helper"
+link_managed_command() {
+  local helper="$1"
+  local helper_target="$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-$helper"
   if [ -e "$helper_target" ] || [ -L "$helper_target" ]; then
     if [ ! -L "$helper_target" ]; then
       echo "refusing to overwrite unmanaged command: $helper_target"
@@ -345,6 +346,10 @@ for helper in doctor status delegate audit graph output sandbox install; do
     esac
   fi
   ln -sfn "$PROFILE_DIR/scripts/personal-tutor-$helper.sh" "$helper_target"
+}
+
+for helper in doctor status delegate audit graph output sandbox install; do
+  link_managed_command "$helper"
 done
 
 printf '[8/8] Readiness check\n'
