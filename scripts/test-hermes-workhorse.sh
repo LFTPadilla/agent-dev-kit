@@ -107,6 +107,12 @@ assert_no_workhorse_lock() {
   fi
 }
 
+assert_skill_checksum() {
+  local name="$1"
+  test "$(cat "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256")" = \
+    "$(sha256sum "$HERMES_HOME/skills/$name/SKILL.md" | cut -d' ' -f1)"
+}
+
 fixture_skill_sha() {
   local name="$1" source="$2"
   printf '%s\n' '---' "name: $name" 'description: test fixture' \
@@ -129,8 +135,7 @@ for name in caveman ponytail; do
   grep -q "^name: $name$" "$HERMES_HOME/skills/$name/SKILL.md"
   test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-source"
   test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256"
-  test "$(cat "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256")" = \
-    "$(sha256sum "$HERMES_HOME/skills/$name/SKILL.md" | cut -d' ' -f1)"
+  assert_skill_checksum "$name"
   for profile in alpha personal-dev-tutor; do
     target="$HERMES_HOME/profiles/$profile/skills/external/$name"
     test -L "$target"
@@ -196,8 +201,7 @@ drifted_install_count="$(wc -l < "$HERMES_TEST_LOG")"
 "$ROOT/scripts/install-hermes-workhorse.sh" --all-profiles >/dev/null
 test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$((drifted_install_count + 1))"
 grep -q '^description: test fixture$' "$HERMES_HOME/skills/caveman/SKILL.md"
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-sha256")" = \
-  "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
+assert_skill_checksum caveman
 
 managed_caveman="$HERMES_HOME/skills/caveman.managed-test-backup"
 mv "$HERMES_HOME/skills/caveman" "$managed_caveman"
@@ -307,8 +311,7 @@ AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$updated_caveman_source" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null
 test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-source")" = "$updated_caveman_source"
 grep -q "^source: $updated_caveman_source$" "$HERMES_HOME/skills/caveman/SKILL.md"
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-sha256")" = \
-  "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
+assert_skill_checksum caveman
 
 mismatched_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.2-tampered/skills/caveman/SKILL.md"
 before_mismatch_sha="$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
