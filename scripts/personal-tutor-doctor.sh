@@ -30,6 +30,12 @@ ok() { printf 'OK   %s\n' "$1"; pass=$((pass + 1)); }
 bad() { printf 'FAIL %s\n' "$1"; fail=$((fail + 1)); }
 warning() { printf 'WARN %s\n' "$1"; warn=$((warn + 1)); }
 
+context7_configured() {
+  local config="$1"
+  printf '%s\n' "$config" | grep -Fq "url: $PERSONAL_TUTOR_CONTEXT7_URL" && \
+    printf '%s\n' "$config" | grep -qiE 'enabled:[[:space:]]*(true|yes)'
+}
+
 printf 'Personal Dev Tutor doctor\nProfile: %s\nSession: %s\nHome:    %s\n\n' \
   "$PERSONAL_TUTOR_PROFILE" "$PERSONAL_TUTOR_SESSION" "$PERSONAL_TUTOR_USER_HOME"
 [ -n "$REPO" ] && printf 'Repository/worktree: %s\n\n' "$REPO"
@@ -70,8 +76,7 @@ else
   bad "secret redaction is not enabled"
 fi
 context7_config="$(hermes --profile "$PERSONAL_TUTOR_PROFILE" config get mcp_servers.context7 2>/dev/null || true)"
-if printf '%s\n' "$context7_config" | grep -Fq "url: $PERSONAL_TUTOR_CONTEXT7_URL" && \
-   printf '%s\n' "$context7_config" | grep -qiE 'enabled:[[:space:]]*(true|yes)'; then
+if context7_configured "$context7_config"; then
   ok "Context7 enabled for Hermes"
 else
   bad "Context7 is not enabled at the expected Hermes endpoint"
@@ -88,8 +93,7 @@ else
   bad "Hermes Context7 live discovery fails after 2 attempts"
 fi
 codex_context7="$(CODEX_HOME="$PERSONAL_TUTOR_CODEX_HOME" codex mcp get context7 2>/dev/null || true)"
-if printf '%s\n' "$codex_context7" | grep -Fq "url: $PERSONAL_TUTOR_CONTEXT7_URL" && \
-   printf '%s\n' "$codex_context7" | grep -qiE 'enabled:[[:space:]]*(true|yes)'; then
+if context7_configured "$codex_context7"; then
   ok "Context7 configured in the isolated Codex home"
 else
   bad "Context7 is not configured at the expected isolated Codex endpoint"
