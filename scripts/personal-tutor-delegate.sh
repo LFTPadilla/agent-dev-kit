@@ -50,7 +50,7 @@ worktree="$(personal_tutor_git_root "$worktree")" || {
 }
 repo_common="$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)"
 worktree_common="$(git -C "$worktree" rev-parse --path-format=absolute --git-common-dir)"
-[ "$(readlink -f "$repo_common")" = "$(readlink -f "$worktree_common")" ] || {
+personal_tutor_paths_match "$repo_common" "$worktree_common" || {
   echo "worktree does not belong to repository: $worktree"
   exit 2
 }

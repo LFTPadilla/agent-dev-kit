@@ -36,10 +36,6 @@ context7_configured() {
     printf '%s\n' "$config" | grep -qiE 'enabled:[[:space:]]*(true|yes)'
 }
 
-paths_match() {
-  [ "$(readlink -f "$1")" = "$(readlink -f "$2")" ]
-}
-
 check_config_setting() {
   local pattern="$1" success_message="$2" failure_message="$3"
   if [ -f "$CONFIG" ] && grep -qiE "$pattern" "$CONFIG"; then
@@ -70,7 +66,7 @@ check_skill_links() {
     personal_tutor_array_contains "$name" "${allowed_skills[@]}" || continue
     target="$target_root/$name"
     expected=$((expected + 1))
-    [ -e "$target" ] && paths_match "$target" "${skill%/}" && linked=$((linked + 1))
+    [ -e "$target" ] && personal_tutor_paths_match "$target" "${skill%/}" && linked=$((linked + 1))
   done
 
   [ "$linked" -eq "$expected" ] && ok "all $expected $description skills linked into $runtime" || \
@@ -225,7 +221,7 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
     else
       expected_external=""
     fi
-    if [ -z "$expected_external" ] || ! paths_match "$installed" "$expected_external"; then
+    if [ -z "$expected_external" ] || ! personal_tutor_paths_match "$installed" "$expected_external"; then
       printf '  unexpected external profile skill: %s\n' "$(basename "$installed")"
       unexpected=$((unexpected + 1))
     fi
@@ -241,7 +237,7 @@ for baseline_skill in "${PERSONAL_TUTOR_BASELINE_SKILLS[@]}"; do
   if [ -f "$baseline_global/SKILL.md" ] && \
      grep -q "^name:[[:space:]]*${baseline_skill}[[:space:]]*$" "$baseline_global/SKILL.md" && \
      [ -L "$baseline_profile" ] && \
-     paths_match "$baseline_profile" "$baseline_global"; then
+     personal_tutor_paths_match "$baseline_profile" "$baseline_global"; then
     ok "baseline skill available: $baseline_skill"
   else
     bad "baseline skill missing or unmanaged: $baseline_skill"
@@ -252,7 +248,7 @@ gsd_unexpected=0
 for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   candidate="$PERSONAL_TUTOR_PROFILE_DIR/skills/gsd/$gsd_skill"
   expected_gsd="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/gsd/$gsd_skill"
-  if [ -f "$candidate/SKILL.md" ] && paths_match "$candidate" "$expected_gsd"; then
+  if [ -f "$candidate/SKILL.md" ] && personal_tutor_paths_match "$candidate" "$expected_gsd"; then
     ok "GSD core skill available: $gsd_skill"
   else
     bad "GSD core skill missing or unmanaged: $gsd_skill"
@@ -294,7 +290,7 @@ check_graphify_skill() {
 check_graphify_skill Hermes "$graphify_hermes"
 check_graphify_skill Codex "$graphify_codex"
 if [ -f "$graphify_profile/SKILL.md" ] && \
-   paths_match "$graphify_profile" "$graphify_hermes"; then
+   personal_tutor_paths_match "$graphify_profile" "$graphify_hermes"; then
   ok "Graphify linked into the isolated tutor profile"
 else
   bad "Graphify is not linked into the isolated tutor profile"
