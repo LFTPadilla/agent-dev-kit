@@ -149,7 +149,7 @@ echo "[6/6] runtime helpers"
 mkdir -p "$PROFILE_SKILLS/../scripts" "$PROFILE_SKILLS/../templates" \
          "$PROFILE_SKILLS/../state"
 [ -d "$SOURCE/scripts" ] && \
-  cp -f "$SOURCE/scripts/tutor-"*.sh "$PROFILE_SKILLS/../scripts/" 2>/dev/null || true
+  cp -f "$SOURCE/scripts/tutor-"*.sh "$PROFILE_SKILLS/../scripts/" 2>/dev/null
 [ -f "$SOURCE/templates/lane-prompt.md" ] && \
   cp -f "$SOURCE/templates/lane-prompt.md" "$PROFILE_SKILLS/../templates/"
 
