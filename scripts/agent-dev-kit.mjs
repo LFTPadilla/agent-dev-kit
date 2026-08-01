@@ -7,6 +7,7 @@ import process from 'node:process'
 import { parseDocument } from 'yaml'
 
 const root = path.resolve(new URL('..', import.meta.url).pathname)
+const claudePluginFile = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
 const privatePatterns = [
   /(?<![A-Za-z0-9_$}])\/home\/(?!(?:example|user|runner|tutor)\b)[A-Za-z0-9._-]+/i,
   /(?<![A-Za-z0-9_$}])\/Users\/(?!(?:example|user|runner|you)\b)[A-Za-z0-9._-]+/
@@ -150,20 +151,18 @@ function validateYamlFiles(checks, { files }) {
 }
 
 function validatePlugin(checks) {
-  const file = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
-  const data = readJson(file, checks)
+  const data = readJson(claudePluginFile, checks)
   if (!data) return
-  if (!/^\d+\.\d+\.\d+/.test(data.version || '')) checks.push(fail(`${rel(file)} version must be semver-like`))
-  if (!data.name || !data.description) checks.push(fail(`${rel(file)} must include name and description`))
+  if (!/^\d+\.\d+\.\d+/.test(data.version || '')) checks.push(fail(`${rel(claudePluginFile)} version must be semver-like`))
+  if (!data.name || !data.description) checks.push(fail(`${rel(claudePluginFile)} must include name and description`))
   else checks.push(ok('plugin manifest checked'))
 }
 
 function validateReleaseVersions(checks) {
   const packageFile = path.join(root, 'package.json')
   const lockFile = path.join(root, 'package-lock.json')
-  const claudeFile = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
   const codexFile = path.join(root, 'plugins/dev-skills/.codex-plugin/plugin.json')
-  const releaseFiles = [packageFile, lockFile, claudeFile, codexFile]
+  const releaseFiles = [packageFile, lockFile, claudePluginFile, codexFile]
   const releaseData = releaseFiles.map((file) => readJson(file, checks))
   if (releaseData.some((data) => !data)) return
   const [packageData, lockData, claudeData, codexData] = releaseData
@@ -171,7 +170,7 @@ function validateReleaseVersions(checks) {
     [rel(packageFile), packageData.version],
     [`${rel(lockFile)} root`, lockData.version],
     [`${rel(lockFile)} package`, lockData.packages?.['']?.version],
-    [rel(claudeFile), claudeData.version],
+    [rel(claudePluginFile), claudeData.version],
     [rel(codexFile), codexData.version],
   ])
   const expected = packageData.version
