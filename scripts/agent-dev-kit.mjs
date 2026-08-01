@@ -29,11 +29,13 @@ function checkLabel(level) {
 }
 
 function printChecks(checks) {
+  let failures = 0
+  let warnings = 0
   for (const check of checks) {
     console.log(`${checkLabel(check.level)} ${check.msg}`)
+    if (check.level === 'fail') failures++
+    if (check.level === 'warn') warnings++
   }
-  const failures = checks.filter((c) => c.level === 'fail').length
-  const warnings = checks.filter((c) => c.level === 'warn').length
   console.log(`\n${checks.length} checks: ${failures} failed, ${warnings} warnings`)
   return failures
 }
