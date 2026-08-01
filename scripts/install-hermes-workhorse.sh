@@ -386,8 +386,9 @@ for profile in "${profiles[@]}"; do
   case " ${linked_profiles[*]} " in
     *" $profile "*) continue ;;
   esac
-  link_profile_skill "$profile" caveman
-  link_profile_skill "$profile" ponytail
+  for skill in caveman ponytail; do
+    link_profile_skill "$profile" "$skill"
+  done
   linked_profiles+=("$profile")
 done
 
