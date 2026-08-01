@@ -21,7 +21,6 @@ source "$TUTOR_SCRIPT_DIR/tutor-lib.sh"
 tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
-STATE_DIR="$USER_HOME/.hermes/profiles/$PROFILE/state"
 TEMPLATE="$USER_HOME/.hermes/profiles/$PROFILE/templates/lane-prompt.md"
 
 [ -f "$TEMPLATE" ] || { echo "template missing: $TEMPLATE"; exit 2; }
