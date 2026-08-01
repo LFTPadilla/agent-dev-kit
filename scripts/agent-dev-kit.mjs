@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { execFileSync, spawnSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
@@ -40,22 +40,11 @@ function printChecks(checks) {
   return failures
 }
 
-function commandExists(name) {
-  const result = spawnSync('sh', ['-lc', `command -v ${quote(name)} >/dev/null 2>&1`])
-  return result.status === 0
-}
-
 function commandVersion(name, args = ['--version']) {
-  if (!commandExists(name)) return null
-  try {
-    return execFileSync(name, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n')[0].trim()
-  } catch {
-    return 'installed'
-  }
-}
-
-function quote(value) {
-  return `'${String(value).replaceAll("'", "'\\''")}'`
+  const result = spawnSync(name, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+  if (result.error?.code === 'ENOENT') return null
+  if (result.error || result.status !== 0) return 'installed'
+  return (result.stdout ?? '').split('\n')[0].trim()
 }
 
 function walkFiles(dir, out = []) {
