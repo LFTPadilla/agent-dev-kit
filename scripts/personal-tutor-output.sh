@@ -161,10 +161,14 @@ print_sanitized_full() {
   safe_stream < "$transcript"
 }
 
-print_sanitized_lines() {
+preview_lines() {
   local command="$1" count="$2"
   [ "$count" -gt 0 ] || return 0
-  "$command" -n "$count" "$transcript" | safe_stream
+  "$command" -n "$count" "$transcript"
+}
+
+print_sanitized_lines() {
+  preview_lines "$1" "$2" | safe_stream
 }
 
 print_sanitized_bytes() {
@@ -196,8 +200,8 @@ elif is_critical_output ||
 else
   printf 'display: bounded-success-preview\n'
   line_preview_bytes="$({
-    if [ "$head_lines" -gt 0 ]; then head -n "$head_lines" "$transcript"; fi
-    if [ "$tail_lines" -gt 0 ]; then tail -n "$tail_lines" "$transcript"; fi
+    preview_lines head "$head_lines"
+    preview_lines tail "$tail_lines"
   } | wc -c | tr -d ' ')"
   if [ "$lines" -gt "$preview_limit" ] && [ "$line_preview_bytes" -le "$preview_byte_limit" ]; then
     omitted=$((lines - preview_limit))
