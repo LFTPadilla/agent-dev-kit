@@ -137,27 +137,27 @@ declare -a overlay_missing=()
 
 # Source candidates to try when repairing. We exclude the destination
 # (the profile's own skills dir) to avoid self-referential symlinks.
+skill_paths_for_root() {
+  local root="$1" name="$2"
+  printf '%s\n' "$root/$name"
+  for parent in "${SKILL_CATEGORIES[@]}"; do
+    printf '%s\n' "$root/$parent/$name"
+  done
+}
+
 source_candidates() {
   local name="$1"
-  local cand=()
   # 1. Global ~/.hermes/skills/<name> and nested under known categories
-  cand+=("$USER_HOME/.hermes/skills/$name")
-  for parent in "${SKILL_CATEGORIES[@]}"; do
-    cand+=("$USER_HOME/.hermes/skills/$parent/$name")
-  done
+  skill_paths_for_root "$USER_HOME/.hermes/skills" "$name"
   # 2. OTHER profiles only (not $PROFILE) — scan whatever exists locally
   if [ -d "$USER_HOME/.hermes/profiles" ]; then
     for pdir in "$USER_HOME/.hermes/profiles"/*/; do
       [ -d "$pdir" ] || continue
       p="$(basename "$pdir")"
       [ "$p" = "$PROFILE" ] && continue
-      cand+=("$USER_HOME/.hermes/profiles/$p/skills/$name")
-      for parent in "${SKILL_CATEGORIES[@]}"; do
-        cand+=("$USER_HOME/.hermes/profiles/$p/skills/$parent/$name")
-      done
+      skill_paths_for_root "$USER_HOME/.hermes/profiles/$p/skills" "$name"
     done
   fi
-  printf '%s\n' "${cand[@]}"
 }
 
 check_skill() {
