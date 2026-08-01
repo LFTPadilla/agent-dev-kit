@@ -167,20 +167,25 @@ print_sanitized_lines() {
   "$command" -n "$count" "$transcript" | safe_stream
 }
 
-if [ "$force_full" -eq 1 ]; then
-  print_sanitized_full
-elif { [ "$kind" = security ] || [ "$status" -ne 0 ]; } && [ "$bytes" -gt "$preview_byte_limit" ]; then
-  head_bytes=$((preview_byte_limit / 2))
-  tail_bytes=$((preview_byte_limit - head_bytes))
-  omitted=$((bytes - preview_byte_limit))
-  printf 'display: bounded-critical-preview\n'
-  printf 'omitted_bytes: %s\n' "$omitted"
+print_sanitized_bytes() {
+  local omission_message="$1"
+  local head_bytes=$((preview_byte_limit / 2))
+  local tail_bytes=$((preview_byte_limit - head_bytes))
   printf '%s\n' '--- sanitized leading bytes ---'
   head -c "$head_bytes" "$transcript" | safe_stream
-  printf '\n%s\n' "--- $omitted exact bytes omitted; inspect the mode-0600 transcript locally ---"
+  printf '\n%s\n' "$omission_message"
   printf '%s\n' '--- sanitized trailing bytes ---'
   tail -c "$tail_bytes" "$transcript" | safe_stream
   printf '\n'
+}
+
+if [ "$force_full" -eq 1 ]; then
+  print_sanitized_full
+elif { [ "$kind" = security ] || [ "$status" -ne 0 ]; } && [ "$bytes" -gt "$preview_byte_limit" ]; then
+  omitted=$((bytes - preview_byte_limit))
+  printf 'display: bounded-critical-preview\n'
+  printf 'omitted_bytes: %s\n' "$omitted"
+  print_sanitized_bytes "--- $omitted exact bytes omitted; inspect the mode-0600 transcript locally ---"
 elif [ "$kind" = security ] || [ "$status" -ne 0 ] ||
   { [ "$lines" -le "$preview_limit" ] && [ "$bytes" -le "$preview_byte_limit" ]; }; then
   print_sanitized_full
@@ -200,18 +205,11 @@ else
     printf '%s\n' '--- sanitized tail ---'
     print_sanitized_lines tail "$tail_lines"
   else
-    head_bytes=$((preview_byte_limit / 2))
-    tail_bytes=$((preview_byte_limit - head_bytes))
     omitted=$((bytes - preview_byte_limit))
     [ "$omitted" -lt 0 ] && omitted=0
     printf 'preview_basis: bytes\n'
     printf 'omitted_bytes: %s\n' "$omitted"
-    printf '%s\n' '--- sanitized leading bytes ---'
-    head -c "$head_bytes" "$transcript" | safe_stream
-    printf '\n%s\n' "--- $omitted exact bytes omitted; inspect transcript before diagnosis ---"
-    printf '%s\n' '--- sanitized trailing bytes ---'
-    tail -c "$tail_bytes" "$transcript" | safe_stream
-    printf '\n'
+    print_sanitized_bytes "--- $omitted exact bytes omitted; inspect transcript before diagnosis ---"
   fi
 fi
 
