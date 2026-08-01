@@ -74,9 +74,10 @@ cache_base="${PERSONAL_TUTOR_OUTPUT_CACHE_ROOT:-${XDG_CACHE_HOME:-$PERSONAL_TUTO
 mkdir -p "$cache_base"
 chmod 700 "$cache_base"
 cache_base="$(cd "$cache_base" && pwd -P)"
-case "$cache_base/" in
-  "$repo/"*) echo "output cache must be outside the worktree: $cache_base"; exit 2 ;;
-esac
+if personal_tutor_path_is_within "$cache_base" "$repo"; then
+  echo "output cache must be outside the worktree: $cache_base"
+  exit 2
+fi
 
 repo_id="$(printf '%s' "$repo" | sha256sum | cut -c1-16)"
 repo_cache="$cache_base/$repo_id"
@@ -84,9 +85,10 @@ repo_cache="$cache_base/$repo_id"
 mkdir -p "$repo_cache"
 chmod 700 "$repo_cache"
 repo_cache="$(cd "$repo_cache" && pwd -P)"
-case "$repo_cache/" in
-  "$repo/"*) echo "repository cache resolves inside the worktree: $repo_cache"; exit 2 ;;
-esac
+if personal_tutor_path_is_within "$repo_cache" "$repo"; then
+  echo "repository cache resolves inside the worktree: $repo_cache"
+  exit 2
+fi
 
 if [ "$doctor" -eq 1 ]; then
   [ $# -eq 0 ] || { echo "--doctor does not accept a command"; exit 2; }

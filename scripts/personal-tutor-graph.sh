@@ -63,24 +63,27 @@ umask 077
 cache_root="${PERSONAL_TUTOR_GRAPH_CACHE_ROOT:-${XDG_CACHE_HOME:-$PERSONAL_TUTOR_USER_HOME/.cache}/personal-dev-tutor/graphify}"
 [ ! -L "$cache_root" ] || { echo "refusing symlinked graph cache root: $cache_root"; exit 2; }
 cache_candidate="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$cache_root")"
-case "$cache_candidate/" in
-  "$repo/"*) echo "graph cache must be outside the worktree: $cache_candidate"; exit 2 ;;
-esac
+if personal_tutor_path_is_within "$cache_candidate" "$repo"; then
+  echo "graph cache must be outside the worktree: $cache_candidate"
+  exit 2
+fi
 mkdir -p "$cache_root"
 chmod 700 "$cache_root"
 cache_root="$(cd "$cache_root" && pwd -P)"
-case "$cache_root/" in
-  "$repo/"*) echo "graph cache must be outside the worktree: $cache_root"; exit 2 ;;
-esac
+if personal_tutor_path_is_within "$cache_root" "$repo"; then
+  echo "graph cache must be outside the worktree: $cache_root"
+  exit 2
+fi
 repo_key="$(printf '%s' "$repo" | sha256sum | cut -c1-16)"
 cache_dir="$cache_root/$(basename "$repo")-$repo_key"
 [ ! -L "$cache_dir" ] || { echo "refusing symlinked repository graph cache: $cache_dir"; exit 2; }
 mkdir -p "$cache_dir"
 chmod 700 "$cache_dir"
 cache_dir="$(cd "$cache_dir" && pwd -P)"
-case "$cache_dir/" in
-  "$repo/"*) echo "repository graph cache resolves inside the worktree: $cache_dir"; exit 2 ;;
-esac
+if personal_tutor_path_is_within "$cache_dir" "$repo"; then
+  echo "repository graph cache resolves inside the worktree: $cache_dir"
+  exit 2
+fi
 graph="$cache_dir/graphify-out/graph.json"
 source_state="$cache_dir/source-state.sha256"
 

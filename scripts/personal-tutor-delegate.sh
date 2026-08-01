@@ -87,7 +87,10 @@ fi
 umask 077
 lane_state_root="${PERSONAL_TUTOR_LANE_CACHE_ROOT:-$PERSONAL_TUTOR_USER_HOME/.cache/personal-dev-tutor/lanes}"
 lane_state_root="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$lane_state_root")"
-case "$lane_state_root/" in "$worktree/"*) echo "lane state cache must be outside the worktree"; exit 2 ;; esac
+if personal_tutor_path_is_within "$lane_state_root" "$worktree"; then
+  echo "lane state cache must be outside the worktree"
+  exit 2
+fi
 mkdir -p "$lane_state_root"
 chmod 700 "$lane_state_root"
 worktree_key="$(printf '%s' "$worktree" | sha256sum | cut -c1-16)"

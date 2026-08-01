@@ -34,7 +34,7 @@ codex_count=0
 while IFS='|' read -r pane name command dead repository codex_home; do
   [ "$command" = codex ] && [ "$dead" = 0 ] || continue
   [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || continue
-  case "$repository" in "$repo"|"$repo"/*) ;; *) continue ;; esac
+  personal_tutor_path_is_within "$repository" "$repo" || continue
   printf '%-12s %-18s %-12s %-5s %s\n' "$PERSONAL_TUTOR_SESSION:$pane" "$name" "$command" "$dead" "$repository"
   codex_count=$((codex_count + 1))
 done < <(tmux list-panes -s -t "$PERSONAL_TUTOR_SESSION" -F '#{window_index}.#{pane_index}|#{window_name}|#{pane_current_command}|#{pane_dead}|#{pane_current_path}|#{@personal_tutor_codex_home}')

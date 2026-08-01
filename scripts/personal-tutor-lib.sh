@@ -32,6 +32,14 @@ personal_tutor_git_root() {
   (cd "$root" && pwd -P)
 }
 
+personal_tutor_path_is_within() {
+  local path="$1" root="$2"
+  case "$path" in
+    "$root"|"$root"/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 personal_tutor_prepare_tmux() {
   local uid runtime
   uid="$(id -u)"

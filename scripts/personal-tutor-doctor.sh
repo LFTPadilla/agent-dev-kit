@@ -298,7 +298,9 @@ if tmux has-session -t "$PERSONAL_TUTOR_SESSION" 2>/dev/null; then
     while IFS='|' read -r command dead path codex_home; do
       [ "$command" = codex ] && [ "$dead" = 0 ] || continue
       [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || continue
-      case "$path" in "$REPO"|"$REPO"/*) codex_count=$((codex_count + 1)) ;; esac
+      if personal_tutor_path_is_within "$path" "$REPO"; then
+        codex_count=$((codex_count + 1))
+      fi
     done < <(tmux list-panes -s -t "$PERSONAL_TUTOR_SESSION" -F '#{pane_current_command}|#{pane_dead}|#{pane_current_path}|#{@personal_tutor_codex_home}' 2>/dev/null)
     [ "$codex_count" -gt 0 ] && ok "repository-matched isolated Codex workers available: $codex_count" || warning "no isolated Codex worker pane for $REPO in $PERSONAL_TUTOR_SESSION; start one with personal-tutor-codex"
   else
