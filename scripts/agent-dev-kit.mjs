@@ -101,8 +101,7 @@ function skillDirs() {
     .sort()
 }
 
-function validateSkills(checks) {
-  const dirs = skillDirs()
+function validateSkills(checks, { skillDirs: dirs }) {
   if (!dirs.length) {
     checks.push(fail('no skills found under plugins/dev-skills/skills'))
     return
@@ -128,12 +127,12 @@ function validateSkills(checks) {
   checks.push(ok(`${dirs.length} skill frontmatters checked`))
 }
 
-function validateJsonFiles(checks, files) {
+function validateJsonFiles(checks, { files }) {
   for (const file of files.filter((f) => f.endsWith('.json'))) readJson(file, checks)
   checks.push(ok('JSON files parse'))
 }
 
-function validateYamlFiles(checks, files) {
+function validateYamlFiles(checks, { files }) {
   for (const file of files.filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))) {
     const text = readFileSync(file, 'utf8')
     if (text.includes('\t')) checks.push(fail(`${rel(file)} contains tabs; use spaces in YAML`))
@@ -182,11 +181,11 @@ function validateReleaseVersions(checks) {
   }
 }
 
-function validateProvenance(checks) {
+function validateProvenance(checks, { skillDirs: dirs }) {
   const file = path.join(root, 'skill-provenance.json')
   const data = readJson(file, checks)
   if (!data) return
-  const actual = skillDirs().map((dir) => path.basename(dir)).sort()
+  const actual = dirs.map((dir) => path.basename(dir)).sort()
   const recorded = Object.keys(data.skills || {}).sort()
   const missing = actual.filter((name) => !recorded.includes(name))
   const stale = recorded.filter((name) => !actual.includes(name))
@@ -310,7 +309,7 @@ function validateEvals(checks) {
   checks.push(ok(`eval suite checked (${planted} planted, ${controls} controls)`))
 }
 
-function validateLinks(checks, files) {
+function validateLinks(checks, { files }) {
   const markdown = files.filter((f) => f.endsWith('.md'))
   const linkPattern = /\[[^\]]+\]\(([^)]+)\)/g
   for (const file of markdown) {
@@ -327,7 +326,7 @@ function validateLinks(checks, files) {
   checks.push(ok('relative markdown links checked'))
 }
 
-function privacyScan(checks, files) {
+function privacyScan(checks, { files }) {
   const offenders = []
   for (const file of files) {
     if (file.includes('plugins/dev-skills/skills/drawio-skill/data/lobe-icons.json')) continue
@@ -342,7 +341,10 @@ function privacyScan(checks, files) {
 
 function validate() {
   const checks = []
-  const files = walkFiles(root)
+  const validationContext = {
+    files: walkFiles(root),
+    skillDirs: skillDirs()
+  }
   for (const validator of [
     validateJsonFiles,
     validateYamlFiles,
@@ -356,7 +358,7 @@ function validate() {
     validateEvals,
     validateLinks,
     privacyScan
-  ]) validator(checks, files)
+  ]) validator(checks, validationContext)
   return printChecks(checks)
 }
 
