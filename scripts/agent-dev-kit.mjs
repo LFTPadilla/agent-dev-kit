@@ -237,13 +237,9 @@ function validatePiPackageResearch(checks) {
   for (const file of missingFiles) checks.push(fail(`${rel(file)} is missing`))
   if (missingFiles.length) return
 
-  const profiles = readFileSync(profilesFile, 'utf8')
+  const [profiles, readme, matrix, audit, remainingAudit] = requiredFiles.map((file) => readFileSync(file, 'utf8'))
   const profilesDocument = parseDocument(profiles, { prettyErrors: true, strict: true })
   const profilesConfig = profilesDocument.errors.length === 0 ? profilesDocument.toJS() : null
-  const readme = readFileSync(readmeFile, 'utf8')
-  const matrix = readFileSync(matrixFile, 'utf8')
-  const audit = readFileSync(auditFile, 'utf8')
-  const remainingAudit = readFileSync(remainingAuditFile, 'utf8')
 
   if (profilesConfig?.status !== 'research-only' || profilesConfig?.runtime_activation !== 'none') {
     checks.push(fail('pi-profiles/profiles.yaml must remain research-only with no runtime activation'))
