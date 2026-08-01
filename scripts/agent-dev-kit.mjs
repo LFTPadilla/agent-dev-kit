@@ -21,10 +21,15 @@ const ok = (msg) => ({ level: 'ok', msg })
 const warn = (msg) => ({ level: 'warn', msg })
 const fail = (msg) => ({ level: 'fail', msg })
 
+function checkLabel(level) {
+  if (level === 'ok') return color(32, 'OK')
+  if (level === 'warn') return color(33, 'WARN')
+  return color(31, 'FAIL')
+}
+
 function printChecks(checks) {
   for (const check of checks) {
-    const label = check.level === 'ok' ? color(32, 'OK') : check.level === 'warn' ? color(33, 'WARN') : color(31, 'FAIL')
-    console.log(`${label} ${check.msg}`)
+    console.log(`${checkLabel(check.level)} ${check.msg}`)
   }
   const failures = checks.filter((c) => c.level === 'fail').length
   const warnings = checks.filter((c) => c.level === 'warn').length
