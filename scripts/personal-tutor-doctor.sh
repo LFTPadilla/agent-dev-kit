@@ -40,6 +40,25 @@ paths_match() {
   [ "$(readlink -f "$1")" = "$(readlink -f "$2")" ]
 }
 
+check_skill_links() {
+  local runtime="$1" target_root="$2" description="$3" skill name target
+  local expected=0 linked=0
+  shift 3
+  local -a allowed_skills=("$@")
+
+  for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
+    [ -f "$skill/SKILL.md" ] || continue
+    name="$(basename "$skill")"
+    personal_tutor_array_contains "$name" "${allowed_skills[@]}" || continue
+    target="$target_root/$name"
+    expected=$((expected + 1))
+    [ -e "$target" ] && paths_match "$target" "${skill%/}" && linked=$((linked + 1))
+  done
+
+  [ "$linked" -eq "$expected" ] && ok "all $expected $description skills linked into $runtime" || \
+    bad "$runtime skill links: $linked/$expected"
+}
+
 printf 'Personal Dev Tutor doctor\nProfile: %s\nSession: %s\nHome:    %s\n\n' \
   "$PERSONAL_TUTOR_PROFILE" "$PERSONAL_TUTOR_SESSION" "$PERSONAL_TUTOR_USER_HOME"
 [ -n "$REPO" ] && printf 'Repository/worktree: %s\n\n' "$REPO"
@@ -143,23 +162,10 @@ else
 fi
 
 if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
-  expected=0 linked=0 codex_expected=0 codex_linked=0
-  for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
-    [ -f "$skill/SKILL.md" ] || continue
-    name="$(basename "$skill")"
-    profile_target="$PERSONAL_TUTOR_PROFILE_DIR/skills/agent-dev-kit/$name"
-    codex_target="$PERSONAL_TUTOR_CODEX_HOME/skills/$name"
-    if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; then
-      expected=$((expected + 1))
-      [ -e "$profile_target" ] && paths_match "$profile_target" "${skill%/}" && linked=$((linked + 1))
-    fi
-    if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
-      codex_expected=$((codex_expected + 1))
-      [ -e "$codex_target" ] && paths_match "$codex_target" "${skill%/}" && codex_linked=$((codex_linked + 1))
-    fi
-  done
-  [ "$linked" -eq "$expected" ] && ok "all $expected public skills linked into Hermes" || bad "Hermes skill links: $linked/$expected"
-  [ "$codex_linked" -eq "$codex_expected" ] && ok "all $codex_expected worker skills linked into Codex" || bad "Codex worker skill links: $codex_linked/$codex_expected"
+  check_skill_links Hermes "$PERSONAL_TUTOR_PROFILE_DIR/skills/agent-dev-kit" public \
+    "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"
+  check_skill_links Codex "$PERSONAL_TUTOR_CODEX_HOME/skills" worker \
+    "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"
   unexpected_codex=0
   for installed in "$PERSONAL_TUTOR_CODEX_HOME/skills"/*; do
     [ -e "$installed" ] || continue
