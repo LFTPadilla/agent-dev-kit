@@ -128,6 +128,12 @@ reset_managed_skill_refresh() {
   REFRESH_BACKUP=""
 }
 
+clear_managed_skill_history() {
+  UPDATED_SKILL_TARGETS=()
+  UPDATED_SKILL_BACKUPS=()
+  UPDATED_SKILL_WAS_ABSENT=()
+}
+
 cleanup_managed_skill_refresh() {
   local status="${1:-0}" index target backup was_absent
   trap '' HUP INT TERM
@@ -146,9 +152,7 @@ cleanup_managed_skill_refresh() {
     done
   fi
   reset_managed_skill_refresh
-  UPDATED_SKILL_TARGETS=()
-  UPDATED_SKILL_BACKUPS=()
-  UPDATED_SKILL_WAS_ABSENT=()
+  clear_managed_skill_history
   if [ "$EXIT_CLEANUP" -eq 0 ] && [ "$WORKHORSE_LOCK_ACTIVE" -eq 1 ]; then
     restore_workhorse_signal_traps
   fi
@@ -176,9 +180,7 @@ commit_managed_skill_refreshes() {
       status=1
     fi
   done
-  UPDATED_SKILL_TARGETS=()
-  UPDATED_SKILL_BACKUPS=()
-  UPDATED_SKILL_WAS_ABSENT=()
+  clear_managed_skill_history
   return "$status"
 }
 
