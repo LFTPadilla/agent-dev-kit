@@ -141,6 +141,14 @@ warn_if_graph_stale() {
   [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
 }
 
+run_graph_action() {
+  local action="$1"
+  shift
+  require_graph
+  warn_if_graph_stale
+  personal_tutor_graphify "$action" "$@" --graph "$graph"
+}
+
 case "$action" in
   refresh)
     [ "${#args[@]}" -eq 0 ] || { usage; exit 2; }
@@ -161,21 +169,15 @@ case "$action" in
     ;;
   query)
     [ "${#args[@]}" -eq 1 ] || { usage; exit 2; }
-    require_graph
-    warn_if_graph_stale
-    personal_tutor_graphify query "${args[0]}" --graph "$graph"
+    run_graph_action query "${args[0]}"
     ;;
   affected)
     [ "${#args[@]}" -eq 1 ] || { usage; exit 2; }
-    require_graph
-    warn_if_graph_stale
-    personal_tutor_graphify affected "${args[0]}" --graph "$graph"
+    run_graph_action affected "${args[0]}"
     ;;
   path)
     [ "${#args[@]}" -eq 2 ] || { usage; exit 2; }
-    require_graph
-    warn_if_graph_stale
-    personal_tutor_graphify path "${args[0]}" "${args[1]}" --graph "$graph"
+    run_graph_action path "${args[0]}" "${args[1]}"
     ;;
   *) echo "unknown action: $action"; usage; exit 2 ;;
 esac
