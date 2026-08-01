@@ -210,7 +210,6 @@ check_skill() {
   fi
 
   checks_ok+=("$name")
-  return 0
 }
 
 # Validate a candidate as a healthy source: must be a directory with a
