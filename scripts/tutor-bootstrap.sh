@@ -291,23 +291,29 @@ repair_skill() {
   return 0
 }
 
+clear_skill_results() {
+  local name="$1" entry
+  local -a filtered_broken=() new_ok=()
+  for entry in "${checks_broken[@]}"; do
+    case "$entry" in
+      "$name"*) ;;
+      *) filtered_broken+=("$entry") ;;
+    esac
+  done
+  checks_broken=("${filtered_broken[@]}")
+  for entry in "${checks_ok[@]}"; do
+    [ "$entry" != "$name" ] && new_ok+=("$entry")
+  done
+  checks_ok=("${new_ok[@]}")
+}
+
 if [ "$MODE" = "repair" ]; then
   for s in "${all_skills[@]}"; do
     if ! check_skill "$s"; then
       repair_skill "$s" || true
       # Re-check after repair: clear prior ok/broken entries for this name
       # so the final counts reflect post-repair reality.
-      declare -a new_ok=()
-      for entry in "${checks_ok[@]}"; do [ "$entry" != "$s" ] && new_ok+=("$entry"); done
-      checks_ok=("${new_ok[@]}")
-      declare -a filtered_broken=()
-      for entry in "${checks_broken[@]}"; do
-        case "$entry" in
-          "$s"*) ;;
-          *) filtered_broken+=("$entry") ;;
-        esac
-      done
-      checks_broken=("${filtered_broken[@]}")
+      clear_skill_results "$s"
       check_skill "$s" >/dev/null 2>&1 || true
     fi
   done
@@ -321,18 +327,8 @@ fi
 for s in "${overlay[@]}"; do
   if ! check_skill "$s" >/dev/null 2>&1; then
     # check_skill appended to checks_broken; pull that back out
-    declare -a filtered_broken=()
-    for entry in "${checks_broken[@]}"; do
-      case "$entry" in
-        "$s"*) overlay_missing+=("$s") ;;
-        *) filtered_broken+=("$entry") ;;
-      esac
-    done
-    checks_broken=("${filtered_broken[@]}")
-    # Also drop accidental ok entries for overlay names
-    declare -a new_ok=()
-    for entry in "${checks_ok[@]}"; do [ "$entry" != "$s" ] && new_ok+=("$entry"); done
-    checks_ok=("${new_ok[@]}")
+    clear_skill_results "$s"
+    overlay_missing+=("$s")
   fi
 done
 
