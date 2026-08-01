@@ -404,10 +404,11 @@ function doctor() {
 
 function inventory() {
   const provenance = readJson(path.join(root, 'skill-provenance.json'), [])
+  const dirs = skillDirs()
   console.log(`# agent-dev-kit inventory\n`)
   console.log(`Root: ${root}`)
-  console.log(`Skills: ${skillDirs().length}`)
-  for (const dir of skillDirs()) {
+  console.log(`Skills: ${dirs.length}`)
+  for (const dir of dirs) {
     const name = path.basename(dir)
     const item = provenance?.skills?.[name]
     console.log(`- ${name}${item ? ` (${item.risk}, ${item.visibility})` : ''}`)
