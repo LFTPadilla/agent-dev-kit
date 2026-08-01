@@ -222,27 +222,25 @@ repair_skill() {
   local name="$1"
   # Determine target dir
   local target="$SKILLS_DIR/$name"
+  # Try the direct path and depth-2 parent categories in the same order as
+  # source discovery.
+  local candidate
+  while IFS= read -r candidate; do
+    if [ -d "$candidate" ]; then
+      target="$candidate"
+      break
+    fi
+  done < <(skill_paths_for_root "$SKILLS_DIR" "$name")
+  # If still not found and we have prior knowledge of where the source lived,
+  # place it there
   if [ ! -d "$target" ]; then
-    # Try the direct path and depth-2 parent categories in the same order as
-    # source discovery.
-    local candidate
-    while IFS= read -r candidate; do
-      if [ -d "$candidate" ]; then
-        target="$candidate"
+    for p in gsd software-development devops autonomous-ai-agents; do
+      if [ -d "$USER_HOME/.hermes/skills/$p/$name" ]; then
+        mkdir -p "$SKILLS_DIR/$p"
+        target="$SKILLS_DIR/$p/$name"
         break
       fi
-    done < <(skill_paths_for_root "$SKILLS_DIR" "$name")
-    # If still not found and we have prior knowledge of where the source lived,
-    # place it there
-    if [ ! -d "$target" ]; then
-      for p in gsd software-development devops autonomous-ai-agents; do
-        if [ -d "$USER_HOME/.hermes/skills/$p/$name" ]; then
-          mkdir -p "$SKILLS_DIR/$p"
-          target="$SKILLS_DIR/$p/$name"
-          break
-        fi
-      done
-    fi
+    done
   fi
 
   # Find the best source: latest mtime, must be healthy (name matches),
