@@ -305,13 +305,14 @@ function validateEvals(checks) {
   const cases = readJson(file, checks)
   if (!Array.isArray(cases)) return
   const seen = new Set()
+  let planted = 0
   for (const c of cases) {
     if (!c.file || typeof c.plantedBug !== 'boolean') checks.push(fail(`invalid eval case entry: ${JSON.stringify(c)}`))
     if (seen.has(c.file)) checks.push(fail(`duplicate eval case: ${c.file}`))
     seen.add(c.file)
     if (c.file && !existsSync(path.join(root, 'evals/cases', c.file))) checks.push(fail(`eval case file missing: ${c.file}`))
+    if (c.plantedBug) planted++
   }
-  const planted = cases.filter((c) => c.plantedBug).length
   const controls = cases.length - planted
   if (cases.length < 12) checks.push(fail('eval suite should have at least 12 cases'))
   if (controls < 2) checks.push(fail('eval suite should have at least 2 clean controls'))
