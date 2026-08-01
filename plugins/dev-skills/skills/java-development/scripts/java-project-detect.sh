@@ -138,14 +138,13 @@ marker_files=()
 for candidate in "$root/pom.xml" "$root/build.gradle" "$root/build.gradle.kts"; do
   [ -f "$candidate" ] && marker_files+=("$candidate")
 done
+marker_text=""
 if [ "${#marker_files[@]}" -gt 0 ]; then
   marker_text="$(grep -Eio 'junit-jupiter|junit-platform|mockito|testcontainers|spring-boot|maven-surefire|maven-failsafe|jacoco|spotbugs|checkstyle|pmd|errorprone|spotless|dependency-check' "${marker_files[@]}" 2>/dev/null || true)"
-  if [ -n "$marker_text" ]; then
-    printf 'markers=' 
-    printf '%s\n' "$marker_text" | tr '[:upper:]' '[:lower:]' | sort -u | paste -sd, -
-  else
-    printf 'markers=none-detected\n'
-  fi
+fi
+if [ -n "$marker_text" ]; then
+  printf 'markers='
+  printf '%s\n' "$marker_text" | tr '[:upper:]' '[:lower:]' | sort -u | paste -sd, -
 else
   printf 'markers=none-detected\n'
 fi
