@@ -45,6 +45,15 @@ list_canonical() {
     [ -d "$SKILLS_DIR" ] && find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort
 }
 
+skill_targets() {
+    local skill="$1"
+    printf '%s\n' \
+        "$CLAUDE_DIR/$skill" \
+        "$CODEX_DIR/$skill" \
+        "$PI_DIR/$skill" \
+        "$OPENCODE_DIR/$skill.md"
+}
+
 link_codex_skill() {
     local source="$1"
     local target="$2"
@@ -66,11 +75,7 @@ case "$mode" in
         echo
         echo "Symlink status per agent:"
         for skill in $(list_canonical); do
-            for path in \
-                "$CLAUDE_DIR/$skill" \
-                "$CODEX_DIR/$skill" \
-                "$PI_DIR/$skill" \
-                "$OPENCODE_DIR/$skill.md"; do
+            while IFS= read -r path; do
                 if [ -L "$path" ]; then
                     target=$(readlink -f "$path")
                     if [ -e "$target" ]; then
@@ -83,17 +88,19 @@ case "$mode" in
                 else
                     printf '  ·  %-60s [not installed]\n' "$path"
                 fi
-            done
+            done < <(skill_targets "$skill")
         done
         exit 0
         ;;
     uninstall)
         echo "Uninstalling all skills from each agent dir..."
         for skill in $(list_canonical); do
-            [ -L "$CLAUDE_DIR/$skill" ] && rm "$CLAUDE_DIR/$skill" && echo "  rm $CLAUDE_DIR/$skill"
-            [ -L "$CODEX_DIR/$skill" ] && rm "$CODEX_DIR/$skill" && echo "  rm $CODEX_DIR/$skill"
-            [ -L "$PI_DIR/$skill" ] && rm "$PI_DIR/$skill" && echo "  rm $PI_DIR/$skill"
-            [ -L "$OPENCODE_DIR/$skill.md" ] && rm "$OPENCODE_DIR/$skill.md" && echo "  rm $OPENCODE_DIR/$skill.md"
+            while IFS= read -r path; do
+                if [ -L "$path" ]; then
+                    rm "$path"
+                    echo "  rm $path"
+                fi
+            done < <(skill_targets "$skill")
         done
         echo "Done. Source files in $SKILLS_DIR untouched."
         exit 0
