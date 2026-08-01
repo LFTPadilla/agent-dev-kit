@@ -329,12 +329,8 @@ function privacyScan(checks) {
     if (file.includes('plugins/dev-skills/skills/drawio-skill/data/lobe-icons.json')) continue
     if (!/\.(md|json|ya?ml|mjs|js|ts|tsx|sh)$/.test(file)) continue
     const text = readFileSync(file, 'utf8')
-    for (const pattern of privatePatterns) {
-      if (pattern.test(text)) {
-        offenders.push(`${rel(file)} matches ${pattern}`)
-        break
-      }
-    }
+    const pattern = privatePatterns.find((candidate) => candidate.test(text))
+    if (pattern) offenders.push(`${rel(file)} matches ${pattern}`)
   }
   if (offenders.length) offenders.forEach((item) => checks.push(fail(`private coupling: ${item}`)))
   else checks.push(ok('privacy scan found no private project coupling'))
