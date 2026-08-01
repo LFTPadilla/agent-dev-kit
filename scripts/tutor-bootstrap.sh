@@ -224,7 +224,6 @@ is_healthy_source() {
   local fm_name
   fm_name="$(skill_frontmatter_field name "$cand/SKILL.md")"
   [ "$fm_name" = "$name" ] || return 1
-  return 0
 }
 
 repair_skill() {
