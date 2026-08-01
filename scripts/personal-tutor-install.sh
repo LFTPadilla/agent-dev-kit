@@ -206,11 +206,16 @@ remove_source_link() {
   fi
 }
 
+remove_symlink_entries() {
+  local directory="$1" prefix="${2:-}" entry
+  for entry in "$directory"/"$prefix"*; do
+    [ -L "$entry" ] && rm "$entry"
+  done
+}
+
 printf '[4/8] Personal Tutor and GSD skills\n'
 mkdir -p "$PROFILE_SKILLS" "$CODEX_SKILLS"
-for stale in "$PROFILE_SKILLS"/*; do
-  [ -L "$stale" ] && rm "$stale"
-done
+remove_symlink_entries "$PROFILE_SKILLS"
 
 CODEX_MANAGED_STATE="$PROFILE_DIR/state/codex-skill-links"
 if [ -f "$CODEX_MANAGED_STATE" ]; then
@@ -247,9 +252,7 @@ done
 GSD_PROFILE_SKILLS="$PROFILE_DIR/skills/gsd"
 if [ -L "$GSD_PROFILE_SKILLS" ]; then rm "$GSD_PROFILE_SKILLS"; fi
 mkdir -p "$GSD_PROFILE_SKILLS"
-for stale in "$GSD_PROFILE_SKILLS"/gsd-*; do
-  [ -L "$stale" ] && rm "$stale"
-done
+remove_symlink_entries "$GSD_PROFILE_SKILLS" gsd-
 for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   link_skill "$GSD_SKILLS/$gsd_skill" "$GSD_PROFILE_SKILLS/$gsd_skill"
 done
@@ -264,9 +267,7 @@ GRAPHIFY_CODEX_SKILL="$CODEX_SKILLS/graphify"
 [ -f "$GRAPHIFY_CODEX_SKILL/SKILL.md" ] || { echo "Graphify Codex skill installation failed"; exit 1; }
 GRAPHIFY_PROFILE_SKILLS="$PROFILE_DIR/skills/external"
 mkdir -p "$GRAPHIFY_PROFILE_SKILLS"
-for stale in "$GRAPHIFY_PROFILE_SKILLS"/*; do
-  [ -L "$stale" ] && rm "$stale"
-done
+remove_symlink_entries "$GRAPHIFY_PROFILE_SKILLS"
 link_skill "$GRAPHIFY_HERMES_SKILL" "$GRAPHIFY_PROFILE_SKILLS/graphify"
 AGENT_DEV_KIT_HERMES_HOME="$PERSONAL_TUTOR_USER_HOME/.hermes" \
   "$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE"
