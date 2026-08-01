@@ -27,6 +27,17 @@ print_evidence_matches() {
   done <<< "$matches"
 }
 
+print_evidence_section() {
+  local section="$1" limit="$2" pattern="$3" file
+  shift 3
+  printf 'evidence.%s.begin\n' "$section"
+  for file in "$@"; do
+    [ -f "$file" ] || continue
+    print_evidence_matches "$file" "$limit" "$pattern"
+  done
+  printf 'evidence.%s.end\n' "$section"
+}
+
 maven_wrapper=no
 gradle_wrapper=no
 maven_wrapper_executable=no
@@ -108,28 +119,20 @@ if [ -f "$gradle_properties" ]; then
   fi
 fi
 
-printf 'evidence.jdk-target.begin\n'
-for file in \
+print_evidence_section jdk-target 12 \
+  'maven\.compiler\.(release|source|target)|<release>|<source>|<target>|<jdkToolchain>|<toolchain>|JavaLanguageVersion|languageVersion|sourceCompatibility|targetCompatibility|options\.release|java[._-]?version|^java[[:space:]]' \
   "$root/pom.xml" \
   "$root/build.gradle" \
   "$root/build.gradle.kts" \
   "$root/gradle.properties" \
   "$root/.java-version" \
   "$root/.sdkmanrc" \
-  "$root/.tool-versions"; do
-  [ -f "$file" ] || continue
-  print_evidence_matches "$file" 12 \
-    'maven\.compiler\.(release|source|target)|<release>|<source>|<target>|<jdkToolchain>|<toolchain>|JavaLanguageVersion|languageVersion|sourceCompatibility|targetCompatibility|options\.release|java[._-]?version|^java[[:space:]]'
-done
-printf 'evidence.jdk-target.end\n'
+  "$root/.tool-versions"
 
-printf 'evidence.ci.begin\n'
-for ci in "$root"/.github/workflows/*.yml "$root"/.github/workflows/*.yaml "$root"/.gitlab-ci.yml "$root"/Jenkinsfile; do
-  [ -f "$ci" ] || continue
-  print_evidence_matches "$ci" 20 \
-    'setup-java|java-version:|distribution:|(^|[[:space:]])\./mvnw([[:space:]]|$)|(^|[[:space:]])\./gradlew([[:space:]]|$)'
-done
-printf 'evidence.ci.end\n'
+print_evidence_section ci 20 \
+  'setup-java|java-version:|distribution:|(^|[[:space:]])\./mvnw([[:space:]]|$)|(^|[[:space:]])\./gradlew([[:space:]]|$)' \
+  "$root"/.github/workflows/*.yml "$root"/.github/workflows/*.yaml \
+  "$root"/.gitlab-ci.yml "$root"/Jenkinsfile
 
 marker_files=()
 for candidate in "$root/pom.xml" "$root/build.gradle" "$root/build.gradle.kts"; do
