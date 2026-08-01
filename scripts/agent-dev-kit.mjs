@@ -214,7 +214,7 @@ function validateProfiles(checks) {
     checks.push(fail('profiles/ directory is missing'))
     return
   }
-  const files = readdirSync(dir).filter((name) => name.endsWith('.yml') || name.endsWith('.yaml'))
+  const files = filesWithExtensions(readdirSync(dir), ['.yml', '.yaml'])
   if (!files.length) checks.push(fail('profiles/ has no profile manifests'))
   for (const name of files) {
     const text = readFileSync(path.join(dir, name), 'utf8')
