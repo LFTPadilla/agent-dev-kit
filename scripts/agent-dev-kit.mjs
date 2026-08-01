@@ -338,18 +338,20 @@ function privacyScan(checks) {
 
 function validate() {
   const checks = []
-  validateJsonFiles(checks)
-  validateYamlFiles(checks)
-  validatePlugin(checks)
-  validateReleaseVersions(checks)
-  validateSkills(checks)
-  validateProvenance(checks)
-  validateProfiles(checks)
-  validatePiPackageResearch(checks)
-  validatePolicies(checks)
-  validateEvals(checks)
-  validateLinks(checks)
-  privacyScan(checks)
+  for (const validator of [
+    validateJsonFiles,
+    validateYamlFiles,
+    validatePlugin,
+    validateReleaseVersions,
+    validateSkills,
+    validateProvenance,
+    validateProfiles,
+    validatePiPackageResearch,
+    validatePolicies,
+    validateEvals,
+    validateLinks,
+    privacyScan
+  ]) validator(checks)
   return printChecks(checks)
 }
 
