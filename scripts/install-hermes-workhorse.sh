@@ -342,7 +342,7 @@ link_profile_skill() {
   }
   mkdir -p "$target_dir"
   if [ -L "$target" ]; then
-    if [ "$(readlink -f "$target" 2>/dev/null || true)" = "$(readlink -f "$source")" ]; then
+    if [ "$(readlink -f "$target" 2>/dev/null)" = "$(readlink -f "$source")" ]; then
       return
     fi
     echo "refusing to replace foreign skill link: $target" >&2
