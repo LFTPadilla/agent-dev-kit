@@ -50,13 +50,18 @@ PY
 
 today="$(date +%Y-%m-%d)"
 
+prompt_required() {
+  local initial_prompt="$1" retry_prompt="$2" value=""
+  read -r -p "$initial_prompt" value || true
+  while [ -z "$value" ]; do read -r -p "$retry_prompt" value || true; done
+  printf '%s' "$value"
+}
+
 if [ -z "$description" ]; then
-  read -r -p "Description (English, no semicolons): " description || true
-  while [ -z "$description" ]; do read -r -p "Description: " description || true; done
+  description="$(prompt_required "Description (English, no semicolons): " "Description: ")"
 fi
 if [ -z "$duration" ]; then
-  read -r -p "Duration (H:MM, e.g. 1:30): " duration || true
-  while [ -z "$duration" ]; do read -r -p "Duration: " duration || true; done
+  duration="$(prompt_required "Duration (H:MM, e.g. 1:30): " "Duration: ")"
 fi
 
 # Sanity: reject inner semicolons
