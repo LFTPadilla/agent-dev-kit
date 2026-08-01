@@ -161,6 +161,12 @@ print_sanitized_full() {
   safe_stream < "$transcript"
 }
 
+print_sanitized_lines() {
+  local command="$1" count="$2"
+  [ "$count" -gt 0 ] || return 0
+  "$command" -n "$count" "$transcript" | safe_stream
+}
+
 if [ "$force_full" -eq 1 ]; then
   print_sanitized_full
 elif { [ "$kind" = security ] || [ "$status" -ne 0 ]; } && [ "$bytes" -gt "$preview_byte_limit" ]; then
@@ -189,10 +195,10 @@ else
     printf 'preview_basis: lines\n'
     printf 'omitted_lines: %s\n' "$omitted"
     printf '%s\n' '--- sanitized head ---'
-    if [ "$head_lines" -gt 0 ]; then head -n "$head_lines" "$transcript" | safe_stream; fi
+    print_sanitized_lines head "$head_lines"
     printf '%s\n' "--- $omitted exact lines omitted; inspect transcript before diagnosis ---"
     printf '%s\n' '--- sanitized tail ---'
-    if [ "$tail_lines" -gt 0 ]; then tail -n "$tail_lines" "$transcript" | safe_stream; fi
+    print_sanitized_lines tail "$tail_lines"
   else
     head_bytes=$((preview_byte_limit / 2))
     tail_bytes=$((preview_byte_limit - head_bytes))
