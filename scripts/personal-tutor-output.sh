@@ -179,14 +179,18 @@ print_sanitized_bytes() {
   printf '\n'
 }
 
+is_critical_output() {
+  [ "$kind" = security ] || [ "$status" -ne 0 ]
+}
+
 if [ "$force_full" -eq 1 ]; then
   print_sanitized_full
-elif { [ "$kind" = security ] || [ "$status" -ne 0 ]; } && [ "$bytes" -gt "$preview_byte_limit" ]; then
+elif is_critical_output && [ "$bytes" -gt "$preview_byte_limit" ]; then
   omitted=$((bytes - preview_byte_limit))
   printf 'display: bounded-critical-preview\n'
   printf 'omitted_bytes: %s\n' "$omitted"
   print_sanitized_bytes "--- $omitted exact bytes omitted; inspect the mode-0600 transcript locally ---"
-elif [ "$kind" = security ] || [ "$status" -ne 0 ] ||
+elif is_critical_output ||
   { [ "$lines" -le "$preview_limit" ] && [ "$bytes" -le "$preview_byte_limit" ]; }; then
   print_sanitized_full
 else
