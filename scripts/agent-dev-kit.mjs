@@ -12,6 +12,7 @@ const privatePatterns = [
   /(?<![A-Za-z0-9_$}])\/home\/(?!(?:example|user|runner|tutor)\b)[A-Za-z0-9._-]+/i,
   /(?<![A-Za-z0-9_$}])\/Users\/(?!(?:example|user|runner|you)\b)[A-Za-z0-9._-]+/
 ]
+const yamlExtensions = ['.yml', '.yaml']
 const privacyScanExtensions = ['.md', '.json', '.yml', '.yaml', '.mjs', '.js', '.ts', '.tsx', '.sh']
 const ignoreDirs = new Set(['.git', 'node_modules', '.pi', '.venv', 'venv', 'playwright-report', 'test-results'])
 
@@ -138,7 +139,7 @@ function validateJsonFiles(checks, { files }) {
 }
 
 function validateYamlFiles(checks, { files }) {
-  for (const file of filesWithExtensions(files, ['.yml', '.yaml'])) {
+  for (const file of filesWithExtensions(files, yamlExtensions)) {
     const text = readFileSync(file, 'utf8')
     if (text.includes('\t')) checks.push(fail(`${rel(file)} contains tabs; use spaces in YAML`))
     if (!text.trim()) checks.push(fail(`${rel(file)} is empty`))
@@ -206,7 +207,7 @@ function validateProfiles(checks) {
     checks.push(fail('profiles/ directory is missing'))
     return
   }
-  const files = filesWithExtensions(readdirSync(dir), ['.yml', '.yaml'])
+  const files = filesWithExtensions(readdirSync(dir), yamlExtensions)
   if (!files.length) checks.push(fail('profiles/ has no profile manifests'))
   for (const name of files) {
     const text = readFileSync(path.join(dir, name), 'utf8')
