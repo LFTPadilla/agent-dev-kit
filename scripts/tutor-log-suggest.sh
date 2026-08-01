@@ -18,7 +18,7 @@ tutor_set_user_home "$SELF_PATH" || exit 1
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 WORKLOG_DIR="${AGENT_TUTOR_WORKLOG_DIR:-$USER_HOME/.hermes/profiles/$PROFILE/worklogs}"
 
-lane_id="${1:-}"; shift || true
+lane_id="${1:-}"; shift
 description=""
 duration=""
 
