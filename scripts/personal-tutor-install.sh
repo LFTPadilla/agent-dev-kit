@@ -213,20 +213,29 @@ remove_symlink_entries() {
   done
 }
 
+remove_managed_source_links() {
+  local state_file="$1" source_root="$2" label="$3" name target_root
+  shift 3
+  [ -f "$state_file" ] || return 0
+  while IFS= read -r name; do
+    managed_name "$name" || { echo "invalid managed $label state entry"; exit 1; }
+    for target_root in "$@"; do
+      remove_source_link "$target_root/$name" "$source_root"
+    done
+  done < "$state_file"
+}
+
 printf '[4/8] Personal Tutor and GSD skills\n'
 mkdir -p "$PROFILE_SKILLS" "$CODEX_SKILLS"
 remove_symlink_entries "$PROFILE_SKILLS"
 
 CODEX_MANAGED_STATE="$PROFILE_DIR/state/codex-skill-links"
 if [ -f "$CODEX_MANAGED_STATE" ]; then
-  while IFS= read -r name; do
-    managed_name "$name" || { echo "invalid managed Codex skill state entry"; exit 1; }
-    # Migrate links made by the earlier global-home installer only if the link
-    # still resolves into this exact source tree.
-    remove_source_link "$PERSONAL_TUTOR_USER_HOME/.codex/skills/$name" \
-      "$SOURCE/plugins/dev-skills/skills"
-    remove_source_link "$CODEX_SKILLS/$name" "$SOURCE/plugins/dev-skills/skills"
-  done < "$CODEX_MANAGED_STATE"
+  # Migrate links made by the earlier global-home installer only if the link
+  # still resolves into this exact source tree.
+  remove_managed_source_links "$CODEX_MANAGED_STATE" \
+    "$SOURCE/plugins/dev-skills/skills" "Codex skill" \
+    "$PERSONAL_TUTOR_USER_HOME/.codex/skills" "$CODEX_SKILLS"
 else
   # Migration from the first installer release: remove only links that resolve
   # into this source tree, then rebuild the filtered worker set.
@@ -274,14 +283,9 @@ AGENT_DEV_KIT_HERMES_HOME="$PERSONAL_TUTOR_USER_HOME/.hermes" \
 
 printf '[6/8] Isolated Codex worker home\n'
 CODEX_AGENT_STATE="$PROFILE_DIR/state/codex-agent-links"
-if [ -f "$CODEX_AGENT_STATE" ]; then
-  while IFS= read -r name; do
-    managed_name "$name" || { echo "invalid managed Codex agent state entry"; exit 1; }
-    target="$PERSONAL_TUTOR_USER_HOME/.codex/agents/$name"
-    remove_source_link "$target" \
-      "$SOURCE/plugins/dev-skills/skills/orchestrate/assets/codex-agents"
-  done < "$CODEX_AGENT_STATE"
-fi
+remove_managed_source_links "$CODEX_AGENT_STATE" \
+  "$SOURCE/plugins/dev-skills/skills/orchestrate/assets/codex-agents" "Codex agent" \
+  "$PERSONAL_TUTOR_USER_HOME/.codex/agents"
 rm -f "$CODEX_AGENT_STATE"
 printf '  Codex home: %s\n' "$CODEX_HOME"
 
