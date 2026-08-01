@@ -267,18 +267,17 @@ fi
 graphify_hermes="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/graphify"
 graphify_codex="$PERSONAL_TUTOR_CODEX_HOME/skills/graphify"
 graphify_profile="$PERSONAL_TUTOR_PROFILE_DIR/skills/external/graphify"
-if [ -f "$graphify_hermes/SKILL.md" ] && [ -f "$graphify_hermes/.graphify_version" ] && \
-   [ "$(cat "$graphify_hermes/.graphify_version")" = "$graphify_version" ]; then
-  ok "Graphify Hermes skill matches the installed CLI"
-else
-  bad "Graphify Hermes skill missing or stale"
-fi
-if [ -f "$graphify_codex/SKILL.md" ] && [ -f "$graphify_codex/.graphify_version" ] && \
-   [ "$(cat "$graphify_codex/.graphify_version")" = "$graphify_version" ]; then
-  ok "Graphify Codex skill matches the installed CLI"
-else
-  bad "Graphify Codex skill missing or stale"
-fi
+check_graphify_skill() {
+  local runtime="$1" skill="$2"
+  if [ -f "$skill/SKILL.md" ] && [ -f "$skill/.graphify_version" ] && \
+     [ "$(cat "$skill/.graphify_version")" = "$graphify_version" ]; then
+    ok "Graphify $runtime skill matches the installed CLI"
+  else
+    bad "Graphify $runtime skill missing or stale"
+  fi
+}
+check_graphify_skill Hermes "$graphify_hermes"
+check_graphify_skill Codex "$graphify_codex"
 if [ -f "$graphify_profile/SKILL.md" ] && \
    paths_match "$graphify_profile" "$graphify_hermes"; then
   ok "Graphify linked into the isolated tutor profile"
