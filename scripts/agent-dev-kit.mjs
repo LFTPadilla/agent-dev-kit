@@ -164,8 +164,9 @@ function validateReleaseVersions(checks) {
   const claudeFile = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
   const codexFile = path.join(root, 'plugins/dev-skills/.codex-plugin/plugin.json')
   const releaseFiles = [packageFile, lockFile, claudeFile, codexFile]
-  const [packageData, lockData, claudeData, codexData] = releaseFiles.map((file) => readJson(file, checks))
-  if (![packageData, lockData, claudeData, codexData].every(Boolean)) return
+  const releaseData = releaseFiles.map((file) => readJson(file, checks))
+  if (releaseData.some((data) => !data)) return
+  const [packageData, lockData, claudeData, codexData] = releaseData
   const versions = new Map([
     [rel(packageFile), packageData.version],
     [`${rel(lockFile)} root`, lockData.version],
