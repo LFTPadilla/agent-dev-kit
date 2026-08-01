@@ -306,21 +306,17 @@ clear_skill_results() {
   checks_ok=("${new_ok[@]}")
 }
 
-if [ "$MODE" = "repair" ]; then
-  for s in "${all_skills[@]}"; do
-    if ! check_skill "$s"; then
-      repair_skill "$s" || true
-      # Re-check after repair: clear prior ok/broken entries for this name
-      # so the final counts reflect post-repair reality.
-      clear_skill_results "$s"
-      check_skill "$s" >/dev/null 2>&1 || true
-    fi
-  done
-else
-  for s in "${all_skills[@]}"; do
-    check_skill "$s" || true
-  done
-fi
+for s in "${all_skills[@]}"; do
+  if check_skill "$s"; then
+    continue
+  fi
+  [ "$MODE" = "repair" ] || continue
+  repair_skill "$s" || true
+  # Re-check after repair: clear prior ok/broken entries for this name
+  # so the final counts reflect post-repair reality.
+  clear_skill_results "$s"
+  check_skill "$s" >/dev/null 2>&1 || true
+done
 
 # Overlay skills: missing is expected without a private overlay (not broken).
 for s in "${overlay[@]}"; do
