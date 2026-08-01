@@ -10,8 +10,8 @@ command -v mmdc >/dev/null || { echo "missing Mermaid CLI (mmdc)"; exit 1; }
 
 if [ -z "${PUPPETEER_EXECUTABLE_PATH:-}" ]; then
   for browser in google-chrome google-chrome-stable chromium chromium-browser; do
-    if command -v "$browser" >/dev/null 2>&1; then
-      export PUPPETEER_EXECUTABLE_PATH="$(command -v "$browser")"
+    if browser_path="$(command -v "$browser" 2>/dev/null)"; then
+      export PUPPETEER_EXECUTABLE_PATH="$browser_path"
       break
     fi
   done
