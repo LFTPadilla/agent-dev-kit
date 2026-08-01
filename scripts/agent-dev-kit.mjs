@@ -11,6 +11,7 @@ const privatePatterns = [
   /(?<![A-Za-z0-9_$}])\/home\/(?!(?:example|user|runner|tutor)\b)[A-Za-z0-9._-]+/i,
   /(?<![A-Za-z0-9_$}])\/Users\/(?!(?:example|user|runner|you)\b)[A-Za-z0-9._-]+/
 ]
+const privacyScanExtensions = ['.md', '.json', '.yml', '.yaml', '.mjs', '.js', '.ts', '.tsx', '.sh']
 const ignoreDirs = new Set(['.git', 'node_modules', '.pi', '.venv', 'venv', 'playwright-report', 'test-results'])
 
 function color(code, text) {
@@ -332,9 +333,8 @@ function validateLinks(checks, { files }) {
 
 function privacyScan(checks, { files }) {
   const offenders = []
-  for (const file of files) {
+  for (const file of filesWithExtensions(files, privacyScanExtensions)) {
     if (file.includes('plugins/dev-skills/skills/drawio-skill/data/lobe-icons.json')) continue
-    if (!/\.(md|json|ya?ml|mjs|js|ts|tsx|sh)$/.test(file)) continue
     const text = readFileSync(file, 'utf8')
     const pattern = privatePatterns.find((candidate) => candidate.test(text))
     if (pattern) offenders.push(`${rel(file)} matches ${pattern}`)
