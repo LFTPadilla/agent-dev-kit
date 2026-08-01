@@ -175,9 +175,8 @@ elif { [ "$kind" = security ] || [ "$status" -ne 0 ]; } && [ "$bytes" -gt "$prev
   printf '%s\n' '--- sanitized trailing bytes ---'
   tail -c "$tail_bytes" "$transcript" | safe_stream
   printf '\n'
-elif [ "$kind" = security ] || [ "$status" -ne 0 ]; then
-  print_sanitized_full
-elif [ "$lines" -le "$preview_limit" ] && [ "$bytes" -le "$preview_byte_limit" ]; then
+elif [ "$kind" = security ] || [ "$status" -ne 0 ] ||
+  { [ "$lines" -le "$preview_limit" ] && [ "$bytes" -le "$preview_byte_limit" ]; }; then
   print_sanitized_full
 else
   printf 'display: bounded-success-preview\n'
