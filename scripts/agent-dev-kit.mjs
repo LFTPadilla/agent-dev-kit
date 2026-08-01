@@ -77,6 +77,10 @@ function missingFields(value, fields) {
   return fields.filter((field) => !(field in value))
 }
 
+function addMissingFieldFailures(checks, value, fields, label) {
+  for (const field of missingFields(value, fields)) checks.push(fail(`${label} missing ${field}`))
+}
+
 function readJson(file, checks) {
   try {
     return JSON.parse(readFileSync(file, 'utf8'))
@@ -201,9 +205,7 @@ function validateProvenance(checks, { skillDirs: dirs }) {
   for (const name of missing) checks.push(fail(`skill-provenance.json missing skill: ${name}`))
   for (const name of stale) checks.push(fail(`skill-provenance.json has stale skill: ${name}`))
   for (const [name, item] of Object.entries(data.skills || {})) {
-    for (const field of missingFields(item, ['source', 'license', 'visibility', 'risk', 'dependencies'])) {
-      checks.push(fail(`skill-provenance.json ${name} missing ${field}`))
-    }
+    addMissingFieldFailures(checks, item, ['source', 'license', 'visibility', 'risk', 'dependencies'], `skill-provenance.json ${name}`)
   }
   if (!missing.length && !stale.length) checks.push(ok('skill provenance covers all skills'))
 }
@@ -293,9 +295,7 @@ function validatePolicies(checks) {
   const data = readJson(file, checks)
   if (!data) return
   for (const [name, policy] of Object.entries(data.policies || {})) {
-    for (const field of missingFields(policy, ['writes', 'network', 'secrets', 'production', 'git_push', 'destructive_ops'])) {
-      checks.push(fail(`sandbox policy ${name} missing ${field}`))
-    }
+    addMissingFieldFailures(checks, policy, ['writes', 'network', 'secrets', 'production', 'git_push', 'destructive_ops'], `sandbox policy ${name}`)
   }
   checks.push(ok('sandbox policies checked'))
 }
