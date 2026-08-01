@@ -44,20 +44,19 @@ import json, sys, time
 p, lane_id, mode, title, target, branch, state = sys.argv[1:]
 lanes = json.load(open(p))
 now = int(time.time())
+lane_fields = {"title": title, "tmux_target": target, "branch": branch, "state": state}
 for lane in lanes:
     if lane.get("id") == lane_id:
         if mode == "bump":
             lane["last_activity_epoch"] = now
         else:
-            lane.update({"title": title, "tmux_target": target, "branch": branch,
-                         "state": state, "last_activity_epoch": now})
+            lane.update({**lane_fields, "last_activity_epoch": now})
         break
 else:
     if mode == "bump":
         lanes.append({"id": lane_id, "last_activity_epoch": now})
     else:
-        lanes.append({"id": lane_id, "title": title, "tmux_target": target,
-                      "branch": branch, "state": state,
+        lanes.append({"id": lane_id, **lane_fields,
                       "created_epoch": now, "last_activity_epoch": now})
 json.dump(lanes, open(p, "w"), indent=2)
 PY
