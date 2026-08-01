@@ -5,6 +5,7 @@ set -euo pipefail
 # Do not let a caller-controlled PATH substitute host-side boundary tools.
 # Preserve the original path only for resolving the requested sandbox command.
 ORIGINAL_PATH="${PATH:-}"
+IFS=: read -r -a ORIGINAL_PATH_ENTRIES <<< "$ORIGINAL_PATH"
 export PATH="/usr/local/bin:/usr/bin:/bin:/nix/var/nix/profiles/default/bin"
 
 SELF_PATH="${BASH_SOURCE[0]}"
@@ -189,9 +190,7 @@ trap - EXIT
 
 build_path() {
   local result="/usr/local/bin:/usr/bin:/bin" entry resolved suffix
-  local -a host_entries
-  IFS=: read -r -a host_entries <<< "$ORIGINAL_PATH"
-  for entry in "${host_entries[@]}"; do
+  for entry in "${ORIGINAL_PATH_ENTRIES[@]}"; do
     [ -d "$entry" ] || continue
     resolved="$(readlink -f "$entry" 2>/dev/null || true)"
     case "$resolved" in
@@ -209,12 +208,10 @@ mounts+=(--setenv PATH "$sandbox_path" --chdir /workspace)
 
 resolve_command() {
   local requested="$1" found="" resolved suffix entry
-  local -a host_entries
   if [[ "$requested" == */* ]]; then
     if [[ "$requested" = /* ]]; then found="$requested"; else found="$repo/$requested"; fi
   else
-    IFS=: read -r -a host_entries <<< "$ORIGINAL_PATH"
-    for entry in "${host_entries[@]}"; do
+    for entry in "${ORIGINAL_PATH_ENTRIES[@]}"; do
       [ -n "$entry" ] || entry=.
       if [ -f "$entry/$requested" ] && [ -x "$entry/$requested" ]; then
         found="$entry/$requested"
