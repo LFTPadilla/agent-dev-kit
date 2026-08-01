@@ -123,6 +123,13 @@ assert_skill_digest() {
   test "$(sha256sum "$HERMES_HOME/skills/$name/SKILL.md" | cut -d' ' -f1)" = "$expected"
 }
 
+assert_profile_skill_link() {
+  local profile="$1" name="$2"
+  local target="$HERMES_HOME/profiles/$profile/skills/external/$name"
+  test -L "$target"
+  test "$(readlink -f "$target")" = "$(readlink -f "$HERMES_HOME/skills/$name")"
+}
+
 fixture_skill_sha() {
   local name="$1" source="$2"
   printf '%s\n' '---' "name: $name" 'description: test fixture' \
@@ -147,9 +154,7 @@ for name in caveman ponytail; do
   test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256"
   assert_skill_checksum "$name"
   for profile in alpha personal-dev-tutor; do
-    target="$HERMES_HOME/profiles/$profile/skills/external/$name"
-    test -L "$target"
-    test "$(readlink -f "$target")" = "$(readlink -f "$HERMES_HOME/skills/$name")"
+    assert_profile_skill_link "$profile" "$name"
   done
 done
 
