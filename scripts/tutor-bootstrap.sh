@@ -179,12 +179,6 @@ check_skill() {
   fi
   local path="${candidates[0]}"
 
-  # Broken symlink?
-  if [ -L "$path" ] && [ ! -e "$path" ]; then
-    checks_broken+=("$name: broken symlink at $path")
-    return 1
-  fi
-
   # SKILL.md exists?
   local skill_md="$path/SKILL.md"
   if [ ! -f "$skill_md" ]; then
