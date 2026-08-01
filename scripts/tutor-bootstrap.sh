@@ -156,9 +156,8 @@ source_candidates() {
   if [ -d "$USER_HOME/.hermes/profiles" ]; then
     for pdir in "$USER_HOME/.hermes/profiles"/*/; do
       [ -d "$pdir" ] || continue
-      p="$(basename "$pdir")"
-      [ "$p" = "$PROFILE" ] && continue
-      skill_paths_for_root "$USER_HOME/.hermes/profiles/$p/skills" "$name"
+      [ "$(basename "$pdir")" = "$PROFILE" ] && continue
+      skill_paths_for_root "${pdir%/}/skills" "$name"
     done
   fi
 }
