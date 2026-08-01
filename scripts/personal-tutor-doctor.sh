@@ -49,6 +49,15 @@ check_config_setting() {
   fi
 }
 
+check_file_presence() {
+  local path="$1" success_message="$2" failure_message="$3"
+  if [ -f "$path" ]; then
+    ok "$success_message"
+  else
+    bad "$failure_message"
+  fi
+}
+
 check_skill_links() {
   local runtime="$1" target_root="$2" description="$3" skill name target
   local expected=0 linked=0
@@ -91,11 +100,11 @@ fi
 CONFIG="$PERSONAL_TUTOR_PROFILE_DIR/config.yaml"
 MANIFEST="$PERSONAL_TUTOR_PROFILE_DIR/personal-dev-tutor.yml"
 SOUL="$PERSONAL_TUTOR_PROFILE_DIR/SOUL.md"
-[ -f "$CONFIG" ] && ok "config.yaml present" || bad "config.yaml missing"
-[ -f "$MANIFEST" ] && ok "installed profile manifest present" || bad "installed profile manifest missing"
-[ -f "$SOUL" ] && ok "English tutor persona present" || bad "SOUL.md missing"
-[ -f "$PERSONAL_TUTOR_PROFILE_DIR/.no-bundled-skills" ] && \
-  ok "bundled skill seeding disabled" || bad "bundled skill seeding is not disabled"
+check_file_presence "$CONFIG" "config.yaml present" "config.yaml missing"
+check_file_presence "$MANIFEST" "installed profile manifest present" "installed profile manifest missing"
+check_file_presence "$SOUL" "English tutor persona present" "SOUL.md missing"
+check_file_presence "$PERSONAL_TUTOR_PROFILE_DIR/.no-bundled-skills" \
+  "bundled skill seeding disabled" "bundled skill seeding is not disabled"
 
 check_config_setting 'home_mode:[[:space:]]*real' \
   "terminal.home_mode is real" "terminal.home_mode must be real"
