@@ -198,6 +198,14 @@ managed_name() {
   [[ "$1" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]
 }
 
+remove_source_skill_link() {
+  local target="$1" resolved
+  if [ -L "$target" ]; then
+    resolved="$(readlink -f "$target")"
+    case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/*) rm "$target" ;; esac
+  fi
+}
+
 printf '[4/8] Personal Tutor and GSD skills\n'
 mkdir -p "$PROFILE_SKILLS" "$CODEX_SKILLS"
 for stale in "$PROFILE_SKILLS"/*; do
@@ -210,26 +218,14 @@ if [ -f "$CODEX_MANAGED_STATE" ]; then
     managed_name "$name" || { echo "invalid managed Codex skill state entry"; exit 1; }
     # Migrate links made by the earlier global-home installer only if the link
     # still resolves into this exact source tree.
-    target="$PERSONAL_TUTOR_USER_HOME/.codex/skills/$name"
-    if [ -L "$target" ]; then
-      resolved="$(readlink -f "$target")"
-      case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/*) rm "$target" ;; esac
-    fi
-    target="$CODEX_SKILLS/$name"
-    if [ -L "$target" ]; then
-      resolved="$(readlink -f "$target")"
-      case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/*) rm "$target" ;; esac
-    fi
+    remove_source_skill_link "$PERSONAL_TUTOR_USER_HOME/.codex/skills/$name"
+    remove_source_skill_link "$CODEX_SKILLS/$name"
   done < "$CODEX_MANAGED_STATE"
 else
   # Migration from the first installer release: remove only links that resolve
   # into this source tree, then rebuild the filtered worker set.
   for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
-    target="$PERSONAL_TUTOR_USER_HOME/.codex/skills/$(basename "$skill")"
-    if [ -L "$target" ]; then
-      resolved="$(readlink -f "$target")"
-      case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/*) rm "$target" ;; esac
-    fi
+    remove_source_skill_link "$PERSONAL_TUTOR_USER_HOME/.codex/skills/$(basename "$skill")"
   done
 fi
 : > "$CODEX_MANAGED_STATE"
