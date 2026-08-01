@@ -93,7 +93,6 @@ function buildNetworkDiagram(nodes, connections, options) {
     // Node box
     svg += '<rect x="' + x + '" y="' + y + '" width="' + nodeW + '" height="' + nodeH + '" fill="' + bg + '" rx="6"/>';
     // Icon (simple text-based icon)
-    const icon = node.icon || '';
     const labelLines = node.label.split('\n');
     let textY = y + nodeH / 2 - (labelLines.length - 1) * fontSize * 0.6;
     for (const line of labelLines) {
