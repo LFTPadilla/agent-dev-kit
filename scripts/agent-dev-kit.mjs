@@ -113,6 +113,7 @@ function validateSkills(checks, { skillDirs: dirs }) {
     return
   }
   for (const dir of dirs) {
+    const name = path.basename(dir)
     const file = path.join(dir, 'SKILL.md')
     if (!existsSync(file)) {
       checks.push(fail(`${rel(dir)} is missing SKILL.md`))
@@ -124,10 +125,10 @@ function validateSkills(checks, { skillDirs: dirs }) {
       checks.push(fail(`${rel(file)} is missing YAML frontmatter`))
       continue
     }
-    const name = fm.get('name')
+    const declaredName = fm.get('name')
     const description = fm.get('description')
-    if (!name) checks.push(fail(`${rel(file)} is missing frontmatter field: name`))
-    else if (name !== path.basename(dir)) checks.push(fail(`${rel(file)} name must match directory ${path.basename(dir)}`))
+    if (!declaredName) checks.push(fail(`${rel(file)} is missing frontmatter field: name`))
+    else if (declaredName !== name) checks.push(fail(`${rel(file)} name must match directory ${name}`))
     if (!description || description.length < 20) checks.push(fail(`${rel(file)} needs an actionable description`))
   }
   checks.push(ok(`${dirs.length} skill frontmatters checked`))
