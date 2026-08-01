@@ -50,14 +50,9 @@ expected_runtime_min=""
 worklog_entry="yes"
 kanban_board=""
 
-quick=0
 if [ "${1:-}" = "--quick" ]; then
-  quick=1
   shift
   repo="${1:-}"; branch="${2:-}"; strategy="${3:-single}"
-fi
-
-if [ "$quick" -eq 1 ]; then
   [ -z "$repo" ]   && { echo "quick mode requires repo"; exit 2; }
   [ -z "$branch" ] && { echo "quick mode requires branch"; exit 2; }
 else
