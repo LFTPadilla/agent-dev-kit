@@ -39,6 +39,14 @@ init_test_repo() {
   git -C "$repo" config user.email "$email"
 }
 
+commit_test_repo() {
+  local repo="$1" message="$2"
+  shift 2
+  git -C "$repo" add "$@"
+  git -C "$repo" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
+    commit --no-gpg-sign -q -m "$message"
+}
+
 for file in "${required_files[@]}"; do
   [[ -f "$file" ]] || { echo "FAIL missing ${file#$ROOT/}"; exit 1; }
 done
@@ -170,9 +178,7 @@ cleanup() { rm -f "$prompt_path"; rm -rf "$fixture" "$failure_root" "$contract_l
 trap cleanup EXIT
 init_test_repo "$fixture" "Personal Tutor Test" "personal-tutor-test@example.invalid"
 printf 'baseline\n' > "$fixture/example.txt"
-git -C "$fixture" add example.txt
-git -C "$fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
-  commit --no-gpg-sign -q -m baseline
+commit_test_repo "$fixture" baseline example.txt
 fixture_branch="$(git -C "$fixture" rev-parse --abbrev-ref HEAD)"
 fixture_head="$(git -C "$fixture" rev-parse HEAD)"
 
@@ -312,9 +318,7 @@ graph_cache="$failure_root/graph-cache"
 mkdir -p "$graph_repo" "$graph_bin"
 init_test_repo "$graph_repo" "Graph Contract Test" "graph-test@example.invalid"
 printf 'class GraphFixture {}\n' > "$graph_repo/GraphFixture.java"
-git -C "$graph_repo" add GraphFixture.java
-git -C "$graph_repo" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
-  commit --no-gpg-sign -q -m baseline
+commit_test_repo "$graph_repo" baseline GraphFixture.java
 cat > "$graph_bin/graphify" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -351,9 +355,7 @@ mkdir -p "$sandbox_fixture/writable"
 init_test_repo "$sandbox_fixture" "Sandbox Contract Test" "sandbox-test@example.invalid"
 printf 'read-only-baseline\n' > "$sandbox_fixture/tracked.txt"
 printf 'writable-baseline\n' > "$sandbox_fixture/writable/result.txt"
-git -C "$sandbox_fixture" add .
-git -C "$sandbox_fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
-  commit --no-gpg-sign -q -m baseline
+commit_test_repo "$sandbox_fixture" baseline .
 if ! command -v bwrap >/dev/null 2>&1; then
   sandbox_available=0
   echo "SKIP optional Bubblewrap sandbox is not installed"
