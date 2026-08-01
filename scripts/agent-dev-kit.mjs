@@ -251,8 +251,11 @@ function validatePiPackageResearch(checks) {
   }
   for (const profileName of ['pi-code-review', 'pi-sre-research']) {
     const profile = profilesConfig?.profiles?.[profileName]
-    if (!profile || !Array.isArray(profile.packages) || profile.packages.length !== 0 ||
-        profile.runtime_activation !== 'metadata-only') {
+    const hasPackageFreeCompatibility = Boolean(profile) &&
+      Array.isArray(profile.packages) &&
+      profile.packages.length === 0 &&
+      profile.runtime_activation === 'metadata-only'
+    if (!hasPackageFreeCompatibility) {
       checks.push(fail(`pi-profiles/profiles.yaml must preserve package-free ${profileName} compatibility`))
     }
   }
