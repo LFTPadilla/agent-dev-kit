@@ -29,14 +29,6 @@ pass=0 fail=0 warn=0
 ok() { printf 'OK   %s\n' "$1"; pass=$((pass + 1)); }
 bad() { printf 'FAIL %s\n' "$1"; fail=$((fail + 1)); }
 warning() { printf 'WARN %s\n' "$1"; warn=$((warn + 1)); }
-array_contains() {
-  local needle="$1" value
-  shift
-  for value in "$@"; do
-    [ "$value" = "$needle" ] && return 0
-  done
-  return 1
-}
 
 printf 'Personal Dev Tutor doctor\nProfile: %s\nSession: %s\nHome:    %s\n\n' \
   "$PERSONAL_TUTOR_PROFILE" "$PERSONAL_TUTOR_SESSION" "$PERSONAL_TUTOR_USER_HOME"
@@ -149,11 +141,11 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
     name="$(basename "$skill")"
     profile_target="$PERSONAL_TUTOR_PROFILE_DIR/skills/agent-dev-kit/$name"
     codex_target="$PERSONAL_TUTOR_CODEX_HOME/skills/$name"
-    if array_contains "$name" "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; then
+    if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; then
       expected=$((expected + 1))
       [ -e "$profile_target" ] && [ "$(readlink -f "$profile_target")" = "$(readlink -f "${skill%/}")" ] && linked=$((linked + 1))
     fi
-    if array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
+    if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
       codex_expected=$((codex_expected + 1))
       [ -e "$codex_target" ] && [ "$(readlink -f "$codex_target")" = "$(readlink -f "${skill%/}")" ] && codex_linked=$((codex_linked + 1))
     fi
@@ -165,7 +157,7 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
     [ -e "$installed" ] || continue
     name="$(basename "$installed")"
     [ "$name" = graphify ] && continue
-    if ! array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
+    if ! personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
       printf '  unexpected isolated Codex skill: %s\n' "$name"
       unexpected_codex=$((unexpected_codex + 1))
     fi
@@ -252,7 +244,7 @@ done
 for installed in "$PERSONAL_TUTOR_PROFILE_DIR/skills/gsd"/*; do
   [ -e "$installed" ] || continue
   gsd_skill="$(basename "$installed")"
-  if ! array_contains "$gsd_skill" "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; then
+  if ! personal_tutor_array_contains "$gsd_skill" "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; then
     printf '  unexpected GSD skill: %s\n' "$gsd_skill"
     gsd_unexpected=$((gsd_unexpected + 1))
   fi

@@ -234,29 +234,13 @@ else
 fi
 : > "$CODEX_MANAGED_STATE"
 
-codex_worker_skill() {
-  local wanted
-  for wanted in "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; do
-    [ "$wanted" = "$1" ] && return 0
-  done
-  return 1
-}
-
-hermes_profile_skill() {
-  local wanted
-  for wanted in "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; do
-    [ "$wanted" = "$1" ] && return 0
-  done
-  return 1
-}
-
 for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
   [ -f "$skill/SKILL.md" ] || continue
   name="$(basename "$skill")"
-  if hermes_profile_skill "$name"; then
+  if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; then
     link_skill "${skill%/}" "$PROFILE_SKILLS/$name"
   fi
-  if codex_worker_skill "$name"; then
+  if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
     link_skill "${skill%/}" "$CODEX_SKILLS/$name"
     printf '%s\n' "$name" >> "$CODEX_MANAGED_STATE"
   fi

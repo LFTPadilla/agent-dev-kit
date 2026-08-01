@@ -38,6 +38,15 @@ personal_tutor_graphify() {
   )
 }
 
+personal_tutor_array_contains() {
+  local needle="$1" value
+  shift
+  for value in "$@"; do
+    [ "$value" = "$needle" ] && return 0
+  done
+  return 1
+}
+
 PERSONAL_TUTOR_USER_HOME="$(personal_tutor_real_home)"
 PERSONAL_TUTOR_INFERRED_PROFILE=""
 PERSONAL_TUTOR_LIB_PATH="${BASH_SOURCE[0]}"
