@@ -66,6 +66,10 @@ function walkFiles(dir, out = []) {
   return out
 }
 
+function filesWithExtensions(files, extensions) {
+  return files.filter((file) => extensions.some((extension) => file.endsWith(extension)))
+}
+
 function readJson(file, checks) {
   try {
     return JSON.parse(readFileSync(file, 'utf8'))
@@ -128,12 +132,12 @@ function validateSkills(checks, { skillDirs: dirs }) {
 }
 
 function validateJsonFiles(checks, { files }) {
-  for (const file of files.filter((f) => f.endsWith('.json'))) readJson(file, checks)
+  for (const file of filesWithExtensions(files, ['.json'])) readJson(file, checks)
   checks.push(ok('JSON files parse'))
 }
 
 function validateYamlFiles(checks, { files }) {
-  for (const file of files.filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))) {
+  for (const file of filesWithExtensions(files, ['.yml', '.yaml'])) {
     const text = readFileSync(file, 'utf8')
     if (text.includes('\t')) checks.push(fail(`${rel(file)} contains tabs; use spaces in YAML`))
     if (!text.trim()) checks.push(fail(`${rel(file)} is empty`))
@@ -310,7 +314,7 @@ function validateEvals(checks) {
 }
 
 function validateLinks(checks, { files }) {
-  const markdown = files.filter((f) => f.endsWith('.md'))
+  const markdown = filesWithExtensions(files, ['.md'])
   const linkPattern = /\[[^\]]+\]\(([^)]+)\)/g
   for (const file of markdown) {
     const text = readFileSync(file, 'utf8')
