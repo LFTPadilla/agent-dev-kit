@@ -15,12 +15,15 @@ while [ $# -gt 0 ]; do
     *) echo "usage: personal-tutor-status [--repo <repository-or-worktree>]"; exit 2 ;;
   esac
 done
-if [ -z "$repo" ]; then
-  repo="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
+requested_repo="$repo"
+if ! repo="$(personal_tutor_git_root "$repo")"; then
+  if [ -n "$requested_repo" ]; then
+    echo "not a Git repository/worktree: $requested_repo"
+    exit 2
+  fi
+  echo "NOT READY: pass --repo from outside a Git worktree"
+  exit 1
 fi
-[ -n "$repo" ] || { echo "NOT READY: pass --repo from outside a Git worktree"; exit 1; }
-repo="$(cd "$repo" && pwd)"
-git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a Git repository/worktree: $repo"; exit 2; }
 
 if ! tmux has-session -t "$PERSONAL_TUTOR_SESSION" 2>/dev/null; then
   echo "NOT READY: tmux session '$PERSONAL_TUTOR_SESSION' does not exist"
