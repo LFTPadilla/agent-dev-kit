@@ -23,23 +23,33 @@ assert_report_contains() {
   done
 }
 
-grep -q '^name: java-development$' "$SKILL"
-grep -q 'Discover before executing' "$SKILL"
-grep -q 'Use the project wrapper' "$SKILL"
-grep -q 'Honor the pinned JDK' "$SKILL"
-grep -q 'Diagnose before patching' "$SKILL"
-grep -q 'focused test' "$SKILL"
-grep -q 'Surefire/Failsafe' "$SKILL"
-grep -q 'Testcontainers' "$SKILL"
-grep -q 'Context7 only for a version-sensitive' "$SKILL"
-grep -q 'Graphify only when its Java parser' "$SKILL"
-grep -q 'Do not edit generated sources' "$SKILL"
-grep -q 'PROJECT / CI-PARITY VERIFICATION' "$SKILL"
-grep -q 'maven.apache.org/wrapper' "$REFERENCES"
-grep -q 'docs.gradle.org/current/userguide/gradle_wrapper' "$REFERENCES"
-grep -q 'docs.junit.org/5' "$REFERENCES"
-grep -q 'java.testcontainers.org' "$REFERENCES"
-grep -q 'eclipse-jdtls' "$REFERENCES"
+assert_file_contains() {
+  local file="$1" pattern
+  shift
+  for pattern in "$@"; do
+    grep -q "$pattern" "$file"
+  done
+}
+
+assert_file_contains "$SKILL" \
+  '^name: java-development$' \
+  'Discover before executing' \
+  'Use the project wrapper' \
+  'Honor the pinned JDK' \
+  'Diagnose before patching' \
+  'focused test' \
+  'Surefire/Failsafe' \
+  'Testcontainers' \
+  'Context7 only for a version-sensitive' \
+  'Graphify only when its Java parser' \
+  'Do not edit generated sources' \
+  'PROJECT / CI-PARITY VERIFICATION'
+assert_file_contains "$REFERENCES" \
+  'maven.apache.org/wrapper' \
+  'docs.gradle.org/current/userguide/gradle_wrapper' \
+  'docs.junit.org/5' \
+  'java.testcontainers.org' \
+  'eclipse-jdtls'
 
 python3 - "$PROFILE" "$LIB" <<'PY'
 from pathlib import Path
@@ -59,9 +69,9 @@ if not match or len(re.findall(r"\bjava-development\b", match.group(1))) != 1:
     raise SystemExit("FAIL runtime Codex allowlist must contain java-development exactly once")
 PY
 
-grep -q '"java-development"' "$ROOT/skill-provenance.json"
-grep -q '`java-development`' "$ROOT/docs/skills-catalog.md"
-grep -q '"test:java"' "$ROOT/package.json"
+assert_file_contains "$ROOT/skill-provenance.json" '"java-development"'
+assert_file_contains "$ROOT/docs/skills-catalog.md" '`java-development`'
+assert_file_contains "$ROOT/package.json" '"test:java"'
 
 fixture="$(mktemp -d)"
 cleanup() { rm -rf "$fixture"; }
