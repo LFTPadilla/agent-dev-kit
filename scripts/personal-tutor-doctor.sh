@@ -40,6 +40,15 @@ paths_match() {
   [ "$(readlink -f "$1")" = "$(readlink -f "$2")" ]
 }
 
+check_config_setting() {
+  local pattern="$1" success_message="$2" failure_message="$3"
+  if [ -f "$CONFIG" ] && grep -qiE "$pattern" "$CONFIG"; then
+    ok "$success_message"
+  else
+    bad "$failure_message"
+  fi
+}
+
 check_skill_links() {
   local runtime="$1" target_root="$2" description="$3" skill name target
   local expected=0 linked=0
@@ -88,16 +97,10 @@ SOUL="$PERSONAL_TUTOR_PROFILE_DIR/SOUL.md"
 [ -f "$PERSONAL_TUTOR_PROFILE_DIR/.no-bundled-skills" ] && \
   ok "bundled skill seeding disabled" || bad "bundled skill seeding is not disabled"
 
-if [ -f "$CONFIG" ] && grep -qiE 'home_mode:[[:space:]]*real' "$CONFIG"; then
-  ok "terminal.home_mode is real"
-else
-  bad "terminal.home_mode must be real"
-fi
-if [ -f "$CONFIG" ] && grep -qiE 'redact_secrets:[[:space:]]*(true|yes)' "$CONFIG"; then
-  ok "secret redaction enabled"
-else
-  bad "secret redaction is not enabled"
-fi
+check_config_setting 'home_mode:[[:space:]]*real' \
+  "terminal.home_mode is real" "terminal.home_mode must be real"
+check_config_setting 'redact_secrets:[[:space:]]*(true|yes)' \
+  "secret redaction enabled" "secret redaction is not enabled"
 context7_config="$(hermes --profile "$PERSONAL_TUTOR_PROFILE" config get mcp_servers.context7 2>/dev/null || true)"
 if context7_configured "$context7_config"; then
   ok "Context7 enabled for Hermes"
