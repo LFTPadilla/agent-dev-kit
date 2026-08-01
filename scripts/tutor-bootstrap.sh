@@ -342,6 +342,14 @@ print_json_array() {
   done
 }
 
+print_list() {
+  local header="$1" value
+  shift
+  [ "$#" -gt 0 ] || return
+  printf '\n%s:\n' "$header"
+  for value in "$@"; do printf '  - %s\n' "$value"; done
+}
+
 ok_count=${#checks_ok[@]}
 fixed_count=${#checks_fixed[@]}
 broken_count=${#checks_broken[@]}
@@ -361,18 +369,9 @@ else
   printf 'FIXED: %d\n' "$fixed_count"
   printf 'BROKEN:%d\n' "$broken_count"
   printf 'OVERLAY_MISSING:%d (expected without private overlay)\n' "$overlay_missing_count"
-  if [ "$fixed_count" -gt 0 ]; then
-    printf '\nfixed:\n'
-    for f in "${checks_fixed[@]}"; do printf '  - %s\n' "$f"; done
-  fi
-  if [ "$broken_count" -gt 0 ]; then
-    printf '\nstill broken:\n'
-    for b in "${checks_broken[@]}"; do printf '  - %s\n' "$b"; done
-  fi
-  if [ "$overlay_missing_count" -gt 0 ]; then
-    printf '\noverlay skills missing (link a private overlay to supply):\n'
-    for o in "${overlay_missing[@]}"; do printf '  - %s\n' "$o"; done
-  fi
+  print_list 'fixed' "${checks_fixed[@]}"
+  print_list 'still broken' "${checks_broken[@]}"
+  print_list 'overlay skills missing (link a private overlay to supply)' "${overlay_missing[@]}"
 fi
 
 [ "$broken_count" -eq 0 ]
