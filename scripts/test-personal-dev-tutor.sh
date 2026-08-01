@@ -289,37 +289,29 @@ grep -q '^display: bounded-critical-preview$' "$large_failure_preview"
   exit 1
 }
 
-if PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$fixture/unsafe-cache" \
-  "$OUTPUT" --doctor --repo "$fixture" >/dev/null 2>&1; then
-  echo "FAIL output helper accepted a cache inside the worktree"
-  exit 1
-fi
+assert_rejected "output helper accepted a cache inside the worktree" env \
+  PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$fixture/unsafe-cache" \
+  "$OUTPUT" --doctor --repo "$fixture"
 mkdir -p "$fixture/nested"
-if PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$fixture/nested-cache" \
-  "$OUTPUT" --doctor --repo "$fixture/nested" >/dev/null 2>&1; then
-  echo "FAIL nested --repo bypassed the worktree cache boundary"
-  exit 1
-fi
+assert_rejected "nested --repo bypassed the worktree cache boundary" env \
+  PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$fixture/nested-cache" \
+  "$OUTPUT" --doctor --repo "$fixture/nested"
 
 symlink_cache="$failure_root/symlink-cache"
 mkdir -p "$symlink_cache" "$fixture/symlink-target"
 fixture_id="$(printf '%s' "$fixture" | sha256sum | cut -c1-16)"
 ln -s "$fixture/symlink-target" "$symlink_cache/$fixture_id"
-if PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$symlink_cache" \
-  "$OUTPUT" --doctor --repo "$fixture" >/dev/null 2>&1; then
-  echo "FAIL output helper followed a symlinked repository cache"
-  exit 1
-fi
+assert_rejected "output helper followed a symlinked repository cache" env \
+  PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$symlink_cache" \
+  "$OUTPUT" --doctor --repo "$fixture"
 
 chmod_failure_bin="$failure_root/chmod-failure-bin"
 mkdir -p "$chmod_failure_bin"
 printf '#!/usr/bin/env sh\nexit 1\n' > "$chmod_failure_bin/chmod"
 chmod +x "$chmod_failure_bin/chmod"
-if PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$failure_root/chmod-failure-cache" \
-  PATH="$chmod_failure_bin:$PATH" "$OUTPUT" --doctor --repo "$fixture" >/dev/null 2>&1; then
-  echo "FAIL output helper ignored private-cache permission failure"
-  exit 1
-fi
+assert_rejected "output helper ignored private-cache permission failure" env \
+  PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$failure_root/chmod-failure-cache" \
+  PATH="$chmod_failure_bin:$PATH" "$OUTPUT" --doctor --repo "$fixture"
 
 graph_repo="$failure_root/graph-repo"
 graph_bin="$failure_root/graph-bin"
