@@ -4,7 +4,7 @@
 //
 // Usage: npm run render:demo   (requires ffmpeg on PATH)
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
@@ -60,7 +60,8 @@ function frame(lines) {
 </svg>`
 }
 
-const lines = readFileSync(SESSION, 'utf8').replace(/\n+$/, '').split('\n')
+const text = readFileSync(SESSION, 'utf8')
+const lines = text.replace(/\n+$/, '').split('\n')
 const dir = mkdtempSync(join(tmpdir(), 'adk-demo-'))
 try {
   let n = 0
@@ -86,7 +87,6 @@ try {
 }
 
 // Self-check: the transcript must still contain the two claims the README cites.
-const text = readFileSync(SESSION, 'utf8')
 if (!text.includes('0 failed') || !text.includes('false positives 0/3')) {
   throw new Error('session.txt no longer shows the results the README quotes — recapture it')
 }

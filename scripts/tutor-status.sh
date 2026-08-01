@@ -6,18 +6,9 @@
 set -uo pipefail
 
 SELF_PATH="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
-# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:?HOME is required}"; fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+# shellcheck source=tutor-lib.sh
+source "$(cd "$(dirname "$SELF_PATH")" && pwd)/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 SESSION="${AGENT_TUTOR_SESSION:-tutor}"
@@ -44,13 +35,13 @@ except Exception as e:
 try:
     out = subprocess.check_output(
         ["tmux", "list-windows", "-t", session, "-F",
-         "#{window_index}|#{window_name}|#{pane_current_command}|#{pane_dead}"],
+         "#{window_index}|#{pane_current_command}|#{pane_dead}"],
         text=True, timeout=5,
     )
     panes = {}
     for line in out.splitlines():
-        wid, name, cmd, dead = line.split("|", 3)
-        panes[int(wid)] = {"name": name, "cmd": cmd, "dead": dead == "1"}
+        wid, cmd, dead = line.split("|", 2)
+        panes[int(wid)] = {"cmd": cmd, "dead": dead == "1"}
 except subprocess.CalledProcessError:
     panes = {}
 

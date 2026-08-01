@@ -10,23 +10,14 @@
 set -uo pipefail
 
 SELF_PATH="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
-# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:?HOME is required}"; fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+# shellcheck source=tutor-lib.sh
+source "$(cd "$(dirname "$SELF_PATH")" && pwd)/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 WORKLOG_DIR="${AGENT_TUTOR_WORKLOG_DIR:-$USER_HOME/.hermes/profiles/$PROFILE/worklogs}"
 
-lane_id="${1:-}"; shift || true
+lane_id="${1:-}"; shift
 description=""
 duration=""
 
@@ -58,13 +49,22 @@ PY
 
 today="$(date +%Y-%m-%d)"
 
+prompt_required() {
+  local initial_prompt="$1" retry_prompt="$2" value=""
+  read -r -p "$initial_prompt" value || return 1
+  while [ -z "$value" ]; do
+    read -r -p "$retry_prompt" value || return 1
+  done
+  printf '%s' "$value"
+}
+
 if [ -z "$description" ]; then
-  read -r -p "Description (English, no semicolons): " description || true
-  while [ -z "$description" ]; do read -r -p "Description: " description || true; done
+  description="$(prompt_required "Description (English, no semicolons): " "Description: ")" \
+    || { echo "input cancelled (EOF)"; exit 0; }
 fi
 if [ -z "$duration" ]; then
-  read -r -p "Duration (H:MM, e.g. 1:30): " duration || true
-  while [ -z "$duration" ]; do read -r -p "Duration: " duration || true; done
+  duration="$(prompt_required "Duration (H:MM, e.g. 1:30): " "Duration: ")" \
+    || { echo "input cancelled (EOF)"; exit 0; }
 fi
 
 # Sanity: reject inner semicolons
@@ -82,7 +82,7 @@ echo
 echo "Context: lane=$lane_id title=$title"
 echo "File:    $WORKLOG_DIR/worklog-$today.txt"
 echo
-read -r -p "Append? (yes/no) " ans || true
+read -r -p "Append? (yes/no) " ans
 if [ "$ans" != "yes" ]; then
   echo "cancelled"
   exit 0

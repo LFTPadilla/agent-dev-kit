@@ -37,18 +37,20 @@ for value in repo branch goal allowed criteria concept verification; do
 done
 printf '%s' "$criteria" | grep -q '[^|[:space:]]' || { echo "--criteria must contain at least one criterion"; exit 2; }
 printf '%s' "$verification" | grep -q '[^[:space:]]' || { echo "--verification must contain a command"; exit 2; }
-repo="$(cd "$repo" && pwd -P)"
-[ -d "$repo/.git" ] || git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git repository: $repo"; exit 2; }
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
+requested_repo="$repo"
+repo="$(personal_tutor_git_root "$repo")" || {
+  echo "not a git repository: $requested_repo"
+  exit 2
+}
 worktree="${worktree:-$repo}"
-worktree="$(cd "$worktree" && pwd -P)"
-git -C "$worktree" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git worktree: $worktree"; exit 2; }
-worktree="$(git -C "$worktree" rev-parse --show-toplevel)"
-worktree="$(cd "$worktree" && pwd -P)"
+requested_worktree="$worktree"
+worktree="$(personal_tutor_git_root "$worktree")" || {
+  echo "not a git worktree: $requested_worktree"
+  exit 2
+}
 repo_common="$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)"
 worktree_common="$(git -C "$worktree" rev-parse --path-format=absolute --git-common-dir)"
-[ "$(readlink -f "$repo_common")" = "$(readlink -f "$worktree_common")" ] || {
+personal_tutor_paths_match "$repo_common" "$worktree_common" || {
   echo "worktree does not belong to repository: $worktree"
   exit 2
 }
@@ -86,11 +88,14 @@ fi
 # misattributed to this lane.
 umask 077
 lane_state_root="${PERSONAL_TUTOR_LANE_CACHE_ROOT:-$PERSONAL_TUTOR_USER_HOME/.cache/personal-dev-tutor/lanes}"
-lane_state_root="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$lane_state_root")"
-case "$lane_state_root/" in "$worktree/"*) echo "lane state cache must be outside the worktree"; exit 2 ;; esac
+lane_state_root="$(personal_tutor_resolve_path "$lane_state_root")"
+if personal_tutor_path_is_within "$lane_state_root" "$worktree"; then
+  echo "lane state cache must be outside the worktree"
+  exit 2
+fi
 mkdir -p "$lane_state_root"
 chmod 700 "$lane_state_root"
-worktree_key="$(printf '%s' "$worktree" | sha256sum | cut -c1-16)"
+worktree_key="$(personal_tutor_path_key "$worktree")"
 lane_state="$lane_state_root/$worktree_key-$lane_id.json"
 python3 - "$worktree" "$branch" "$lane_state" <<'PY'
 from pathlib import Path
@@ -139,12 +144,10 @@ PY
 if [ "$dry_run" -eq 0 ]; then
   if [ -z "$target" ]; then
     while IFS='|' read -r pane command path dead codex_home; do
-      [ "$command" = codex ] || continue
-      [ "$dead" = 0 ] || continue
-      [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || continue
-      case "$path" in
-        "$worktree"|"$worktree"/*) target="$PERSONAL_TUTOR_SESSION:$pane"; break ;;
-      esac
+      personal_tutor_is_live_codex_pane "$command" "$dead" "$codex_home" || continue
+      personal_tutor_path_is_within "$path" "$worktree" || continue
+      target="$PERSONAL_TUTOR_SESSION:$pane"
+      break
     done < <(tmux list-panes -s -t "$PERSONAL_TUTOR_SESSION" -F '#{window_index}.#{pane_index}|#{pane_current_command}|#{pane_current_path}|#{pane_dead}|#{@personal_tutor_codex_home}')
   fi
   [ -n "$target" ] || { echo "no live Codex pane found for worktree '$worktree' in tmux session '$PERSONAL_TUTOR_SESSION'"; exit 1; }
@@ -155,10 +158,10 @@ if [ "$dry_run" -eq 0 ]; then
   pane_codex_home="$(tmux display-message -p -t "$target" '#{@personal_tutor_codex_home}')"
   [ "$pane_command" = codex ] && [ "$pane_dead" = 0 ] || { echo "target is not a live Codex pane: $target command=$pane_command dead=$pane_dead"; exit 1; }
   [ "$pane_codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || { echo "target is not an isolated Personal Tutor Codex pane: $target"; exit 1; }
-  case "$pane_path" in
-    "$worktree"|"$worktree"/*) ;;
-    *) echo "target is not attached to worktree: $target path=$pane_path expected=$worktree"; exit 1 ;;
-  esac
+  personal_tutor_path_is_within "$pane_path" "$worktree" || {
+    echo "target is not attached to worktree: $target path=$pane_path expected=$worktree"
+    exit 1
+  }
 fi
 
 prompt_file="$(mktemp "${TMPDIR:-/tmp}/personal-dev-tutor-${lane_id}.XXXXXX.md")"

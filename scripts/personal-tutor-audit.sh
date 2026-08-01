@@ -9,7 +9,9 @@ SCRIPT_DIR="$(cd "$(dirname "$SELF_PATH")" && pwd)"
 source "$SCRIPT_DIR/personal-tutor-lib.sh"
 
 lane_id="${1:-}"
-[ -n "$lane_id" ] && shift || true
+if [ -n "$lane_id" ]; then
+  shift
+fi
 repo="" branch="" allowed="" verification="" concept="" criteria="" evidence=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -30,19 +32,23 @@ done
 for value in allowed criteria evidence verification; do
   printf '%s' "${!value}" | grep -q '[^|[:space:]]' || { echo "$value must contain a non-empty value"; exit 2; }
 done
-repo="$(cd "$repo" && pwd -P)"
-git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git repository: $repo"; exit 2; }
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
+requested_repo="$repo"
+repo="$(personal_tutor_git_root "$repo")" || {
+  echo "not a git repository: $requested_repo"
+  exit 2
+}
 actual_branch="$(git -C "$repo" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 branch_ok=1
 [ "$actual_branch" = "$branch" ] || branch_ok=0
 
 umask 077
 lane_state_root="${PERSONAL_TUTOR_LANE_CACHE_ROOT:-$PERSONAL_TUTOR_USER_HOME/.cache/personal-dev-tutor/lanes}"
-lane_state_root="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$lane_state_root")"
-case "$lane_state_root/" in "$repo/"*) echo "lane state cache must be outside the worktree"; exit 2 ;; esac
-worktree_key="$(printf '%s' "$repo" | sha256sum | cut -c1-16)"
+lane_state_root="$(personal_tutor_resolve_path "$lane_state_root")"
+if personal_tutor_path_is_within "$lane_state_root" "$repo"; then
+  echo "lane state cache must be outside the worktree"
+  exit 2
+fi
+worktree_key="$(personal_tutor_path_key "$repo")"
 lane_state="$lane_state_root/$worktree_key-$lane_id.json"
 [ -f "$lane_state" ] || { echo "missing pre-delegation baseline for lane: $lane_id"; exit 1; }
 changed_file="$(mktemp)"
@@ -110,9 +116,9 @@ Path(violations_path).write_bytes(b"".join(os.fsencode(path) + b"\0" for path in
 PY
 
 changed=()
-while IFS= read -r -d '' path; do changed+=("$path"); done < "$changed_file"
+mapfile -d '' changed < "$changed_file"
 violations=()
-while IFS= read -r -d '' path; do violations+=("$path"); done < "$violations_file"
+mapfile -d '' violations < "$violations_file"
 
 mapping_ok=1
 criteria_mapping="$(python3 - "$criteria" "$evidence" <<'PY'

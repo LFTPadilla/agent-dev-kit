@@ -17,6 +17,27 @@ root="$(cd "$requested" && pwd -P)"
 bool_file() { [ -f "$1" ] && printf 'yes' || printf 'no'; }
 command_path() { command -v "$1" 2>/dev/null || printf 'unavailable'; }
 
+print_evidence_matches() {
+  local file="$1" limit="$2" pattern="$3" matches line
+  matches="$(grep -nEim "$limit" "$pattern" "$file" 2>/dev/null || true)"
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    line="$(printf '%s' "$line" | LC_ALL=C tr '\t' ' ' | LC_ALL=C tr -d '\000-\010\013\014\016-\037\177' | cut -c1-220)"
+    printf '%s:%s\n' "${file#$root/}" "$line"
+  done <<< "$matches"
+}
+
+print_evidence_section() {
+  local section="$1" limit="$2" pattern="$3" file
+  shift 3
+  printf 'evidence.%s.begin\n' "$section"
+  for file in "$@"; do
+    [ -f "$file" ] || continue
+    print_evidence_matches "$file" "$limit" "$pattern"
+  done
+  printf 'evidence.%s.end\n' "$section"
+}
+
 maven_wrapper=no
 gradle_wrapper=no
 maven_wrapper_executable=no
@@ -67,84 +88,57 @@ printf 'command.javac=%s\n' "$(command_path javac)"
 printf 'command.maven=%s\n' "$(command_path mvn)"
 printf 'command.gradle=%s\n' "$(command_path gradle)"
 
-if command -v java >/dev/null 2>&1; then
-  runtime_version="$(java -version 2>&1 | { IFS= read -r line; printf '%s' "$line"; })"
-  printf 'java.runtime=%s\n' "$runtime_version"
-else
-  printf 'java.runtime=unavailable\n'
-fi
-if command -v javac >/dev/null 2>&1; then
-  printf 'javac.runtime=%s\n' "$(javac -version 2>&1 | { IFS= read -r line; printf '%s' "$line"; })"
-else
-  printf 'javac.runtime=unavailable\n'
-fi
+print_runtime_version() {
+  local command_name="$1" runtime_version
+  if command -v "$command_name" >/dev/null 2>&1; then
+    runtime_version="$("$command_name" -version 2>&1 | { IFS= read -r line; printf '%s' "$line"; })"
+    printf '%s.runtime=%s\n' "$command_name" "$runtime_version"
+  else
+    printf '%s.runtime=unavailable\n' "$command_name"
+  fi
+}
+
+print_runtime_version java
+print_runtime_version javac
 
 maven_properties="$root/.mvn/wrapper/maven-wrapper.properties"
 gradle_properties="$root/gradle/wrapper/gradle-wrapper.properties"
 printf 'wrapper.maven.properties=%s\n' "$(bool_file "$maven_properties")"
 printf 'wrapper.gradle.properties=%s\n' "$(bool_file "$gradle_properties")"
-if [ -f "$maven_properties" ]; then
-  if grep -Eq '^[[:space:]]*distributionSha256Sum=' "$maven_properties"; then
-    printf 'wrapper.maven.distribution-sha256=declared\n'
-  else
-    printf 'wrapper.maven.distribution-sha256=not-declared\n'
-  fi
-fi
-if [ -f "$gradle_properties" ]; then
-  if grep -Eq '^[[:space:]]*distributionSha256Sum=' "$gradle_properties"; then
-    printf 'wrapper.gradle.distribution-sha256=declared\n'
-  else
-    printf 'wrapper.gradle.distribution-sha256=not-declared\n'
-  fi
-fi
 
-printf 'evidence.jdk-target.begin\n'
-for file in \
+print_wrapper_checksum_status() {
+  local kind="$1" properties="$2"
+  [ -f "$properties" ] || return 0
+  if grep -Eq '^[[:space:]]*distributionSha256Sum=' "$properties"; then
+    printf 'wrapper.%s.distribution-sha256=declared\n' "$kind"
+  else
+    printf 'wrapper.%s.distribution-sha256=not-declared\n' "$kind"
+  fi
+}
+
+print_wrapper_checksum_status maven "$maven_properties"
+print_wrapper_checksum_status gradle "$gradle_properties"
+
+print_evidence_section jdk-target 12 \
+  'maven\.compiler\.(release|source|target)|<release>|<source>|<target>|<jdkToolchain>|<toolchain>|JavaLanguageVersion|languageVersion|sourceCompatibility|targetCompatibility|options\.release|java[._-]?version|^java[[:space:]]' \
   "$root/pom.xml" \
   "$root/build.gradle" \
   "$root/build.gradle.kts" \
   "$root/gradle.properties" \
   "$root/.java-version" \
   "$root/.sdkmanrc" \
-  "$root/.tool-versions"; do
-  [ -f "$file" ] || continue
-  matches="$(grep -nEim 12 \
-    'maven\.compiler\.(release|source|target)|<release>|<source>|<target>|<jdkToolchain>|<toolchain>|JavaLanguageVersion|languageVersion|sourceCompatibility|targetCompatibility|options\.release|java[._-]?version|^java[[:space:]]' \
-    "$file" 2>/dev/null || true)"
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    line="$(printf '%s' "$line" | tr '\t' ' ' | cut -c1-220)"
-    printf '%s:%s\n' "${file#$root/}" "$line"
-  done <<< "$matches"
-done
-printf 'evidence.jdk-target.end\n'
+  "$root/.tool-versions"
 
-printf 'evidence.ci.begin\n'
-for ci in "$root"/.github/workflows/*.yml "$root"/.github/workflows/*.yaml "$root"/.gitlab-ci.yml "$root"/Jenkinsfile; do
-  [ -f "$ci" ] || continue
-  matches="$(grep -nEim 20 \
-    'setup-java|java-version:|distribution:|(^|[[:space:]])\./mvnw([[:space:]]|$)|(^|[[:space:]])\./gradlew([[:space:]]|$)' \
-    "$ci" 2>/dev/null || true)"
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    line="$(printf '%s' "$line" | tr '\t' ' ' | cut -c1-220)"
-    printf '%s:%s\n' "${ci#$root/}" "$line"
-  done <<< "$matches"
-done
-printf 'evidence.ci.end\n'
+print_evidence_section ci 20 \
+  'setup-java|java-version:|distribution:|(^|[[:space:]])\./mvnw([[:space:]]|$)|(^|[[:space:]])\./gradlew([[:space:]]|$)' \
+  "$root"/.github/workflows/*.yml "$root"/.github/workflows/*.yaml \
+  "$root"/.gitlab-ci.yml "$root"/Jenkinsfile
 
-marker_files=()
-for candidate in "$root/pom.xml" "$root/build.gradle" "$root/build.gradle.kts"; do
-  [ -f "$candidate" ] && marker_files+=("$candidate")
-done
-if [ "${#marker_files[@]}" -gt 0 ]; then
-  marker_text="$(grep -Eio 'junit-jupiter|junit-platform|mockito|testcontainers|spring-boot|maven-surefire|maven-failsafe|jacoco|spotbugs|checkstyle|pmd|errorprone|spotless|dependency-check' "${marker_files[@]}" 2>/dev/null || true)"
-  if [ -n "$marker_text" ]; then
-    printf 'markers=' 
-    printf '%s\n' "$marker_text" | tr '[:upper:]' '[:lower:]' | sort -u | paste -sd, -
-  else
-    printf 'markers=none-detected\n'
-  fi
+marker_text="$(grep -Eio 'junit-jupiter|junit-platform|mockito|testcontainers|spring-boot|maven-surefire|maven-failsafe|jacoco|spotbugs|checkstyle|pmd|errorprone|spotless|dependency-check' \
+  "$root/pom.xml" "$root/build.gradle" "$root/build.gradle.kts" 2>/dev/null || true)"
+if [ -n "$marker_text" ]; then
+  printf 'markers='
+  printf '%s\n' "$marker_text" | tr '[:upper:]' '[:lower:]' | sort -u | paste -sd, -
 else
   printf 'markers=none-detected\n'
 fi

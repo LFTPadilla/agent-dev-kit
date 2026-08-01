@@ -86,6 +86,50 @@ export HERMES_TEST_LOG="$FIXTURE/hermes.log"
 export AGENT_DEV_KIT_HERMES_HOME="$HERMES_HOME"
 export PATH="$FAKE_BIN:$PATH"
 
+wait_for_refresh_marker() {
+  local marker="$1" pid="$2" failure_message="$3"
+  for _ in $(seq 1 200); do
+    [ -e "$marker" ] && return 0
+    sleep 0.05
+  done
+  kill "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  echo "FAIL $failure_message"
+  exit 1
+}
+
+assert_no_workhorse_lock() {
+  local failure_message="$1"
+  if [ -e "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" ] ||
+     [ -L "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" ]; then
+    echo "FAIL $failure_message"
+    exit 1
+  fi
+}
+
+assert_skill_checksum() {
+  local name="$1"
+  test "$(cat "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256")" = \
+    "$(sha256sum "$HERMES_HOME/skills/$name/SKILL.md" | cut -d' ' -f1)"
+}
+
+assert_skill_source() {
+  local name="$1" expected="$2"
+  test "$(cat "$HERMES_HOME/skills/$name/.agent-dev-kit-source")" = "$expected"
+}
+
+assert_skill_digest() {
+  local name="$1" expected="$2"
+  test "$(sha256sum "$HERMES_HOME/skills/$name/SKILL.md" | cut -d' ' -f1)" = "$expected"
+}
+
+assert_profile_skill_link() {
+  local profile="$1" name="$2"
+  local target="$HERMES_HOME/profiles/$profile/skills/external/$name"
+  test -L "$target"
+  test "$(readlink -f "$target")" = "$(readlink -f "$HERMES_HOME/skills/$name")"
+}
+
 fixture_skill_sha() {
   local name="$1" source="$2"
   printf '%s\n' '---' "name: $name" 'description: test fixture' \
@@ -108,12 +152,9 @@ for name in caveman ponytail; do
   grep -q "^name: $name$" "$HERMES_HOME/skills/$name/SKILL.md"
   test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-source"
   test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256"
-  test "$(cat "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256")" = \
-    "$(sha256sum "$HERMES_HOME/skills/$name/SKILL.md" | cut -d' ' -f1)"
+  assert_skill_checksum "$name"
   for profile in alpha personal-dev-tutor; do
-    target="$HERMES_HOME/profiles/$profile/skills/external/$name"
-    test -L "$target"
-    test "$(readlink -f "$target")" = "$(readlink -f "$HERMES_HOME/skills/$name")"
+    assert_profile_skill_link "$profile" "$name"
   done
 done
 
@@ -175,8 +216,7 @@ drifted_install_count="$(wc -l < "$HERMES_TEST_LOG")"
 "$ROOT/scripts/install-hermes-workhorse.sh" --all-profiles >/dev/null
 test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$((drifted_install_count + 1))"
 grep -q '^description: test fixture$' "$HERMES_HOME/skills/caveman/SKILL.md"
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-sha256")" = \
-  "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
+assert_skill_checksum caveman
 
 managed_caveman="$HERMES_HOME/skills/caveman.managed-test-backup"
 mv "$HERMES_HOME/skills/caveman" "$managed_caveman"
@@ -254,11 +294,7 @@ for sig in TERM HUP INT; do
   test -L "$HERMES_HOME/profiles/signal-$sig/skills/external/caveman"
   test -L "$HERMES_HOME/profiles/signal-$sig/skills/external/ponytail"
 done
-{ test ! -e "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" &&
-  test ! -L "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock"; } || {
-  echo "FAIL signal-mid-install left a workhorse lock behind"
-  exit 1
-}
+assert_no_workhorse_lock "signal-mid-install left a workhorse lock behind"
 
 mkdir -p "$HERMES_HOME/profiles/ln-failure/skills"
 cat > "$FAKE_BIN/ln" <<'SH'
@@ -281,21 +317,16 @@ fi
 grep -q 'unable to create profile skill link' "$ln_failure_log"
 test ! -e "$HERMES_HOME/profiles/ln-failure/skills/external/caveman"
 test ! -e "$HERMES_HOME/profiles/ln-failure/skills/external/ponytail"
-{ test ! -e "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" &&
-  test ! -L "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock"; } || {
-  echo "FAIL ln failure left a workhorse lock behind"
-  exit 1
-}
+assert_no_workhorse_lock "ln failure left a workhorse lock behind"
 write_fake_ln
 
 updated_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.2/skills/caveman/SKILL.md"
 AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$updated_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$updated_caveman_source")" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-source")" = "$updated_caveman_source"
+assert_skill_source caveman "$updated_caveman_source"
 grep -q "^source: $updated_caveman_source$" "$HERMES_HOME/skills/caveman/SKILL.md"
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-sha256")" = \
-  "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
+assert_skill_checksum caveman
 
 mismatched_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.2-tampered/skills/caveman/SKILL.md"
 before_mismatch_sha="$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
@@ -305,9 +336,8 @@ if AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$mismatched_caveman_source" \
   echo "FAIL installer accepted content that missed its pinned SHA-256"
   exit 1
 fi
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-source")" = "$updated_caveman_source"
-test "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)" = \
-  "$before_mismatch_sha"
+assert_skill_source caveman "$updated_caveman_source"
+assert_skill_digest caveman "$before_mismatch_sha"
 
 transaction_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.2-bundle/skills/caveman/SKILL.md"
 transaction_ponytail_source="https://raw.githubusercontent.com/DietrichGebert/ponytail/v4.8.4-bundle/skills/ponytail/SKILL.md"
@@ -321,10 +351,8 @@ if AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$transaction_caveman_source" \
   echo "FAIL installer accepted a partially valid workhorse bundle"
   exit 1
 fi
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-source")" = \
-  "$before_transaction_caveman_source"
-test "$(cat "$HERMES_HOME/skills/ponytail/.agent-dev-kit-source")" = \
-  "$before_transaction_ponytail_source"
+assert_skill_source caveman "$before_transaction_caveman_source"
+assert_skill_source ponytail "$before_transaction_ponytail_source"
 if compgen -G "$HERMES_HOME/skills/.*.backup.*" >/dev/null; then
   echo "FAIL failed bundle transaction left a skill backup behind"
   exit 1
@@ -340,18 +368,13 @@ if HERMES_TEST_FAIL_SOURCE="$failed_caveman_source" \
   echo "FAIL installer accepted a failed managed skill refresh"
   exit 1
 fi
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-source")" = "$updated_caveman_source"
-test "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)" = \
-  "$before_failed_refresh_sha"
+assert_skill_source caveman "$updated_caveman_source"
+assert_skill_digest caveman "$before_failed_refresh_sha"
 if compgen -G "$HERMES_HOME/skills/.caveman.backup.*" >/dev/null; then
   echo "FAIL failed refresh left a managed-skill backup behind"
   exit 1
 fi
-{ test ! -e "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" &&
-  test ! -L "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock"; } || {
-  echo "FAIL failed refresh left a workhorse lock behind"
-  exit 1
-}
+assert_no_workhorse_lock "failed refresh left a workhorse lock behind"
 
 signal_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.4/skills/caveman/SKILL.md"
 before_signal_refresh_sha="$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)"
@@ -367,14 +390,9 @@ if [ "$signal_refresh_status" -ne 143 ]; then
   echo "FAIL interrupted refresh returned $signal_refresh_status, expected 143"
   exit 1
 fi
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-source")" = "$updated_caveman_source"
-test "$(sha256sum "$HERMES_HOME/skills/caveman/SKILL.md" | cut -d' ' -f1)" = \
-  "$before_signal_refresh_sha"
-{ test ! -e "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" &&
-  test ! -L "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock"; } || {
-  echo "FAIL interrupted refresh left a workhorse lock behind"
-  exit 1
-}
+assert_skill_source caveman "$updated_caveman_source"
+assert_skill_digest caveman "$before_signal_refresh_sha"
+assert_no_workhorse_lock "interrupted refresh left a workhorse lock behind"
 
 concurrent_caveman_source="https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.5/skills/caveman/SKILL.md"
 block_started="$FIXTURE/concurrent-refresh-started"
@@ -389,16 +407,8 @@ HERMES_TEST_BLOCK_SOURCE="$concurrent_caveman_source" \
   AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$default_ponytail_sha" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>&1 &
 concurrent_pid=$!
-for _ in $(seq 1 200); do
-  [ -e "$block_started" ] && break
-  sleep 0.05
-done
-if [ ! -e "$block_started" ]; then
-  kill "$concurrent_pid" 2>/dev/null || true
-  wait "$concurrent_pid" 2>/dev/null || true
-  echo "FAIL concurrent refresh fixture did not reach the critical section"
-  exit 1
-fi
+wait_for_refresh_marker "$block_started" "$concurrent_pid" \
+  "concurrent refresh fixture did not reach the critical section"
 if AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$concurrent_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$concurrent_caveman_source")" \
   AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$default_ponytail_source" \
@@ -412,7 +422,7 @@ fi
 : > "$block_release"
 wait "$concurrent_pid"
 test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$((before_concurrent_count + 1))"
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-source")" = "$concurrent_caveman_source"
+assert_skill_source caveman "$concurrent_caveman_source"
 grep -q "^source: $concurrent_caveman_source$" "$HERMES_HOME/skills/caveman/SKILL.md"
 if compgen -G "$HERMES_HOME/skills/.caveman.agent-dev-kit.lock" >/dev/null; then
   echo "FAIL successful refresh left a managed-skill lock behind"
@@ -434,16 +444,8 @@ HERMES_TEST_BLOCK_SOURCE="$bundle_ponytail_source" \
   AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$(fixture_skill_sha ponytail "$bundle_ponytail_source")" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>&1 &
 bundle_pid=$!
-for _ in $(seq 1 200); do
-  [ -e "$bundle_started" ] && break
-  sleep 0.05
-done
-if [ ! -e "$bundle_started" ]; then
-  kill "$bundle_pid" 2>/dev/null || true
-  wait "$bundle_pid" 2>/dev/null || true
-  echo "FAIL bundle refresh fixture did not reach the second skill"
-  exit 1
-fi
+wait_for_refresh_marker "$bundle_started" "$bundle_pid" \
+  "bundle refresh fixture did not reach the second skill"
 if AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$competing_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$competing_caveman_source")" \
   AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$bundle_ponytail_source" \
@@ -457,13 +459,9 @@ fi
 : > "$bundle_release"
 wait "$bundle_pid"
 test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$((before_bundle_count + 2))"
-test "$(cat "$HERMES_HOME/skills/caveman/.agent-dev-kit-source")" = "$bundle_caveman_source"
-test "$(cat "$HERMES_HOME/skills/ponytail/.agent-dev-kit-source")" = "$bundle_ponytail_source"
-if [ -e "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" ] ||
-   [ -L "$HERMES_HOME/skills/.agent-dev-kit-workhorse.lock" ]; then
-  echo "FAIL successful bundle refresh left a workhorse lock behind"
-  exit 1
-fi
+assert_skill_source caveman "$bundle_caveman_source"
+assert_skill_source ponytail "$bundle_ponytail_source"
+assert_no_workhorse_lock "successful bundle refresh left a workhorse lock behind"
 
 grep -q 'AGENT_DEV_KIT_HERMES_HOME="\$PERSONAL_TUTOR_USER_HOME/.hermes"' \
   "$ROOT/scripts/personal-tutor-install.sh"

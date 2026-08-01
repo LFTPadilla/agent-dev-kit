@@ -1,16 +1,20 @@
 #!/usr/bin/env node
-import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 import { parseDocument } from 'yaml'
 
-const root = path.resolve(new URL('..', import.meta.url).pathname)
+const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)))
+const claudePluginFile = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
 const privatePatterns = [
   /(?<![A-Za-z0-9_$}])\/home\/(?!(?:example|user|runner|tutor)\b)[A-Za-z0-9._-]+/i,
   /(?<![A-Za-z0-9_$}])\/Users\/(?!(?:example|user|runner|you)\b)[A-Za-z0-9._-]+/
 ]
+const yamlExtensions = ['.yml', '.yaml']
+const privacyScanExtensions = ['.md', '.json', '.yml', '.yaml', '.mjs', '.js', '.ts', '.tsx', '.sh']
 const ignoreDirs = new Set(['.git', 'node_modules', '.pi', '.venv', 'venv', 'playwright-report', 'test-results'])
 
 function color(code, text) {
@@ -21,33 +25,29 @@ const ok = (msg) => ({ level: 'ok', msg })
 const warn = (msg) => ({ level: 'warn', msg })
 const fail = (msg) => ({ level: 'fail', msg })
 
+function checkLabel(level) {
+  if (level === 'ok') return color(32, 'OK')
+  if (level === 'warn') return color(33, 'WARN')
+  return color(31, 'FAIL')
+}
+
 function printChecks(checks) {
+  let failures = 0
+  let warnings = 0
   for (const check of checks) {
-    const label = check.level === 'ok' ? color(32, 'OK') : check.level === 'warn' ? color(33, 'WARN') : color(31, 'FAIL')
-    console.log(`${label} ${check.msg}`)
+    console.log(`${checkLabel(check.level)} ${check.msg}`)
+    if (check.level === 'fail') failures++
+    else if (check.level === 'warn') warnings++
   }
-  const failures = checks.filter((c) => c.level === 'fail').length
-  const warnings = checks.filter((c) => c.level === 'warn').length
   console.log(`\n${checks.length} checks: ${failures} failed, ${warnings} warnings`)
   return failures
 }
 
-function commandExists(name) {
-  const result = spawnSync('sh', ['-lc', `command -v ${quote(name)} >/dev/null 2>&1`])
-  return result.status === 0
-}
-
-function commandVersion(name, args = ['--version']) {
-  if (!commandExists(name)) return null
-  try {
-    return execFileSync(name, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n')[0].trim()
-  } catch {
-    return 'installed'
-  }
-}
-
-function quote(value) {
-  return `'${String(value).replaceAll("'", "'\\''")}'`
+function commandVersion(name) {
+  const result = spawnSync(name, ['--version'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+  if (result.error?.code === 'ENOENT') return null
+  if (result.error || result.status !== 0) return 'installed'
+  return (result.stdout ?? '').split('\n')[0].trim()
 }
 
 function walkFiles(dir, out = []) {
@@ -59,6 +59,19 @@ function walkFiles(dir, out = []) {
     else if (entry.isFile()) out.push(full)
   }
   return out
+}
+
+function filesWithExtensions(files, extensions) {
+  return files.filter((file) => extensions.some((extension) => file.endsWith(extension)))
+}
+
+function missingFields(value, fields) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return fields.slice()
+  return fields.filter((field) => !(field in value))
+}
+
+function addMissingFieldFailures(checks, value, fields, label) {
+  for (const field of missingFields(value, fields)) checks.push(fail(`${label} missing ${field}`))
 }
 
 function readJson(file, checks) {
@@ -96,13 +109,13 @@ function skillDirs() {
     .sort()
 }
 
-function validateSkills(checks) {
-  const dirs = skillDirs()
+function validateSkills(checks, { skillDirs: dirs }) {
   if (!dirs.length) {
     checks.push(fail('no skills found under plugins/dev-skills/skills'))
     return
   }
   for (const dir of dirs) {
+    const name = path.basename(dir)
     const file = path.join(dir, 'SKILL.md')
     if (!existsSync(file)) {
       checks.push(fail(`${rel(dir)} is missing SKILL.md`))
@@ -114,22 +127,22 @@ function validateSkills(checks) {
       checks.push(fail(`${rel(file)} is missing YAML frontmatter`))
       continue
     }
-    const name = fm.get('name')
+    const declaredName = fm.get('name')
     const description = fm.get('description')
-    if (!name) checks.push(fail(`${rel(file)} is missing frontmatter field: name`))
-    else if (name !== path.basename(dir)) checks.push(fail(`${rel(file)} name must match directory ${path.basename(dir)}`))
+    if (!declaredName) checks.push(fail(`${rel(file)} is missing frontmatter field: name`))
+    else if (declaredName !== name) checks.push(fail(`${rel(file)} name must match directory ${name}`))
     if (!description || description.length < 20) checks.push(fail(`${rel(file)} needs an actionable description`))
   }
   checks.push(ok(`${dirs.length} skill frontmatters checked`))
 }
 
-function validateJsonFiles(checks) {
-  for (const file of walkFiles(root).filter((f) => f.endsWith('.json'))) readJson(file, checks)
+function validateJsonFiles(checks, { files }) {
+  for (const file of filesWithExtensions(files, ['.json'])) readJson(file, checks)
   checks.push(ok('JSON files parse'))
 }
 
-function validateYamlFiles(checks) {
-  for (const file of walkFiles(root).filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))) {
+function validateYamlFiles(checks, { files }) {
+  for (const file of filesWithExtensions(files, yamlExtensions)) {
     const text = readFileSync(file, 'utf8')
     if (text.includes('\t')) checks.push(fail(`${rel(file)} contains tabs; use spaces in YAML`))
     if (!text.trim()) checks.push(fail(`${rel(file)} is empty`))
@@ -142,54 +155,51 @@ function validateYamlFiles(checks) {
 }
 
 function validatePlugin(checks) {
-  const file = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
-  const data = readJson(file, checks)
+  const data = readJson(claudePluginFile, checks)
   if (!data) return
-  if (!/^\d+\.\d+\.\d+/.test(data.version || '')) checks.push(fail(`${rel(file)} version must be semver-like`))
-  if (!data.name || !data.description) checks.push(fail(`${rel(file)} must include name and description`))
+  if (!/^\d+\.\d+\.\d+/.test(data.version || '')) checks.push(fail(`${rel(claudePluginFile)} version must be semver-like`))
+  if (!data.name || !data.description) checks.push(fail(`${rel(claudePluginFile)} must include name and description`))
   else checks.push(ok('plugin manifest checked'))
 }
 
 function validateReleaseVersions(checks) {
   const packageFile = path.join(root, 'package.json')
   const lockFile = path.join(root, 'package-lock.json')
-  const claudeFile = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
   const codexFile = path.join(root, 'plugins/dev-skills/.codex-plugin/plugin.json')
-  const packageData = readJson(packageFile, checks)
-  const lockData = readJson(lockFile, checks)
-  const claudeData = readJson(claudeFile, checks)
-  const codexData = readJson(codexFile, checks)
-  if (![packageData, lockData, claudeData, codexData].every(Boolean)) return
+  const releaseFiles = [packageFile, lockFile, claudePluginFile, codexFile]
+  const releaseData = releaseFiles.map((file) => readJson(file, checks))
+  if (releaseData.some((data) => !data)) return
+  const [packageData, lockData, claudeData, codexData] = releaseData
   const versions = new Map([
     [rel(packageFile), packageData.version],
     [`${rel(lockFile)} root`, lockData.version],
     [`${rel(lockFile)} package`, lockData.packages?.['']?.version],
-    [rel(claudeFile), claudeData.version],
+    [rel(claudePluginFile), claudeData.version],
     [rel(codexFile), codexData.version],
   ])
   const expected = packageData.version
-  for (const [source, version] of versions) {
-    if (version !== expected) checks.push(fail(`${source} version ${version ?? 'missing'} does not match ${expected}`))
+  const mismatches = [...versions].filter(([, version]) => version !== expected)
+  for (const [source, version] of mismatches) {
+    checks.push(fail(`${source} version ${version ?? 'missing'} does not match ${expected}`))
   }
-  if ([...versions.values()].every((version) => version === expected)) {
+  if (!mismatches.length) {
     checks.push(ok(`release versions aligned at ${expected}`))
   }
 }
 
-function validateProvenance(checks) {
+function validateProvenance(checks, { skillDirs: dirs }) {
   const file = path.join(root, 'skill-provenance.json')
   const data = readJson(file, checks)
   if (!data) return
-  const actual = skillDirs().map((dir) => path.basename(dir)).sort()
-  const recorded = Object.keys(data.skills || {}).sort()
+  const skills = data.skills || {}
+  const actual = dirs.map((dir) => path.basename(dir)).sort()
+  const recorded = Object.keys(skills).sort()
   const missing = actual.filter((name) => !recorded.includes(name))
   const stale = recorded.filter((name) => !actual.includes(name))
   for (const name of missing) checks.push(fail(`skill-provenance.json missing skill: ${name}`))
   for (const name of stale) checks.push(fail(`skill-provenance.json has stale skill: ${name}`))
-  for (const [name, item] of Object.entries(data.skills || {})) {
-    for (const field of ['source', 'license', 'visibility', 'risk', 'dependencies']) {
-      if (!(field in item)) checks.push(fail(`skill-provenance.json ${name} missing ${field}`))
-    }
+  for (const [name, item] of Object.entries(skills)) {
+    addMissingFieldFailures(checks, item, ['source', 'license', 'visibility', 'risk', 'dependencies'], `skill-provenance.json ${name}`)
   }
   if (!missing.length && !stale.length) checks.push(ok('skill provenance covers all skills'))
 }
@@ -200,7 +210,7 @@ function validateProfiles(checks) {
     checks.push(fail('profiles/ directory is missing'))
     return
   }
-  const files = readdirSync(dir).filter((name) => name.endsWith('.yml') || name.endsWith('.yaml'))
+  const files = filesWithExtensions(readdirSync(dir), yamlExtensions)
   if (!files.length) checks.push(fail('profiles/ has no profile manifests'))
   for (const name of files) {
     const text = readFileSync(path.join(dir, name), 'utf8')
@@ -219,6 +229,7 @@ function validatePiPackageResearch(checks) {
   const matrixFile = path.join(dir, 'package-matrix.md')
   const auditFile = path.join(dir, 'context-mode-audit.md')
   const remainingAuditFile = path.join(dir, 'remaining-candidates-audit.md')
+  const requiredFiles = [profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile]
 
   const settings = readJson(settingsFile, checks)
   if (!settings || !Array.isArray(settings.packages)) {
@@ -227,26 +238,24 @@ function validatePiPackageResearch(checks) {
     checks.push(fail('pi-profiles/settings.example.json must remain inert with an empty packages array'))
   }
 
-  for (const file of [profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile]) {
-    if (!existsSync(file)) checks.push(fail(`${rel(file)} is missing`))
-  }
-  if (![profilesFile, readmeFile, matrixFile, auditFile, remainingAuditFile].every(existsSync)) return
+  const missingFiles = requiredFiles.filter((file) => !existsSync(file))
+  for (const file of missingFiles) checks.push(fail(`${rel(file)} is missing`))
+  if (missingFiles.length) return
 
-  const profiles = readFileSync(profilesFile, 'utf8')
+  const [profiles, readme, matrix, audit, remainingAudit] = requiredFiles.map((file) => readFileSync(file, 'utf8'))
   const profilesDocument = parseDocument(profiles, { prettyErrors: true, strict: true })
   const profilesConfig = profilesDocument.errors.length === 0 ? profilesDocument.toJS() : null
-  const readme = readFileSync(readmeFile, 'utf8')
-  const matrix = readFileSync(matrixFile, 'utf8')
-  const audit = readFileSync(auditFile, 'utf8')
-  const remainingAudit = readFileSync(remainingAuditFile, 'utf8')
 
   if (profilesConfig?.status !== 'research-only' || profilesConfig?.runtime_activation !== 'none') {
     checks.push(fail('pi-profiles/profiles.yaml must remain research-only with no runtime activation'))
   }
   for (const profileName of ['pi-code-review', 'pi-sre-research']) {
     const profile = profilesConfig?.profiles?.[profileName]
-    if (!profile || !Array.isArray(profile.packages) || profile.packages.length !== 0 ||
-        profile.runtime_activation !== 'metadata-only') {
+    const hasPackageFreeCompatibility = Boolean(profile) &&
+      Array.isArray(profile.packages) &&
+      profile.packages.length === 0 &&
+      profile.runtime_activation === 'metadata-only'
+    if (!hasPackageFreeCompatibility) {
       checks.push(fail(`pi-profiles/profiles.yaml must preserve package-free ${profileName} compatibility`))
     }
   }
@@ -268,7 +277,7 @@ function validatePiPackageResearch(checks) {
       checks.push(fail(`Pi package research must preserve the reviewed decision for ${packagePin}`))
     }
   }
-  if (!remainingAudit.includes('No Pi') && !remainingAudit.includes('No Pi\n')) {
+  if (!remainingAudit.includes('No Pi')) {
     checks.push(fail('remaining Pi audits must state that no Pi package is enabled'))
   }
 
@@ -280,9 +289,7 @@ function validatePolicies(checks) {
   const data = readJson(file, checks)
   if (!data) return
   for (const [name, policy] of Object.entries(data.policies || {})) {
-    for (const field of ['writes', 'network', 'secrets', 'production', 'git_push', 'destructive_ops']) {
-      if (!(field in policy)) checks.push(fail(`sandbox policy ${name} missing ${field}`))
-    }
+    addMissingFieldFailures(checks, policy, ['writes', 'network', 'secrets', 'production', 'git_push', 'destructive_ops'], `sandbox policy ${name}`)
   }
   checks.push(ok('sandbox policies checked'))
 }
@@ -292,21 +299,22 @@ function validateEvals(checks) {
   const cases = readJson(file, checks)
   if (!Array.isArray(cases)) return
   const seen = new Set()
+  let planted = 0
   for (const c of cases) {
     if (!c.file || typeof c.plantedBug !== 'boolean') checks.push(fail(`invalid eval case entry: ${JSON.stringify(c)}`))
     if (seen.has(c.file)) checks.push(fail(`duplicate eval case: ${c.file}`))
     seen.add(c.file)
     if (c.file && !existsSync(path.join(root, 'evals/cases', c.file))) checks.push(fail(`eval case file missing: ${c.file}`))
+    if (c.plantedBug) planted++
   }
-  const planted = cases.filter((c) => c.plantedBug).length
   const controls = cases.length - planted
   if (cases.length < 12) checks.push(fail('eval suite should have at least 12 cases'))
   if (controls < 2) checks.push(fail('eval suite should have at least 2 clean controls'))
   checks.push(ok(`eval suite checked (${planted} planted, ${controls} controls)`))
 }
 
-function validateLinks(checks) {
-  const markdown = walkFiles(root).filter((f) => f.endsWith('.md'))
+function validateLinks(checks, { files }) {
+  const markdown = filesWithExtensions(files, ['.md'])
   const linkPattern = /\[[^\]]+\]\(([^)]+)\)/g
   for (const file of markdown) {
     const text = readFileSync(file, 'utf8')
@@ -322,18 +330,13 @@ function validateLinks(checks) {
   checks.push(ok('relative markdown links checked'))
 }
 
-function privacyScan(checks) {
+function privacyScan(checks, { files }) {
   const offenders = []
-  for (const file of walkFiles(root)) {
+  for (const file of filesWithExtensions(files, privacyScanExtensions)) {
     if (file.includes('plugins/dev-skills/skills/drawio-skill/data/lobe-icons.json')) continue
-    if (!/\.(md|json|ya?ml|mjs|js|ts|tsx|sh)$/.test(file)) continue
     const text = readFileSync(file, 'utf8')
-    for (const pattern of privatePatterns) {
-      if (pattern.test(text)) {
-        offenders.push(`${rel(file)} matches ${pattern}`)
-        break
-      }
-    }
+    const pattern = privatePatterns.find((candidate) => candidate.test(text))
+    if (pattern) offenders.push(`${rel(file)} matches ${pattern}`)
   }
   if (offenders.length) offenders.forEach((item) => checks.push(fail(`private coupling: ${item}`)))
   else checks.push(ok('privacy scan found no private project coupling'))
@@ -341,18 +344,24 @@ function privacyScan(checks) {
 
 function validate() {
   const checks = []
-  validateJsonFiles(checks)
-  validateYamlFiles(checks)
-  validatePlugin(checks)
-  validateReleaseVersions(checks)
-  validateSkills(checks)
-  validateProvenance(checks)
-  validateProfiles(checks)
-  validatePiPackageResearch(checks)
-  validatePolicies(checks)
-  validateEvals(checks)
-  validateLinks(checks)
-  privacyScan(checks)
+  const validationContext = {
+    files: walkFiles(root),
+    skillDirs: skillDirs()
+  }
+  for (const validator of [
+    validateJsonFiles,
+    validateYamlFiles,
+    validatePlugin,
+    validateReleaseVersions,
+    validateSkills,
+    validateProvenance,
+    validateProfiles,
+    validatePiPackageResearch,
+    validatePolicies,
+    validateEvals,
+    validateLinks,
+    privacyScan
+  ]) validator(checks, validationContext)
   return printChecks(checks)
 }
 
@@ -368,18 +377,8 @@ function runtimeTargets() {
 
 function doctor() {
   const checks = []
-  for (const [name, args] of [
-    ['node', ['--version']],
-    ['npm', ['--version']],
-    ['git', ['--version']],
-    ['rg', ['--version']],
-    ['hypa', ['--version']],
-    ['claude', ['--version']],
-    ['pi', ['--version']],
-    ['opencode', ['--version']],
-    ['semgrep', ['--version']]
-  ]) {
-    const version = commandVersion(name, args)
+  for (const name of ['node', 'npm', 'git', 'rg', 'hypa', 'claude', 'pi', 'opencode', 'semgrep']) {
+    const version = commandVersion(name)
     checks.push(version ? ok(`${name}: ${version}`) : warn(`${name}: not found`))
   }
   for (const [label, target] of runtimeTargets()) {
@@ -401,10 +400,11 @@ function doctor() {
 
 function inventory() {
   const provenance = readJson(path.join(root, 'skill-provenance.json'), [])
+  const dirs = skillDirs()
   console.log(`# agent-dev-kit inventory\n`)
   console.log(`Root: ${root}`)
-  console.log(`Skills: ${skillDirs().length}`)
-  for (const dir of skillDirs()) {
+  console.log(`Skills: ${dirs.length}`)
+  for (const dir of dirs) {
     const name = path.basename(dir)
     const item = provenance?.skills?.[name]
     console.log(`- ${name}${item ? ` (${item.risk}, ${item.visibility})` : ''}`)

@@ -77,7 +77,7 @@ if [ ! -d "$GSD_SKILLS" ] || [ ! -d "$GSD_RUNTIME" ]; then
   echo "Install it first: npm i -g get-shit-done-cc && HOME=$PERSONAL_TUTOR_USER_HOME get-shit-done-cc --hermes --global"
   exit 1
 fi
-for gsd_skill in gsd-new-project gsd-discuss-phase gsd-plan-phase gsd-execute-phase gsd-verify-work gsd-progress; do
+for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   [ -f "$GSD_SKILLS/$gsd_skill/SKILL.md" ] || { echo "missing GSD core skill: $gsd_skill"; exit 1; }
 done
 if ! command -v graphify >/dev/null 2>&1; then
@@ -162,7 +162,7 @@ EOF
 fi
 
 printf '[3/8] Profile contract and persona\n'
-mkdir -p "$PROFILE_DIR/state" "$PROFILE_DIR/templates" "$PROFILE_DIR/scripts"
+mkdir -p "$PROFILE_DIR/templates" "$PROFILE_DIR/scripts"
 cp -f "$SOURCE/templates/personal-dev-tutor-SOUL.md" "$PROFILE_DIR/SOUL.md"
 cp -f "$SOURCE/templates/personal-codex-lane-prompt.md" "$PROFILE_DIR/templates/"
 cp -f "$SOURCE/profiles/personal-dev-tutor.yml" "$PROFILE_DIR/personal-dev-tutor.yml"
@@ -198,65 +198,61 @@ managed_name() {
   [[ "$1" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]
 }
 
+remove_source_link() {
+  local target="$1" source_root="$2" resolved
+  if [ -L "$target" ]; then
+    resolved="$(readlink -f "$target")"
+    case "$resolved" in "$source_root"/*) rm "$target" ;; esac
+  fi
+}
+
+remove_symlink_entries() {
+  local directory="$1" prefix="${2:-}" entry
+  for entry in "$directory"/"$prefix"*; do
+    [ -L "$entry" ] && rm "$entry"
+  done
+}
+
+remove_managed_source_links() {
+  local state_file="$1" source_root="$2" label="$3" name target_root
+  shift 3
+  [ -f "$state_file" ] || return 0
+  while IFS= read -r name; do
+    managed_name "$name" || { echo "invalid managed $label state entry"; exit 1; }
+    for target_root in "$@"; do
+      remove_source_link "$target_root/$name" "$source_root"
+    done
+  done < "$state_file"
+}
+
 printf '[4/8] Personal Tutor and GSD skills\n'
 mkdir -p "$PROFILE_SKILLS" "$CODEX_SKILLS"
-for stale in "$PROFILE_SKILLS"/*; do
-  [ -L "$stale" ] && rm "$stale"
-done
+remove_symlink_entries "$PROFILE_SKILLS"
 
 CODEX_MANAGED_STATE="$PROFILE_DIR/state/codex-skill-links"
 if [ -f "$CODEX_MANAGED_STATE" ]; then
-  while IFS= read -r name; do
-    managed_name "$name" || { echo "invalid managed Codex skill state entry"; exit 1; }
-    # Migrate links made by the earlier global-home installer only if the link
-    # still resolves into this exact source tree.
-    target="$PERSONAL_TUTOR_USER_HOME/.codex/skills/$name"
-    if [ -L "$target" ]; then
-      resolved="$(readlink -f "$target")"
-      case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/*) rm "$target" ;; esac
-    fi
-    target="$CODEX_SKILLS/$name"
-    if [ -L "$target" ]; then
-      resolved="$(readlink -f "$target")"
-      case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/*) rm "$target" ;; esac
-    fi
-  done < "$CODEX_MANAGED_STATE"
+  # Migrate links made by the earlier global-home installer only if the link
+  # still resolves into this exact source tree.
+  remove_managed_source_links "$CODEX_MANAGED_STATE" \
+    "$SOURCE/plugins/dev-skills/skills" "Codex skill" \
+    "$PERSONAL_TUTOR_USER_HOME/.codex/skills" "$CODEX_SKILLS"
 else
   # Migration from the first installer release: remove only links that resolve
   # into this source tree, then rebuild the filtered worker set.
   for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
-    target="$PERSONAL_TUTOR_USER_HOME/.codex/skills/$(basename "$skill")"
-    if [ -L "$target" ]; then
-      resolved="$(readlink -f "$target")"
-      case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/*) rm "$target" ;; esac
-    fi
+    remove_source_link "$PERSONAL_TUTOR_USER_HOME/.codex/skills/$(basename "$skill")" \
+      "$SOURCE/plugins/dev-skills/skills"
   done
 fi
 : > "$CODEX_MANAGED_STATE"
 
-codex_worker_skill() {
-  local wanted
-  for wanted in "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; do
-    [ "$wanted" = "$1" ] && return 0
-  done
-  return 1
-}
-
-hermes_profile_skill() {
-  local wanted
-  for wanted in "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; do
-    [ "$wanted" = "$1" ] && return 0
-  done
-  return 1
-}
-
 for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
   [ -f "$skill/SKILL.md" ] || continue
   name="$(basename "$skill")"
-  if hermes_profile_skill "$name"; then
+  if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; then
     link_skill "${skill%/}" "$PROFILE_SKILLS/$name"
   fi
-  if codex_worker_skill "$name"; then
+  if personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
     link_skill "${skill%/}" "$CODEX_SKILLS/$name"
     printf '%s\n' "$name" >> "$CODEX_MANAGED_STATE"
   fi
@@ -265,22 +261,13 @@ done
 GSD_PROFILE_SKILLS="$PROFILE_DIR/skills/gsd"
 if [ -L "$GSD_PROFILE_SKILLS" ]; then rm "$GSD_PROFILE_SKILLS"; fi
 mkdir -p "$GSD_PROFILE_SKILLS"
-for stale in "$GSD_PROFILE_SKILLS"/gsd-*; do
-  [ -L "$stale" ] && rm "$stale"
-done
-for gsd_skill in \
-  gsd-new-project \
-  gsd-discuss-phase \
-  gsd-plan-phase \
-  gsd-execute-phase \
-  gsd-verify-work \
-  gsd-progress; do
+remove_symlink_entries "$GSD_PROFILE_SKILLS" gsd-
+for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   link_skill "$GSD_SKILLS/$gsd_skill" "$GSD_PROFILE_SKILLS/$gsd_skill"
 done
 
 printf '[5/8] External Graphify skill\n'
 personal_tutor_graphify install --platform hermes >/dev/null
-mkdir -p "$CODEX_USER_HOME"
 (cd "$CODEX_USER_HOME" && HOME="$CODEX_USER_HOME" command graphify install --platform codex >/dev/null)
 GRAPHIFY_HERMES_SKILL="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/graphify"
 GRAPHIFY_CODEX_SKILL="$CODEX_SKILLS/graphify"
@@ -288,25 +275,16 @@ GRAPHIFY_CODEX_SKILL="$CODEX_SKILLS/graphify"
 [ -f "$GRAPHIFY_CODEX_SKILL/SKILL.md" ] || { echo "Graphify Codex skill installation failed"; exit 1; }
 GRAPHIFY_PROFILE_SKILLS="$PROFILE_DIR/skills/external"
 mkdir -p "$GRAPHIFY_PROFILE_SKILLS"
-for stale in "$GRAPHIFY_PROFILE_SKILLS"/*; do
-  [ -L "$stale" ] && rm "$stale"
-done
+remove_symlink_entries "$GRAPHIFY_PROFILE_SKILLS"
 link_skill "$GRAPHIFY_HERMES_SKILL" "$GRAPHIFY_PROFILE_SKILLS/graphify"
 AGENT_DEV_KIT_HERMES_HOME="$PERSONAL_TUTOR_USER_HOME/.hermes" \
   "$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE"
 
 printf '[6/8] Isolated Codex worker home\n'
 CODEX_AGENT_STATE="$PROFILE_DIR/state/codex-agent-links"
-if [ -f "$CODEX_AGENT_STATE" ]; then
-  while IFS= read -r name; do
-    managed_name "$name" || { echo "invalid managed Codex agent state entry"; exit 1; }
-    target="$PERSONAL_TUTOR_USER_HOME/.codex/agents/$name"
-    if [ -L "$target" ]; then
-      resolved="$(readlink -f "$target")"
-      case "$resolved" in "$SOURCE"/plugins/dev-skills/skills/orchestrate/assets/codex-agents/*) rm "$target" ;; esac
-    fi
-  done < "$CODEX_AGENT_STATE"
-fi
+remove_managed_source_links "$CODEX_AGENT_STATE" \
+  "$SOURCE/plugins/dev-skills/skills/orchestrate/assets/codex-agents" "Codex agent" \
+  "$PERSONAL_TUTOR_USER_HOME/.codex/agents"
 rm -f "$CODEX_AGENT_STATE"
 printf '  Codex home: %s\n' "$CODEX_HOME"
 
@@ -315,41 +293,47 @@ rm -f "$PROFILE_DIR/scripts/render-diagrams.sh"
 cp -f "$SOURCE"/scripts/personal-tutor-*.sh "$PROFILE_DIR/scripts/"
 chmod +x "$PROFILE_DIR/scripts/"*.sh
 mkdir -p "$PERSONAL_TUTOR_USER_HOME/.local/bin"
-python3 - "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE" "$PERSONAL_TUTOR_USER_HOME" "$PROFILE" "$SESSION" <<'PY'
+write_runtime_launcher() {
+  local path="$1" runtime="$2"
+  python3 - "$path" "$PERSONAL_TUTOR_USER_HOME" "$PROFILE" "$SESSION" "$CODEX_HOME" "$runtime" <<'PY'
 from pathlib import Path
 import shlex
 import sys
 
-path, home, profile, session = Path(sys.argv[1]), *sys.argv[2:]
-path.write_text(f'''#!/usr/bin/env bash
-export PATH={shlex.quote(home + "/.nix-profile/bin:" + home + "/.local/bin:")}"$PATH"
-[ -S "/run/user/$(id -u)/tmux-$(id -u)/default" ] && export TMUX_TMPDIR="/run/user/$(id -u)"
-export PERSONAL_TUTOR_PROFILE={shlex.quote(profile)}
-export PERSONAL_TUTOR_SESSION={shlex.quote(session)}
-exec hermes --profile {shlex.quote(profile)} "$@"
-''')
+path, home, profile, session, codex_home, runtime = Path(sys.argv[1]), *sys.argv[2:]
+lines = [
+    "#!/usr/bin/env bash",
+    f'export PATH={shlex.quote(home + "/.nix-profile/bin:" + home + "/.local/bin:")}"$PATH"',
+]
+if runtime == "hermes":
+    lines.extend([
+        '[ -S "/run/user/$(id -u)/tmux-$(id -u)/default" ] && export TMUX_TMPDIR="/run/user/$(id -u)"',
+        f"export PERSONAL_TUTOR_PROFILE={shlex.quote(profile)}",
+        f"export PERSONAL_TUTOR_SESSION={shlex.quote(session)}",
+        f'exec hermes --profile {shlex.quote(profile)} "$@"',
+    ])
+elif runtime == "codex":
+    lines.extend([
+        f"export CODEX_HOME={shlex.quote(codex_home)}",
+        f"export PERSONAL_TUTOR_PROFILE={shlex.quote(profile)}",
+        f"export PERSONAL_TUTOR_SESSION={shlex.quote(session)}",
+        'if [ -n "${TMUX_PANE:-}" ]; then',
+        '  tmux set-option -p -t "$TMUX_PANE" @personal_tutor_codex_home "$CODEX_HOME"',
+        "fi",
+        'exec codex "$@"',
+    ])
+else:
+    raise SystemExit(f"unsupported launcher runtime: {runtime}")
+path.write_text("\n".join(lines) + "\n")
 PY
-chmod +x "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE"
-python3 - "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex" "$PERSONAL_TUTOR_USER_HOME" "$PROFILE" "$SESSION" "$CODEX_HOME" <<'PY'
-from pathlib import Path
-import shlex
-import sys
+  chmod +x "$path"
+}
 
-path, home, profile, session, codex_home = Path(sys.argv[1]), *sys.argv[2:]
-path.write_text(f'''#!/usr/bin/env bash
-export PATH={shlex.quote(home + "/.nix-profile/bin:" + home + "/.local/bin:")}"$PATH"
-export CODEX_HOME={shlex.quote(codex_home)}
-export PERSONAL_TUTOR_PROFILE={shlex.quote(profile)}
-export PERSONAL_TUTOR_SESSION={shlex.quote(session)}
-if [ -n "${{TMUX_PANE:-}}" ]; then
-  tmux set-option -p -t "$TMUX_PANE" @personal_tutor_codex_home "$CODEX_HOME"
-fi
-exec codex "$@"
-''')
-PY
-chmod +x "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex"
-for helper in doctor status delegate audit graph output sandbox install; do
-  helper_target="$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-$helper"
+write_runtime_launcher "$PERSONAL_TUTOR_USER_HOME/.local/bin/$PROFILE" hermes
+write_runtime_launcher "$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-codex" codex
+link_managed_command() {
+  local helper="$1"
+  local helper_target="$PERSONAL_TUTOR_USER_HOME/.local/bin/personal-tutor-$helper"
   if [ -e "$helper_target" ] || [ -L "$helper_target" ]; then
     if [ ! -L "$helper_target" ]; then
       echo "refusing to overwrite unmanaged command: $helper_target"
@@ -362,6 +346,10 @@ for helper in doctor status delegate audit graph output sandbox install; do
     esac
   fi
   ln -sfn "$PROFILE_DIR/scripts/personal-tutor-$helper.sh" "$helper_target"
+}
+
+for helper in doctor status delegate audit graph output sandbox install; do
+  link_managed_command "$helper"
 done
 
 printf '[8/8] Readiness check\n'

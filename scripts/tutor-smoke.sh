@@ -14,24 +14,10 @@ set -uo pipefail
 # script (or its realpath) to derive the canonical user home.
 SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then SELF_PATH="$(readlink -f "$SELF_PATH")"; fi
-# SELF_PATH is something like ~/.hermes/profiles/agent-tutor-orchestrator/scripts/tutor-smoke.sh
-# Walk up until we find a dir named .hermes, then USER_HOME is its parent.
-# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  base="$(basename "$dir")"
-  if [ "$base" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then
-  USER_HOME="$(dirname "$HERMES_DIR")"
-else
-  USER_HOME="${HOME:?HOME is required}"
-fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+TUTOR_SCRIPT_DIR="$(cd "$(dirname "$SELF_PATH")" && pwd)"
+# shellcheck source=tutor-lib.sh
+source "$TUTOR_SCRIPT_DIR/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 SESSION="${AGENT_TUTOR_SESSION:-tutor}"
@@ -61,11 +47,22 @@ check() {
 # Find SKILL.md for a named skill anywhere under SKILLS_DIR (1 or 2 levels).
 find_skill() {
   local name="$1"
-  [ -f "$SKILLS_DIR/$name/SKILL.md" ] && return 0
-  for d in "$SKILLS_DIR"/*/; do
-    [ -f "$d/$name/SKILL.md" ] && return 0
+  for skill_md in "$SKILLS_DIR/$name/SKILL.md" "$SKILLS_DIR"/*/"$name/SKILL.md"; do
+    [ -f "$skill_md" ] && return 0
   done
   return 1
+}
+
+check_required_skill() {
+  local required_skill="$1"
+  if find_skill "$required_skill"; then
+    printf '  OK   %s SKILL.md\n' "$required_skill"
+    pass=$((pass + 1))
+  else
+    printf '  FAIL %s SKILL.md\n' "$required_skill"
+    fail=$((fail + 1))
+    failures+=("$required_skill")
+  fi
 }
 
 section() { printf '\n[%s]\n' "$1"; }
@@ -94,7 +91,7 @@ else
 fi
 
 section "Model"
-model_line="$(hermes --profile "$PROFILE" profile show "$PROFILE" 2>/dev/null | grep -m1 '^Model:' || true)"
+model_line="$(hermes --profile "$PROFILE" profile show "$PROFILE" 2>/dev/null | grep -m1 '^Model:')"
 if [ -n "$model_line" ]; then
   printf '  OK   %s\n' "$model_line"
   pass=$((pass + 1))
@@ -115,36 +112,19 @@ for baseline_skill in caveman ponytail; do
   check "Hermes baseline skill: $baseline_skill" \
     "[ -f '$baseline_global/SKILL.md' ] && [ -L '$baseline_profile' ] && [ \"\$(readlink -f '$baseline_profile')\" = \"\$(readlink -f '$baseline_global')\" ]"
 done
-if find_skill ai-workflow-orchestrator; then
-  printf '  OK   ai-workflow-orchestrator SKILL.md\n'; pass=$((pass+1))
-else
-  printf '  FAIL ai-workflow-orchestrator SKILL.md\n'; fail=$((fail+1)); failures+=("ai-workflow-orchestrator")
-fi
 if [ -L "$SKILLS_DIR/worklog" ] || [ -f "$SKILLS_DIR/worklog/SKILL.md" ]; then
   printf '  OK   worklog available\n'; pass=$((pass+1))
 else
   printf '  FAIL worklog not found\n'; fail=$((fail+1)); failures+=("worklog")
 fi
-if find_skill delegating-to-tmux-claude; then
-  printf '  OK   delegating-to-tmux-claude SKILL.md\n'; pass=$((pass+1))
-else
-  printf '  FAIL delegating-to-tmux-claude SKILL.md\n'; fail=$((fail+1)); failures+=("delegating-to-tmux-claude")
-fi
-if find_skill kanban-orchestrator; then
-  printf '  OK   kanban-orchestrator SKILL.md\n'; pass=$((pass+1))
-else
-  printf '  FAIL kanban-orchestrator SKILL.md\n'; fail=$((fail+1)); failures+=("kanban-orchestrator")
-fi
-if find_skill kanban-worker; then
-  printf '  OK   kanban-worker SKILL.md\n'; pass=$((pass+1))
-else
-  printf '  FAIL kanban-worker SKILL.md\n'; fail=$((fail+1)); failures+=("kanban-worker")
-fi
+for required_skill in ai-workflow-orchestrator delegating-to-tmux-claude kanban-orchestrator kanban-worker; do
+  check_required_skill "$required_skill"
+done
 
 section "tmux delegate session"
 check "tmux server up"           "tmux list-sessions"
 check "session '$SESSION' exists" "tmux has-session -t $SESSION"
-claude_panes="$(tmux list-windows -t "$SESSION" -F '#{pane_current_command}' 2>/dev/null | grep -c '^claude$' || true)"
+claude_panes="$(tmux list-windows -t "$SESSION" -F '#{pane_current_command}' 2>/dev/null | grep -c '^claude$')"
 if [ "$claude_panes" -gt 0 ]; then
   printf '  OK   %d Claude pane(s) in %s\n' "$claude_panes" "$SESSION"
   pass=$((pass + 1))

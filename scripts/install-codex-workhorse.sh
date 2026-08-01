@@ -13,9 +13,13 @@ else
   SKILLS_COMMAND=(npx -y skills@1.5.20)
 fi
 
-"${SKILLS_COMMAND[@]}" add "$CAVEMAN_SOURCE" \
-  --global --agent codex --skill caveman --yes
-"${SKILLS_COMMAND[@]}" add "$PONYTAIL_SOURCE" \
-  --global --agent codex --skill ponytail --yes
+install_skill() {
+  local source="$1" name="$2"
+  "${SKILLS_COMMAND[@]}" add "$source" \
+    --global --agent codex --skill "$name" --yes
+}
+
+install_skill "$CAVEMAN_SOURCE" caveman
+install_skill "$PONYTAIL_SOURCE" ponytail
 
 echo "Codex workhorse ready: caveman + ponytail"

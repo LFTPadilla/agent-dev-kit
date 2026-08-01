@@ -60,31 +60,35 @@ case "$kind" in standard|security) ;; *) echo "--kind must be standard or securi
 [[ "$head_lines" =~ ^[0-9]+$ ]] || { echo "--head must be a non-negative integer"; exit 2; }
 [[ "$tail_lines" =~ ^[0-9]+$ ]] || { echo "--tail must be a non-negative integer"; exit 2; }
 
-if [ -z "$repo" ]; then
-  repo="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
+requested_repo="$repo"
+if ! repo="$(personal_tutor_git_root "$repo")"; then
+  if [ -n "$requested_repo" ]; then
+    echo "not a Git repository: $requested_repo"
+  else
+    echo "unable to resolve a Git worktree; pass --repo"
+  fi
+  exit 2
 fi
-[ -n "$repo" ] || { echo "unable to resolve a Git worktree; pass --repo"; exit 2; }
-git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a Git repository: $repo"; exit 2; }
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
 
 cache_base="${PERSONAL_TUTOR_OUTPUT_CACHE_ROOT:-${XDG_CACHE_HOME:-$PERSONAL_TUTOR_USER_HOME/.cache}/personal-dev-tutor/command-output}"
 mkdir -p "$cache_base"
 chmod 700 "$cache_base"
 cache_base="$(cd "$cache_base" && pwd -P)"
-case "$cache_base/" in
-  "$repo/"*) echo "output cache must be outside the worktree: $cache_base"; exit 2 ;;
-esac
+if personal_tutor_path_is_within "$cache_base" "$repo"; then
+  echo "output cache must be outside the worktree: $cache_base"
+  exit 2
+fi
 
-repo_id="$(printf '%s' "$repo" | sha256sum | cut -c1-16)"
+repo_id="$(personal_tutor_path_key "$repo")"
 repo_cache="$cache_base/$repo_id"
 [ ! -L "$repo_cache" ] || { echo "refusing symlinked repository cache: $repo_cache"; exit 2; }
 mkdir -p "$repo_cache"
 chmod 700 "$repo_cache"
 repo_cache="$(cd "$repo_cache" && pwd -P)"
-case "$repo_cache/" in
-  "$repo/"*) echo "repository cache resolves inside the worktree: $repo_cache"; exit 2 ;;
-esac
+if personal_tutor_path_is_within "$repo_cache" "$repo"; then
+  echo "repository cache resolves inside the worktree: $repo_cache"
+  exit 2
+fi
 
 if [ "$doctor" -eq 1 ]; then
   [ $# -eq 0 ] || { echo "--doctor does not accept a command"; exit 2; }
@@ -156,55 +160,68 @@ for char in text:
 sys.stdout.write("".join(out))'
 }
 
-if [ "$force_full" -eq 1 ]; then
+print_sanitized_full() {
   printf 'display: sanitized-full\n--- sanitized display; transcript remains exact ---\n'
   safe_stream < "$transcript"
-elif { [ "$kind" = security ] || [ "$status" -ne 0 ]; } && [ "$bytes" -gt "$preview_byte_limit" ]; then
-  head_bytes=$((preview_byte_limit / 2))
-  tail_bytes=$((preview_byte_limit - head_bytes))
-  omitted=$((bytes - preview_byte_limit))
-  printf 'display: bounded-critical-preview\n'
-  printf 'omitted_bytes: %s\n' "$omitted"
+}
+
+preview_lines() {
+  local command="$1" count="$2"
+  [ "$count" -gt 0 ] || return 0
+  "$command" -n "$count" "$transcript"
+}
+
+print_sanitized_lines() {
+  preview_lines "$1" "$2" | safe_stream
+}
+
+print_sanitized_bytes() {
+  local omission_message="$1"
+  local head_bytes=$((preview_byte_limit / 2))
+  local tail_bytes=$((preview_byte_limit - head_bytes))
   printf '%s\n' '--- sanitized leading bytes ---'
   head -c "$head_bytes" "$transcript" | safe_stream
-  printf '\n%s\n' "--- $omitted exact bytes omitted; inspect the mode-0600 transcript locally ---"
+  printf '\n%s\n' "$omission_message"
   printf '%s\n' '--- sanitized trailing bytes ---'
   tail -c "$tail_bytes" "$transcript" | safe_stream
   printf '\n'
-elif [ "$kind" = security ] || [ "$status" -ne 0 ]; then
-  printf 'display: sanitized-full\n--- sanitized display; transcript remains exact ---\n'
-  safe_stream < "$transcript"
-elif [ "$lines" -le "$preview_limit" ] && [ "$bytes" -le "$preview_byte_limit" ]; then
-  printf 'display: sanitized-full\n--- sanitized display; transcript remains exact ---\n'
-  safe_stream < "$transcript"
+}
+
+is_critical_output() {
+  [ "$kind" = security ] || [ "$status" -ne 0 ]
+}
+
+if [ "$force_full" -eq 1 ]; then
+  print_sanitized_full
+elif is_critical_output && [ "$bytes" -gt "$preview_byte_limit" ]; then
+  omitted=$((bytes - preview_byte_limit))
+  printf 'display: bounded-critical-preview\n'
+  printf 'omitted_bytes: %s\n' "$omitted"
+  print_sanitized_bytes "--- $omitted exact bytes omitted; inspect the mode-0600 transcript locally ---"
+elif is_critical_output ||
+  { [ "$lines" -le "$preview_limit" ] && [ "$bytes" -le "$preview_byte_limit" ]; }; then
+  print_sanitized_full
 else
   printf 'display: bounded-success-preview\n'
   line_preview_bytes="$({
-    if [ "$head_lines" -gt 0 ]; then head -n "$head_lines" "$transcript"; fi
-    if [ "$tail_lines" -gt 0 ]; then tail -n "$tail_lines" "$transcript"; fi
+    preview_lines head "$head_lines"
+    preview_lines tail "$tail_lines"
   } | wc -c | tr -d ' ')"
   if [ "$lines" -gt "$preview_limit" ] && [ "$line_preview_bytes" -le "$preview_byte_limit" ]; then
     omitted=$((lines - preview_limit))
     printf 'preview_basis: lines\n'
     printf 'omitted_lines: %s\n' "$omitted"
     printf '%s\n' '--- sanitized head ---'
-    if [ "$head_lines" -gt 0 ]; then head -n "$head_lines" "$transcript" | safe_stream; fi
+    print_sanitized_lines head "$head_lines"
     printf '%s\n' "--- $omitted exact lines omitted; inspect transcript before diagnosis ---"
     printf '%s\n' '--- sanitized tail ---'
-    if [ "$tail_lines" -gt 0 ]; then tail -n "$tail_lines" "$transcript" | safe_stream; fi
+    print_sanitized_lines tail "$tail_lines"
   else
-    head_bytes=$((preview_byte_limit / 2))
-    tail_bytes=$((preview_byte_limit - head_bytes))
     omitted=$((bytes - preview_byte_limit))
     [ "$omitted" -lt 0 ] && omitted=0
     printf 'preview_basis: bytes\n'
     printf 'omitted_bytes: %s\n' "$omitted"
-    printf '%s\n' '--- sanitized leading bytes ---'
-    head -c "$head_bytes" "$transcript" | safe_stream
-    printf '\n%s\n' "--- $omitted exact bytes omitted; inspect transcript before diagnosis ---"
-    printf '%s\n' '--- sanitized trailing bytes ---'
-    tail -c "$tail_bytes" "$transcript" | safe_stream
-    printf '\n'
+    print_sanitized_bytes "--- $omitted exact bytes omitted; inspect transcript before diagnosis ---"
   fi
 fi
 

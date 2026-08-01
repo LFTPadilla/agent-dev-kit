@@ -145,6 +145,7 @@ def available_opencode_models() -> set[str]:
 
 
 def print_profiles() -> None:
+    header = ["profile", "harness", "model", "mode", "description"]
     rows = []
     for name, profile in DEFAULT_PROFILES.items():
         rows.append(
@@ -156,10 +157,9 @@ def print_profiles() -> None:
                 profile.get("description", ""),
             ]
         )
-    widths = [max(len(str(row[i])) for row in rows + [["profile", "harness", "model", "mode", "description"]]) for i in range(5)]
-    header = ["profile", "harness", "model", "mode", "description"]
+    widths = [max(len(str(row[i])) for row in rows + [header]) for i in range(len(header))]
     print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(header)))
-    print("  ".join("-" * widths[i] for i in range(5)))
+    print("  ".join("-" * width for width in widths))
     for row in rows:
         print("  ".join(str(cell).ljust(widths[i]) for i, cell in enumerate(row)))
 

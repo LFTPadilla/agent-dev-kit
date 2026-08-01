@@ -14,25 +14,13 @@
 set -uo pipefail
 
 SELF_PATH="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
-# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:?HOME is required}"; fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+# shellcheck source=tutor-lib.sh
+source "$(cd "$(dirname "$SELF_PATH")" && pwd)/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
-STATE_DIR="$USER_HOME/.hermes/profiles/$PROFILE/state"
-LANES="$STATE_DIR/lanes.json"
-prompt_file="/tmp/lane-${1:-}-prompt.md"
 
-lane_id="${1:-}"; shift || true
+lane_id="${1:-}"; shift
 repo=""; branch=""; allowed=""
 
 while [ $# -gt 0 ]; do
@@ -68,7 +56,6 @@ else
 fi
 
 echo "[3/4] allowlist enforcement"
-allowed_set="$(printf '%s' "$allowed" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sort -u)"
 violations="$(echo "$status_out" | awk '{print $2}' | sort -u | while read -r f; do
   [ -z "$f" ] && continue
   case ",$allowed," in *,"$f",*) ;; *) printf '%s\n' "$f" ;; esac

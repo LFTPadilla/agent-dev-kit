@@ -45,6 +45,15 @@ list_canonical() {
     [ -d "$SKILLS_DIR" ] && find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort
 }
 
+skill_targets() {
+    local skill="$1"
+    printf '%s\n' \
+        "$CLAUDE_DIR/$skill" \
+        "$CODEX_DIR/$skill" \
+        "$PI_DIR/$skill" \
+        "$OPENCODE_DIR/$skill.md"
+}
+
 link_codex_skill() {
     local source="$1"
     local target="$2"
@@ -66,11 +75,7 @@ case "$mode" in
         echo
         echo "Symlink status per agent:"
         for skill in $(list_canonical); do
-            for path in \
-                "$CLAUDE_DIR/$skill" \
-                "$CODEX_DIR/$skill" \
-                "$PI_DIR/$skill" \
-                "$OPENCODE_DIR/$skill.md"; do
+            while IFS= read -r path; do
                 if [ -L "$path" ]; then
                     target=$(readlink -f "$path")
                     if [ -e "$target" ]; then
@@ -83,17 +88,19 @@ case "$mode" in
                 else
                     printf '  ·  %-60s [not installed]\n' "$path"
                 fi
-            done
+            done < <(skill_targets "$skill")
         done
         exit 0
         ;;
     uninstall)
         echo "Uninstalling all skills from each agent dir..."
         for skill in $(list_canonical); do
-            [ -L "$CLAUDE_DIR/$skill" ] && rm "$CLAUDE_DIR/$skill" && echo "  rm $CLAUDE_DIR/$skill"
-            [ -L "$CODEX_DIR/$skill" ] && rm "$CODEX_DIR/$skill" && echo "  rm $CODEX_DIR/$skill"
-            [ -L "$PI_DIR/$skill" ] && rm "$PI_DIR/$skill" && echo "  rm $PI_DIR/$skill"
-            [ -L "$OPENCODE_DIR/$skill.md" ] && rm "$OPENCODE_DIR/$skill.md" && echo "  rm $OPENCODE_DIR/$skill.md"
+            while IFS= read -r path; do
+                if [ -L "$path" ]; then
+                    rm "$path"
+                    echo "  rm $path"
+                fi
+            done < <(skill_targets "$skill")
         done
         echo "Done. Source files in $SKILLS_DIR untouched."
         exit 0
@@ -115,9 +122,7 @@ if [ ${#skills[@]} -eq 0 ]; then
 fi
 
 # Create agent dirs if missing
-for dir in "$CLAUDE_DIR" "$CODEX_DIR" "$PI_DIR" "$OPENCODE_DIR"; do
-    [ -d "$dir" ] || mkdir -p "$dir"
-done
+mkdir -p "$CLAUDE_DIR" "$CODEX_DIR" "$PI_DIR" "$OPENCODE_DIR"
 
 for skill in "${skills[@]}"; do
     src_dir="$SKILLS_DIR/$skill"
@@ -138,15 +143,15 @@ for skill in "${skills[@]}"; do
     # This matches the convention used by the vault-symlinked skills
     # (e.g., ~/.claude/skills/caveman -> ~/vault/Resources/AI/Skills/shared/caveman).
     # The skill dir contains SKILL.md + any references/ siblings.
-    ln -sfn "$src_dir" "$CLAUDE_DIR/$skill"
-    echo "  ✓  $CLAUDE_DIR/$skill -> $src_dir"
+    for target_root in "$CLAUDE_DIR" "$PI_DIR"; do
+        ln -sfn "$src_dir" "$target_root/$skill"
+        echo "  ✓  $target_root/$skill -> $src_dir"
+    done
     if link_codex_skill "$src_dir" "$CODEX_DIR/$skill"; then
         echo "  ✓  $CODEX_DIR/$skill -> $src_dir"
     else
         install_failed=1
     fi
-    ln -sfn "$src_dir" "$PI_DIR/$skill"
-    echo "  ✓  $PI_DIR/$skill -> $src_dir"
 
     # OpenCode: symlink to the *.opencode.md variant if present, else the SKILL.md.
     src_opencode_md="$src_dir/$skill.opencode.md"

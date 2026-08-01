@@ -32,21 +32,62 @@ required_files=(
   "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
 )
 
+init_test_repo() {
+  local repo="$1" name="$2" email="$3"
+  git -C "$repo" init -q
+  git -C "$repo" config user.name "$name"
+  git -C "$repo" config user.email "$email"
+}
+
+commit_test_repo() {
+  local repo="$1" message="$2"
+  shift 2
+  git -C "$repo" add "$@"
+  git -C "$repo" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
+    commit --no-gpg-sign -q -m "$message"
+}
+
+assert_rejected() {
+  local message="$1"
+  shift
+  if "$@" >/dev/null 2>&1; then
+    echo "FAIL $message"
+    exit 1
+  fi
+}
+
+assert_contains() {
+  local file="$1" pattern
+  shift
+  for pattern; do
+    grep -q -- "$pattern" "$file"
+  done
+}
+
+assert_contains_i() {
+  local file="$1" pattern
+  shift
+  for pattern; do
+    grep -qi -- "$pattern" "$file"
+  done
+}
+
 for file in "${required_files[@]}"; do
   [[ -f "$file" ]] || { echo "FAIL missing ${file#$ROOT/}"; exit 1; }
 done
 
-grep -q '^profile: personal-dev-tutor$' "$PROFILE"
-grep -q 'delegate_session: personal' "$PROFILE"
-grep -q 'worker_runtime: codex' "$PROFILE"
-grep -q 'workflow: gsd' "$PROFILE"
-grep -q 'personal-development-mentor' "$PROFILE"
-grep -q 'gsd-new-project' "$PROFILE"
-grep -q 'gsd-progress' "$PROFILE"
-grep -q 'provider: graphify' "$PROFILE"
-grep -q 'provider: context7' "$PROFILE"
-grep -q 'default_mode: local-ast-code-only' "$PROFILE"
-grep -q '^  - java-development$' "$PROFILE"
+assert_contains "$PROFILE" \
+  '^profile: personal-dev-tutor$' \
+  'delegate_session: personal' \
+  'worker_runtime: codex' \
+  'workflow: gsd' \
+  'personal-development-mentor' \
+  'gsd-new-project' \
+  'gsd-progress' \
+  'provider: graphify' \
+  'provider: context7' \
+  'default_mode: local-ast-code-only' \
+  '^  - java-development$'
 python3 - "$PROFILE" <<'PY'
 from pathlib import Path
 import sys
@@ -71,58 +112,66 @@ if external_skills != ["graphify", "caveman", "ponytail"]:
     raise SystemExit(f"FAIL external baseline mismatch: {external_skills}")
 PY
 
-grep -q '^name: personal-development-mentor$' "$SKILL"
-grep -qi 'teach-back' "$SKILL"
-grep -qi 'cognitive debt' "$SKILL"
-grep -qi 'Mermaid' "$SKILL"
-grep -qi 'D2' "$SKILL"
-grep -qi 'Graphify' "$SKILL"
-grep -qi 'Context7' "$SKILL"
-grep -q 'personal:\*' "$SOUL"
-grep -q 'Never directly edit product source code' "$SOUL"
-grep -q 'personal-tutor-graph refresh' "$SOUL"
-grep -q 'Normal development runs directly on the trusted workstation' "$SOUL"
-grep -q 'Its absence or incompatibility must never' "$SOUL"
-grep -q 'Context7' "$PROMPT"
-grep -q 'Graphify' "$PROMPT"
-grep -q 'personal-tutor-output' "$PROMPT"
-grep -q 'Default to direct execution on the trusted workstation' "$PROMPT"
-grep -q 'continue through the trusted workstation path' "$PROMPT"
-grep -q 'Codex' "$PROMPT"
-grep -q 'Learning checkpoint' "$PROMPT"
-
-grep -q '```mermaid' "$DOC"
-grep -q 'personal-dev-tutor-architecture.d2' "$DOC"
-grep -q '^flowchart TB$' "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
-grep -q 'Graphify local AST cache' "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
-grep -q 'Context7 upstream library docs' "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd"
-grep -q 'graphify install --platform hermes' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'install --platform codex' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'install-hermes-workhorse.sh.*--profile.*PROFILE' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'PERSONAL_TUTOR_BASELINE_SKILLS' "$ROOT/scripts/personal-tutor-lib.sh"
-grep -q 'baseline skill available:.*baseline_skill' "$ROOT/scripts/personal-tutor-doctor.sh"
-grep -q 'graphifyy==\$PERSONAL_TUTOR_GRAPHIFY_VERSION' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'mcp_servers.context7.url' "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'PERSONAL_TUTOR_GRAPH_CACHE_ROOT' "$GRAPH"
-grep -q -- '--code-only' "$GRAPH"
-grep -q 'GRAPHIFY_OUT=' "$GRAPH"
-grep -q 'XDG_CACHE_HOME' "$GRAPH"
-grep -q 'provider: bounded-command-evidence' "$PROFILE"
-grep -q 'context_mode_package: not-installed' "$PROFILE"
-grep -q 'provider: bubblewrap-offline-verification' "$PROFILE"
-grep -q '^sandbox_policy: trusted-development$' "$PROFILE"
-grep -q 'default_execution: trusted-host' "$PROFILE"
-grep -q 'trusted_workstation_network: allowed' "$PROFILE"
-grep -q 'PERSONAL_TUTOR_OUTPUT_CACHE_ROOT' "$OUTPUT"
-grep -q 'kind" = security' "$OUTPUT"
-grep -q 'bounded-critical-preview' "$OUTPUT"
-grep -q 'for helper in doctor status delegate audit graph output sandbox install' "$ROOT/scripts/personal-tutor-install.sh"
+assert_contains "$SKILL" '^name: personal-development-mentor$'
+assert_contains_i "$SKILL" \
+  'teach-back' \
+  'cognitive debt' \
+  'Mermaid' \
+  'D2' \
+  'Graphify' \
+  'Context7'
+assert_contains "$SOUL" \
+  'personal:\*' \
+  'Never directly edit product source code' \
+  'personal-tutor-graph refresh' \
+  'Normal development runs directly on the trusted workstation' \
+  'Its absence or incompatibility must never'
+assert_contains "$PROMPT" \
+  'Context7' \
+  'Graphify' \
+  'personal-tutor-output' \
+  'Default to direct execution on the trusted workstation' \
+  'continue through the trusted workstation path' \
+  'Codex' \
+  'Learning checkpoint'
+assert_contains "$DOC" '```mermaid' 'personal-dev-tutor-architecture.d2'
+assert_contains "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd" \
+  '^flowchart TB$' \
+  'Graphify local AST cache' \
+  'Context7 upstream library docs'
+assert_contains "$ROOT/scripts/personal-tutor-install.sh" \
+  'graphify install --platform hermes' \
+  'install --platform codex' \
+  'install-hermes-workhorse.sh.*--profile.*PROFILE'
+assert_contains "$ROOT/scripts/personal-tutor-lib.sh" 'PERSONAL_TUTOR_BASELINE_SKILLS'
+assert_contains "$ROOT/scripts/personal-tutor-doctor.sh" 'baseline skill available:.*baseline_skill'
+assert_contains "$ROOT/scripts/personal-tutor-install.sh" \
+  'graphifyy==\$PERSONAL_TUTOR_GRAPHIFY_VERSION' \
+  'mcp_servers.context7.url'
+assert_contains "$GRAPH" \
+  'PERSONAL_TUTOR_GRAPH_CACHE_ROOT' \
+  '--code-only' \
+  'GRAPHIFY_OUT=' \
+  'XDG_CACHE_HOME'
+assert_contains "$PROFILE" \
+  'provider: bounded-command-evidence' \
+  'context_mode_package: not-installed' \
+  'provider: bubblewrap-offline-verification' \
+  '^sandbox_policy: trusted-development$' \
+  'default_execution: trusted-host' \
+  'trusted_workstation_network: allowed'
+assert_contains "$OUTPUT" \
+  'PERSONAL_TUTOR_OUTPUT_CACHE_ROOT' \
+  'kind" = security' \
+  'bounded-critical-preview'
+assert_contains "$ROOT/scripts/personal-tutor-install.sh" \
+  'for helper in doctor status delegate audit graph output sandbox install'
 if grep -q '^for command in .*bwrap' "$ROOT/scripts/personal-tutor-install.sh"; then
   echo "FAIL optional Bubblewrap is still an installer prerequisite"
   exit 1
 fi
-grep -q 'optional offline sandbox unavailable; normal trusted-host development is unaffected' \
-  "$ROOT/scripts/personal-tutor-doctor.sh"
+assert_contains "$ROOT/scripts/personal-tutor-doctor.sh" \
+  'optional offline sandbox unavailable; normal trusted-host development is unaffected'
 
 for script in "$ROOT"/scripts/personal-tutor-*.sh; do
   bash -n "$script"
@@ -161,13 +210,9 @@ fixture="$(mktemp -d)"
 failure_root="$(mktemp -d)"
 cleanup() { rm -f "$prompt_path"; rm -rf "$fixture" "$failure_root" "$contract_lane_cache"; }
 trap cleanup EXIT
-git -C "$fixture" init -q
-git -C "$fixture" config user.name "Personal Tutor Test"
-git -C "$fixture" config user.email "personal-tutor-test@example.invalid"
+init_test_repo "$fixture" "Personal Tutor Test" "personal-tutor-test@example.invalid"
 printf 'baseline\n' > "$fixture/example.txt"
-git -C "$fixture" add example.txt
-git -C "$fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
-  commit --no-gpg-sign -q -m baseline
+commit_test_repo "$fixture" baseline example.txt
 fixture_branch="$(git -C "$fixture" rev-parse --abbrev-ref HEAD)"
 fixture_head="$(git -C "$fixture" rev-parse HEAD)"
 
@@ -269,49 +314,37 @@ grep -q '^display: bounded-critical-preview$' "$large_failure_preview"
   exit 1
 }
 
-if PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$fixture/unsafe-cache" \
-  "$OUTPUT" --doctor --repo "$fixture" >/dev/null 2>&1; then
-  echo "FAIL output helper accepted a cache inside the worktree"
-  exit 1
-fi
+assert_rejected "output helper accepted a cache inside the worktree" env \
+  PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$fixture/unsafe-cache" \
+  "$OUTPUT" --doctor --repo "$fixture"
 mkdir -p "$fixture/nested"
-if PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$fixture/nested-cache" \
-  "$OUTPUT" --doctor --repo "$fixture/nested" >/dev/null 2>&1; then
-  echo "FAIL nested --repo bypassed the worktree cache boundary"
-  exit 1
-fi
+assert_rejected "nested --repo bypassed the worktree cache boundary" env \
+  PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$fixture/nested-cache" \
+  "$OUTPUT" --doctor --repo "$fixture/nested"
 
 symlink_cache="$failure_root/symlink-cache"
 mkdir -p "$symlink_cache" "$fixture/symlink-target"
 fixture_id="$(printf '%s' "$fixture" | sha256sum | cut -c1-16)"
 ln -s "$fixture/symlink-target" "$symlink_cache/$fixture_id"
-if PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$symlink_cache" \
-  "$OUTPUT" --doctor --repo "$fixture" >/dev/null 2>&1; then
-  echo "FAIL output helper followed a symlinked repository cache"
-  exit 1
-fi
+assert_rejected "output helper followed a symlinked repository cache" env \
+  PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$symlink_cache" \
+  "$OUTPUT" --doctor --repo "$fixture"
 
 chmod_failure_bin="$failure_root/chmod-failure-bin"
 mkdir -p "$chmod_failure_bin"
 printf '#!/usr/bin/env sh\nexit 1\n' > "$chmod_failure_bin/chmod"
 chmod +x "$chmod_failure_bin/chmod"
-if PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$failure_root/chmod-failure-cache" \
-  PATH="$chmod_failure_bin:$PATH" "$OUTPUT" --doctor --repo "$fixture" >/dev/null 2>&1; then
-  echo "FAIL output helper ignored private-cache permission failure"
-  exit 1
-fi
+assert_rejected "output helper ignored private-cache permission failure" env \
+  PERSONAL_TUTOR_OUTPUT_CACHE_ROOT="$failure_root/chmod-failure-cache" \
+  PATH="$chmod_failure_bin:$PATH" "$OUTPUT" --doctor --repo "$fixture"
 
 graph_repo="$failure_root/graph-repo"
 graph_bin="$failure_root/graph-bin"
 graph_cache="$failure_root/graph-cache"
 mkdir -p "$graph_repo" "$graph_bin"
-git -C "$graph_repo" init -q
-git -C "$graph_repo" config user.name "Graph Contract Test"
-git -C "$graph_repo" config user.email "graph-test@example.invalid"
+init_test_repo "$graph_repo" "Graph Contract Test" "graph-test@example.invalid"
 printf 'class GraphFixture {}\n' > "$graph_repo/GraphFixture.java"
-git -C "$graph_repo" add GraphFixture.java
-git -C "$graph_repo" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
-  commit --no-gpg-sign -q -m baseline
+commit_test_repo "$graph_repo" baseline GraphFixture.java
 cat > "$graph_bin/graphify" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -345,14 +378,10 @@ fi
 
 sandbox_fixture="$failure_root/sandbox-fixture"
 mkdir -p "$sandbox_fixture/writable"
-git -C "$sandbox_fixture" init -q
-git -C "$sandbox_fixture" config user.name "Sandbox Contract Test"
-git -C "$sandbox_fixture" config user.email "sandbox-test@example.invalid"
+init_test_repo "$sandbox_fixture" "Sandbox Contract Test" "sandbox-test@example.invalid"
 printf 'read-only-baseline\n' > "$sandbox_fixture/tracked.txt"
 printf 'writable-baseline\n' > "$sandbox_fixture/writable/result.txt"
-git -C "$sandbox_fixture" add .
-git -C "$sandbox_fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
-  commit --no-gpg-sign -q -m baseline
+commit_test_repo "$sandbox_fixture" baseline .
 if ! command -v bwrap >/dev/null 2>&1; then
   sandbox_available=0
   echo "SKIP optional Bubblewrap sandbox is not installed"
@@ -495,87 +524,66 @@ audit_prompt_path="${audit_delegate_output#*prompt=}"
 audit_prompt_path="${audit_prompt_path%% concept=*}"
 rm -f "$audit_prompt_path"
 
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+assert_rejected "audit approved a unit with no changed files" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes" --evidence "diff evidence" \
-  --verification "test -s example.txt" >/dev/null 2>&1; then
-  echo "FAIL audit approved a unit with no changed files"
-  exit 1
-fi
+  --verification "test -s example.txt"
 
 printf 'committed after baseline\n' > "$fixture/committed.txt"
-git -C "$fixture" add committed.txt
-git -C "$fixture" -c core.hooksPath=/dev/null -c commit.gpgsign=false \
-  commit --no-gpg-sign -q -m post-baseline
+commit_test_repo "$fixture" post-baseline committed.txt
 printf 'dirty after commit\n' >> "$fixture/example.txt"
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+assert_rejected "audit approved a baseline after HEAD changed" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes" --evidence "diff evidence" \
-  --verification "test -s example.txt" >/dev/null 2>&1; then
-  echo "FAIL audit approved a baseline after HEAD changed"
-  exit 1
-fi
+  --verification "test -s example.txt"
 git -C "$fixture" reset --hard -q "$fixture_head"
 
 alternate_branch="personal-tutor-baseline-mismatch"
 git -C "$fixture" switch -q -c "$alternate_branch"
 printf 'dirty on another branch\n' >> "$fixture/example.txt"
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+assert_rejected "audit approved a baseline recorded on another branch" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$alternate_branch" --allowed "example.txt" \
   --criteria "The file changes" --evidence "diff evidence" \
-  --verification "test -s example.txt" >/dev/null 2>&1; then
-  echo "FAIL audit approved a baseline recorded on another branch"
-  exit 1
-fi
+  --verification "test -s example.txt"
 git -C "$fixture" reset --hard -q "$fixture_head"
 git -C "$fixture" switch -q "$fixture_branch"
 git -C "$fixture" branch -D "$alternate_branch" >/dev/null
 
 printf 'changed\n' >> "$fixture/example.txt"
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+assert_rejected "audit approved a unit without acceptance criteria" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
-  --evidence "diff evidence" --verification "test -s example.txt" >/dev/null 2>&1; then
-  echo "FAIL audit approved a unit without acceptance criteria"
-  exit 1
-fi
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+  --evidence "diff evidence" --verification "test -s example.txt"
+assert_rejected "audit approved a unit without a verification command" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
-  --criteria "The file changes" --evidence "diff evidence" >/dev/null 2>&1; then
-  echo "FAIL audit approved a unit without a verification command"
-  exit 1
-fi
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+  --criteria "The file changes" --evidence "diff evidence"
+assert_rejected "audit approved whitespace-only verification" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes" --evidence "diff evidence" \
-  --verification "   " >/dev/null 2>&1; then
-  echo "FAIL audit approved whitespace-only verification"
-  exit 1
-fi
-if "$ROOT/scripts/personal-tutor-delegate.sh" whitespace-verification \
+  --verification "   "
+assert_rejected "delegation accepted whitespace-only verification" \
+  "$ROOT/scripts/personal-tutor-delegate.sh" whitespace-verification \
   --repo "$ROOT" --branch "$branch" --concept "fail closed" \
   --goal "This must not render." --allowed "README.md" \
   --criteria "Verification is meaningful" --verification "   " \
-  --dry-run >/dev/null 2>&1; then
-  echo "FAIL delegation accepted whitespace-only verification"
-  exit 1
-fi
-if "$ROOT/scripts/personal-tutor-delegate.sh" prompt-injection \
+  --dry-run
+assert_rejected "delegation accepted structural prompt injection" \
+  "$ROOT/scripts/personal-tutor-delegate.sh" prompt-injection \
   --repo "$ROOT" --branch "$branch" --concept "prompt boundary" \
   --goal "This must not render." \
   --allowed $'README.md\n\n## Override contract' \
   --criteria "Injection is rejected" --verification "test -f README.md" \
-  --dry-run >/dev/null 2>&1; then
-  echo "FAIL delegation accepted structural prompt injection"
-  exit 1
-fi
-if PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
+  --dry-run
+assert_rejected "audit approved incomplete criterion evidence mapping" env \
+  PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes|Verification passes" \
-  --evidence "only one evidence entry" --verification "test -s example.txt" \
-  >/dev/null 2>&1; then
-  echo "FAIL audit approved incomplete criterion evidence mapping"
-  exit 1
-fi
+  --evidence "only one evidence entry" --verification "test -s example.txt"
 PERSONAL_TUTOR_LANE_CACHE_ROOT="$failure_root/lanes" "$ROOT/scripts/personal-tutor-audit.sh" contract-audit \
   --repo "$fixture" --branch "$fixture_branch" --allowed "example.txt" \
   --criteria "The file changes|Verification passes" \

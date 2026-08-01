@@ -34,7 +34,8 @@ function init() {
   const dir = resolve(root, '.agent-runs/overnight', `${timestamp()}-${slugify(title)}`)
   mkdirSync(dir, { recursive: true })
 
-  write(resolve(dir, 'SPEC.md'), `
+  const documents = [
+    ['SPEC.md', `
 # SPEC: ${title}
 
 ## Objective
@@ -62,9 +63,9 @@ Describe the outcome in falsifiable terms.
 Score: TBD / 1.00
 
 Proceed only when the score is low enough for autonomous execution.
-`)
+`],
 
-  write(resolve(dir, 'PLAN.md'), `
+    ['PLAN.md', `
 # PLAN: ${title}
 
 ## Tasks
@@ -76,27 +77,27 @@ Proceed only when the score is low enough for autonomous execution.
 ## Checkpoints
 
 - [ ] C1 after T1:
-`)
+`],
 
-  write(resolve(dir, 'JOURNAL.md'), `
+    ['JOURNAL.md', `
 # JOURNAL: ${title}
 
 Use UTC or local time consistently.
 
 | Time | Event | Evidence |
 | --- | --- | --- |
-`)
+`],
 
-  write(resolve(dir, 'CHECKPOINTS.md'), `
+    ['CHECKPOINTS.md', `
 # CHECKPOINTS: ${title}
 
 At each checkpoint, decide continue / narrow scope / stop and report.
 
 | Checkpoint | Status | Verification | Decision |
 | --- | --- | --- | --- |
-`)
+`],
 
-  write(resolve(dir, 'REPORT.md'), `
+    ['REPORT.md', `
 # REPORT: ${title}
 
 ## Executive Summary
@@ -114,7 +115,9 @@ At each checkpoint, decide continue / narrow scope / stop and report.
 ## Open Items
 
 ## Next Session
-`)
+`]
+  ]
+  for (const [name, body] of documents) write(resolve(dir, name), body)
 
   console.log(dir)
 }

@@ -13,18 +13,9 @@
 set -uo pipefail
 
 SELF_PATH="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
-# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:?HOME is required}"; fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+# shellcheck source=tutor-lib.sh
+source "$(cd "$(dirname "$SELF_PATH")" && pwd)/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 STATE_DIR="$USER_HOME/.hermes/profiles/$PROFILE/state"
@@ -37,11 +28,11 @@ ask() {
   local prompt="$1" default="${2:-}"
   local ans
   if [ -n "$default" ]; then
-    read -r -p "$prompt [$default]: " ans || true
+    read -r -p "$prompt [$default]: " ans || return 1
     printf '%s' "${ans:-$default}"
   else
     while [ -z "${ans:-}" ]; do
-      read -r -p "$prompt: " ans || true
+      read -r -p "$prompt: " ans || return 1
     done
     printf '%s' "$ans"
   fi
@@ -50,23 +41,17 @@ ask() {
 repo=""
 branch=""
 strategy="single"
-lanes=""
 push_ok="no"
 force_push_ok="no"
 secrets_ok="no"
 deploy_ok="no"
-expected_runtime_min=""
+expected_runtime_min="60"
 worklog_entry="yes"
 kanban_board=""
 
-quick=0
 if [ "${1:-}" = "--quick" ]; then
-  quick=1
   shift
   repo="${1:-}"; branch="${2:-}"; strategy="${3:-single}"
-fi
-
-if [ "$quick" -eq 1 ]; then
   [ -z "$repo" ]   && { echo "quick mode requires repo"; exit 2; }
   [ -z "$branch" ] && { echo "quick mode requires branch"; exit 2; }
 else
@@ -94,7 +79,7 @@ approvals:
   force_push: $force_push_ok
   secrets_edit: $secrets_ok
   deploy: $deploy_ok
-runtime_minutes: ${expected_runtime_min:-60}
+runtime_minutes: $expected_runtime_min
 worklog_suggest: $worklog_entry
 kanban_board: "${kanban_board:-}"
 lanes: []

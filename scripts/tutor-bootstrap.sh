@@ -34,25 +34,16 @@ SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then
   SELF_PATH="$(readlink -f "$SELF_PATH")"
 fi
-# Resolve to absolute dir so relative invocations cannot spin on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:?HOME is required}"; fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+script_dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
+# shellcheck source=tutor-lib.sh
+source "$script_dir/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="${AGENT_TUTOR_PROFILE:-agent-tutor-orchestrator}"
 PROFILE_DIR="$USER_HOME/.hermes/profiles/$PROFILE"
 SKILLS_DIR="$PROFILE_DIR/skills"
 # Prefer the public kit manifest next to this script's repo checkout, then
 # a copied manifest under the profile, then config.yaml.
-script_dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
 MANIFEST=""
 for candidate in \
   "$script_dir/../profiles/agent-tutor-orchestrator.yml" \
@@ -68,6 +59,22 @@ done
 CRITICAL_SKILLS=(
   ai-workflow-orchestrator
   orchestrate
+)
+
+# Known Hermes skill categories, ordered by the existing lookup precedence.
+SKILL_CATEGORIES=(
+  software-development
+  devops
+  gsd
+  autonomous-ai-agents
+  creative
+  data-science
+  github
+  mcp
+  note-taking
+  productivity
+  research
+  social-media
 )
 
 # All GSD skills (these often get out of sync because there are 67 of them)
@@ -105,11 +112,23 @@ read_yaml_list() {
   done
 }
 
+skill_frontmatter_field() {
+  local field="$1" file="$2"
+  awk -v field="$field" '
+    /^---/{c++;next}
+    c==1 && $0 ~ "^" field ":" {
+      sub("^" field ":[[:space:]]*", "")
+      print
+      exit
+    }
+  ' "$file"
+}
+
 declare -a declared=()
 declare -a overlay=()
 if [ -n "$MANIFEST" ] && [ -f "$MANIFEST" ]; then
-  while IFS= read -r s; do declared+=("$s"); done < <(read_yaml_list "include_skills" "$MANIFEST")
-  while IFS= read -r s; do overlay+=("$s"); done < <(read_yaml_list "requires_private_overlay" "$MANIFEST")
+  mapfile -t declared < <(read_yaml_list "include_skills" "$MANIFEST")
+  mapfile -t overlay < <(read_yaml_list "requires_private_overlay" "$MANIFEST")
 fi
 
 # Public skills to check/repair: include_skills + critical + any local gsd copies
@@ -121,40 +140,32 @@ declare -a overlay_missing=()
 
 # Source candidates to try when repairing. We exclude the destination
 # (the profile's own skills dir) to avoid self-referential symlinks.
+skill_paths_for_root() {
+  local root="$1" name="$2"
+  printf '%s\n' "$root/$name"
+  for parent in "${SKILL_CATEGORIES[@]}"; do
+    printf '%s\n' "$root/$parent/$name"
+  done
+}
+
 source_candidates() {
   local name="$1"
-  local cand=()
   # 1. Global ~/.hermes/skills/<name> and nested under known categories
-  cand+=("$USER_HOME/.hermes/skills/$name")
-  for parent in software-development devops gsd autonomous-ai-agents creative \
-                data-science github mcp note-taking productivity research \
-                social-media; do
-    cand+=("$USER_HOME/.hermes/skills/$parent/$name")
-  done
+  skill_paths_for_root "$USER_HOME/.hermes/skills" "$name"
   # 2. OTHER profiles only (not $PROFILE) — scan whatever exists locally
-  if [ -d "$USER_HOME/.hermes/profiles" ]; then
-    for pdir in "$USER_HOME/.hermes/profiles"/*/; do
-      [ -d "$pdir" ] || continue
-      p="$(basename "$pdir")"
-      [ "$p" = "$PROFILE" ] && continue
-      cand+=("$USER_HOME/.hermes/profiles/$p/skills/$name")
-      for parent in software-development devops gsd autonomous-ai-agents creative \
-                    data-science github mcp note-taking productivity research \
-                    social-media; do
-        cand+=("$USER_HOME/.hermes/profiles/$p/skills/$parent/$name")
-      done
-    done
-  fi
-  printf '%s\n' "${cand[@]}"
+  for pdir in "$USER_HOME/.hermes/profiles"/*/; do
+    [ -d "$pdir" ] || continue
+    [ "$(basename "$pdir")" = "$PROFILE" ] && continue
+    skill_paths_for_root "${pdir%/}/skills" "$name"
+  done
 }
 
 check_skill() {
   local name="$1"
   # Find all occurrences (depth 1 and depth 2) under SKILLS_DIR
   local candidates=()
-  [ -e "$SKILLS_DIR/$name" ] && candidates+=("$SKILLS_DIR/$name")
-  for d in "$SKILLS_DIR"/*/; do
-    [ -e "$d/$name" ] && candidates+=("$d/$name")
+  for candidate in "$SKILLS_DIR/$name" "$SKILLS_DIR"/*/"$name"; do
+    [ -e "$candidate" ] && candidates+=("$candidate")
   done
   if [ ${#candidates[@]} -eq 0 ]; then
     checks_broken+=("$name: directory missing")
@@ -166,12 +177,6 @@ check_skill() {
   fi
   local path="${candidates[0]}"
 
-  # Broken symlink?
-  if [ -L "$path" ] && [ ! -e "$path" ]; then
-    checks_broken+=("$name: broken symlink at $path")
-    return 1
-  fi
-
   # SKILL.md exists?
   local skill_md="$path/SKILL.md"
   if [ ! -f "$skill_md" ]; then
@@ -181,8 +186,8 @@ check_skill() {
 
   # Parse frontmatter
   local fm_name fm_desc
-  fm_name="$(awk '/^---/{c++;next} c==1 && /^name:/{sub(/^name:[[:space:]]*/,""); print; exit}' "$skill_md")"
-  fm_desc="$(awk '/^---/{c++;next} c==1 && /^description:/{sub(/^description:[[:space:]]*/,""); print; exit}' "$skill_md")"
+  fm_name="$(skill_frontmatter_field name "$skill_md")"
+  fm_desc="$(skill_frontmatter_field description "$skill_md")"
   if [ -z "$fm_name" ]; then
     checks_broken+=("$name: frontmatter 'name:' missing or empty")
     return 1
@@ -197,7 +202,6 @@ check_skill() {
   fi
 
   checks_ok+=("$name")
-  return 0
 }
 
 # Validate a candidate as a healthy source: must be a directory with a
@@ -208,38 +212,33 @@ is_healthy_source() {
   [ -d "$cand" ] || return 1
   [ -f "$cand/SKILL.md" ] || return 1
   local fm_name
-  fm_name="$(awk '/^---/{c++;next} c==1 && /^name:/{sub(/^name:[[:space:]]*/,""); print; exit}' "$cand/SKILL.md")"
-  [ "$fm_name" = "$name" ] || return 1
-  return 0
+  fm_name="$(skill_frontmatter_field name "$cand/SKILL.md")"
+  [ "$fm_name" = "$name" ]
 }
 
 repair_skill() {
   local name="$1"
   # Determine target dir
   local target="$SKILLS_DIR/$name"
-  local parent=""
+  # Try the direct path and depth-2 parent categories in the same order as
+  # source discovery.
+  local candidate
+  while IFS= read -r candidate; do
+    if [ -d "$candidate" ]; then
+      target="$candidate"
+      break
+    fi
+  done < <(skill_paths_for_root "$SKILLS_DIR" "$name")
+  # If still not found and we have prior knowledge of where the source lived,
+  # place it there
   if [ ! -d "$target" ]; then
-    # try depth-2 (parent categories)
-    for p in software-development devops gsd autonomous-ai-agents creative \
-             data-science github mcp note-taking productivity research \
-             social-media software-development devops devops; do
-      if [ -d "$SKILLS_DIR/$p/$name" ]; then
+    for p in gsd software-development devops autonomous-ai-agents; do
+      if [ -d "$USER_HOME/.hermes/skills/$p/$name" ]; then
+        mkdir -p "$SKILLS_DIR/$p"
         target="$SKILLS_DIR/$p/$name"
-        parent="$p"
         break
       fi
     done
-    # If still not found and we have prior knowledge of where the source lived,
-    # place it there
-    if [ ! -d "$target" ]; then
-      for p in gsd software-development devops autonomous-ai-agents; do
-        if [ -d "$USER_HOME/.hermes/skills/$p/$name" ]; then
-          parent="$p"; mkdir -p "$SKILLS_DIR/$parent"
-          target="$SKILLS_DIR/$parent/$name"
-          break
-        fi
-      done
-    fi
   fi
 
   # Find the best source: latest mtime, must be healthy (name matches),
@@ -249,7 +248,6 @@ repair_skill() {
   local target_inode=""
   [ -d "$target" ] && target_inode="$(stat -c %i "$target" 2>/dev/null || echo "")"
   while IFS= read -r cand; do
-    [ -d "$cand" ] || continue
     is_healthy_source "$cand" "$name" || continue
     local cand_inode; cand_inode="$(stat -c %i "$cand" 2>/dev/null || echo "")"
     [ -n "$target_inode" ] && [ "$cand_inode" = "$target_inode" ] && continue
@@ -266,55 +264,63 @@ repair_skill() {
   rm -rf "$target"
   ln -s "$best" "$target"
   checks_fixed+=("$name: -> $best")
-  return 0
 }
 
-if [ "$MODE" = "repair" ]; then
-  for s in "${all_skills[@]}"; do
-    if ! check_skill "$s"; then
-      repair_skill "$s" || true
-      # Re-check after repair: clear prior ok/broken entries for this name
-      # so the final counts reflect post-repair reality.
-      declare -a new_ok=()
-      for entry in "${checks_ok[@]}"; do [ "$entry" != "$s" ] && new_ok+=("$entry"); done
-      checks_ok=("${new_ok[@]}")
-      declare -a filtered_broken=()
-      for entry in "${checks_broken[@]}"; do
-        case "$entry" in
-          "$s"*) ;;
-          *) filtered_broken+=("$entry") ;;
-        esac
-      done
-      checks_broken=("${filtered_broken[@]}")
-      check_skill "$s" >/dev/null 2>&1 || true
-    fi
+clear_skill_results() {
+  local name="$1" entry
+  local -a filtered_broken=() new_ok=()
+  for entry in "${checks_broken[@]}"; do
+    case "$entry" in
+      "$name"*) ;;
+      *) filtered_broken+=("$entry") ;;
+    esac
   done
-else
-  for s in "${all_skills[@]}"; do
-    check_skill "$s" || true
+  checks_broken=("${filtered_broken[@]}")
+  for entry in "${checks_ok[@]}"; do
+    [ "$entry" != "$name" ] && new_ok+=("$entry")
   done
-fi
+  checks_ok=("${new_ok[@]}")
+}
+
+for s in "${all_skills[@]}"; do
+  if check_skill "$s"; then
+    continue
+  fi
+  [ "$MODE" = "repair" ] || continue
+  repair_skill "$s"
+  # Re-check after repair: clear prior ok/broken entries for this name
+  # so the final counts reflect post-repair reality.
+  clear_skill_results "$s"
+  check_skill "$s" >/dev/null 2>&1
+done
 
 # Overlay skills: missing is expected without a private overlay (not broken).
 for s in "${overlay[@]}"; do
   if ! check_skill "$s" >/dev/null 2>&1; then
     # check_skill appended to checks_broken; pull that back out
-    declare -a filtered_broken=()
-    for entry in "${checks_broken[@]}"; do
-      case "$entry" in
-        "$s"*) overlay_missing+=("$s") ;;
-        *) filtered_broken+=("$entry") ;;
-      esac
-    done
-    checks_broken=("${filtered_broken[@]}")
-    # Also drop accidental ok entries for overlay names
-    declare -a new_ok=()
-    for entry in "${checks_ok[@]}"; do [ "$entry" != "$s" ] && new_ok+=("$entry"); done
-    checks_ok=("${new_ok[@]}")
+    clear_skill_results "$s"
+    overlay_missing+=("$s")
   fi
 done
 
 # Emit
+print_json_array() {
+  local first=1 value
+  for value in "$@"; do
+    [ "$first" -eq 0 ] && printf ','
+    printf '"%s"' "${value//\"/\\\"}"
+    first=0
+  done
+}
+
+print_list() {
+  local header="$1" value
+  shift
+  [ "$#" -gt 0 ] || return
+  printf '\n%s:\n' "$header"
+  for value in "$@"; do printf '  - %s\n' "$value"; done
+}
+
 ok_count=${#checks_ok[@]}
 fixed_count=${#checks_fixed[@]}
 broken_count=${#checks_broken[@]}
@@ -323,44 +329,20 @@ overlay_missing_count=${#overlay_missing[@]}
 if [ "$JSON" -eq 1 ]; then
   printf '{"ok":%d,"fixed":%d,"broken":%d,"overlay_missing":%d,"fixed_list":[' \
     "$ok_count" "$fixed_count" "$broken_count" "$overlay_missing_count"
-  first=1
-  for f in "${checks_fixed[@]}"; do
-    [ $first -eq 0 ] && printf ','
-    printf '"%s"' "${f//\"/\\\"}"
-    first=0
-  done
+  print_json_array "${checks_fixed[@]}"
   printf '],"broken_list":['
-  first=1
-  for b in "${checks_broken[@]}"; do
-    [ $first -eq 0 ] && printf ','
-    printf '"%s"' "${b//\"/\\\"}"
-    first=0
-  done
+  print_json_array "${checks_broken[@]}"
   printf '],"overlay_missing_list":['
-  first=1
-  for o in "${overlay_missing[@]}"; do
-    [ $first -eq 0 ] && printf ','
-    printf '"%s"' "${o//\"/\\\"}"
-    first=0
-  done
+  print_json_array "${overlay_missing[@]}"
   printf ']}\n'
 else
   printf 'OK:    %d\n' "$ok_count"
   printf 'FIXED: %d\n' "$fixed_count"
   printf 'BROKEN:%d\n' "$broken_count"
   printf 'OVERLAY_MISSING:%d (expected without private overlay)\n' "$overlay_missing_count"
-  if [ "$fixed_count" -gt 0 ]; then
-    printf '\nfixed:\n'
-    for f in "${checks_fixed[@]}"; do printf '  - %s\n' "$f"; done
-  fi
-  if [ "$broken_count" -gt 0 ]; then
-    printf '\nstill broken:\n'
-    for b in "${checks_broken[@]}"; do printf '  - %s\n' "$b"; done
-  fi
-  if [ "$overlay_missing_count" -gt 0 ]; then
-    printf '\noverlay skills missing (link a private overlay to supply):\n'
-    for o in "${overlay_missing[@]}"; do printf '  - %s\n' "$o"; done
-  fi
+  print_list 'fixed' "${checks_fixed[@]}"
+  print_list 'still broken' "${checks_broken[@]}"
+  print_list 'overlay skills missing (link a private overlay to supply)' "${overlay_missing[@]}"
 fi
 
 [ "$broken_count" -eq 0 ]

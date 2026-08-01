@@ -13,19 +13,10 @@ set -uo pipefail
 
 SELF_PATH="${BASH_SOURCE[0]}"
 if [ -L "$SELF_PATH" ]; then SELF_PATH="$(readlink -f "$SELF_PATH")"; fi
-# Resolve to an absolute directory so relative invocations (bash scripts/…)
-# cannot spin forever on dirname(".") → ".".
-HERMES_DIR=""
-dir="$(cd "$(dirname "$SELF_PATH")" && pwd)"
-while [ "$dir" != "/" ]; do
-  if [ "$(basename "$dir")" = ".hermes" ]; then HERMES_DIR="$dir"; break; fi
-  parent="$(dirname "$dir")"
-  [ "$parent" = "$dir" ] && break
-  dir="$parent"
-done
-if [ -n "$HERMES_DIR" ]; then USER_HOME="$(dirname "$HERMES_DIR")"
-else USER_HOME="${HOME:?HOME is required}"; fi
-[ -d "$USER_HOME" ] || { echo "user home does not exist: $USER_HOME" >&2; exit 1; }
+TUTOR_SCRIPT_DIR="$(cd "$(dirname "$SELF_PATH")" && pwd)"
+# shellcheck source=tutor-lib.sh
+source "$TUTOR_SCRIPT_DIR/tutor-lib.sh"
+tutor_set_user_home "$SELF_PATH" || exit 1
 
 PROFILE="agent-tutor-orchestrator"
 SESSION="${AGENT_TUTOR_SESSION:-tutor}"
@@ -58,9 +49,8 @@ fi
 
 # Default source: this script lives next to the agent-dev-kit repo's profiles/
 # and skills/. If --source is given, use that as the repo root.
-script_dir="$(cd "$(dirname "$0")" && pwd)"
 if [ -z "$SOURCE" ]; then
-  SOURCE="$(cd "$script_dir/.." && pwd)"
+  SOURCE="$(cd "$TUTOR_SCRIPT_DIR/.." && pwd)"
 fi
 
 [ -f "$SOURCE/profiles/agent-tutor-orchestrator.yml" ] || {
@@ -108,7 +98,8 @@ hermes --profile "$PROFILE" config set approvals.mode smart
 
 # Symlink skills
 echo "[5/6] skills"
-PROFILE_SKILLS="$USER_HOME/.hermes/profiles/$PROFILE/skills"
+PROFILE_DIR="$USER_HOME/.hermes/profiles/$PROFILE"
+PROFILE_SKILLS="$PROFILE_DIR/skills"
 mkdir -p "$PROFILE_SKILLS"
 
 # Orchestrator skill (copy so updates via tutor-update refresh it)
@@ -121,14 +112,14 @@ if [ -f "$SOURCE/plugins/dev-skills/skills/orchestrate/SKILL.md" ]; then
         "$PROFILE_SKILLS/software-development/orchestrate/SKILL.md"
 fi
 cp -f "$SOURCE/profiles/agent-tutor-orchestrator.yml" \
-      "$USER_HOME/.hermes/profiles/$PROFILE/agent-tutor-orchestrator.yml"
+      "$PROFILE_DIR/agent-tutor-orchestrator.yml"
 AGENT_DEV_KIT_HERMES_HOME="$USER_HOME/.hermes" \
   "$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE" || exit 1
 
 # The public manifest stays generic. A local installation may select its own
 # long-lived tmux session without baking that organization's name into git.
 if [ -n "$SESSION_OVERRIDE" ]; then
-  python3 - "$USER_HOME/.hermes/profiles/$PROFILE/agent-tutor-orchestrator.yml" "$SESSION" <<'PY'
+  python3 - "$PROFILE_DIR/agent-tutor-orchestrator.yml" "$SESSION" <<'PY'
 from pathlib import Path
 import sys
 
@@ -157,7 +148,7 @@ echo "[6/6] runtime helpers"
 mkdir -p "$PROFILE_SKILLS/../scripts" "$PROFILE_SKILLS/../templates" \
          "$PROFILE_SKILLS/../state"
 [ -d "$SOURCE/scripts" ] && \
-  cp -f "$SOURCE/scripts/tutor-"*.sh "$PROFILE_SKILLS/../scripts/" 2>/dev/null || true
+  cp -f "$SOURCE/scripts/tutor-"*.sh "$PROFILE_SKILLS/../scripts/" 2>/dev/null
 [ -f "$SOURCE/templates/lane-prompt.md" ] && \
   cp -f "$SOURCE/templates/lane-prompt.md" "$PROFILE_SKILLS/../templates/"
 

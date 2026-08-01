@@ -30,13 +30,64 @@ ok() { printf 'OK   %s\n' "$1"; pass=$((pass + 1)); }
 bad() { printf 'FAIL %s\n' "$1"; fail=$((fail + 1)); }
 warning() { printf 'WARN %s\n' "$1"; warn=$((warn + 1)); }
 
+context7_configured() {
+  local config="$1"
+  printf '%s\n' "$config" | grep -Fq "url: $PERSONAL_TUTOR_CONTEXT7_URL" && \
+    printf '%s\n' "$config" | grep -qiE 'enabled:[[:space:]]*(true|yes)'
+}
+
+check_config_setting() {
+  local pattern="$1" success_message="$2" failure_message="$3"
+  if [ -f "$CONFIG" ] && grep -qiE "$pattern" "$CONFIG"; then
+    ok "$success_message"
+  else
+    bad "$failure_message"
+  fi
+}
+
+check_file_presence() {
+  local path="$1" success_message="$2" failure_message="$3"
+  if [ -f "$path" ]; then
+    ok "$success_message"
+  else
+    bad "$failure_message"
+  fi
+}
+
+check_command() {
+  local command="$1" success_message="$2" failure_message="$3"
+  if command -v "$command" >/dev/null 2>&1; then
+    ok "$success_message"
+  else
+    bad "$failure_message"
+  fi
+}
+
+check_skill_links() {
+  local runtime="$1" target_root="$2" description="$3" skill name target
+  local expected=0 linked=0
+  shift 3
+  local -a allowed_skills=("$@")
+
+  for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
+    [ -f "$skill/SKILL.md" ] || continue
+    name="$(basename "$skill")"
+    personal_tutor_array_contains "$name" "${allowed_skills[@]}" || continue
+    target="$target_root/$name"
+    expected=$((expected + 1))
+    [ -e "$target" ] && personal_tutor_paths_match "$target" "${skill%/}" && linked=$((linked + 1))
+  done
+
+  [ "$linked" -eq "$expected" ] && ok "all $expected $description skills linked into $runtime" || \
+    bad "$runtime skill links: $linked/$expected"
+}
+
 printf 'Personal Dev Tutor doctor\nProfile: %s\nSession: %s\nHome:    %s\n\n' \
   "$PERSONAL_TUTOR_PROFILE" "$PERSONAL_TUTOR_SESSION" "$PERSONAL_TUTOR_USER_HOME"
 [ -n "$REPO" ] && printf 'Repository/worktree: %s\n\n' "$REPO"
 
 for command in hermes codex tmux git python3 gsd-sdk d2 mmdc graphify sha256sum; do
-  if command -v "$command" >/dev/null 2>&1; then ok "command available: $command"
-  else bad "required command missing: $command"; fi
+  check_command "$command" "command available: $command" "required command missing: $command"
 done
 if command -v bwrap >/dev/null 2>&1; then
   ok "optional offline sandbox command available: bwrap"
@@ -53,43 +104,38 @@ fi
 CONFIG="$PERSONAL_TUTOR_PROFILE_DIR/config.yaml"
 MANIFEST="$PERSONAL_TUTOR_PROFILE_DIR/personal-dev-tutor.yml"
 SOUL="$PERSONAL_TUTOR_PROFILE_DIR/SOUL.md"
-[ -f "$CONFIG" ] && ok "config.yaml present" || bad "config.yaml missing"
-[ -f "$MANIFEST" ] && ok "installed profile manifest present" || bad "installed profile manifest missing"
-[ -f "$SOUL" ] && ok "English tutor persona present" || bad "SOUL.md missing"
-[ -f "$PERSONAL_TUTOR_PROFILE_DIR/.no-bundled-skills" ] && \
-  ok "bundled skill seeding disabled" || bad "bundled skill seeding is not disabled"
+check_file_presence "$CONFIG" "config.yaml present" "config.yaml missing"
+check_file_presence "$MANIFEST" "installed profile manifest present" "installed profile manifest missing"
+check_file_presence "$SOUL" "English tutor persona present" "SOUL.md missing"
+check_file_presence "$PERSONAL_TUTOR_PROFILE_DIR/.no-bundled-skills" \
+  "bundled skill seeding disabled" "bundled skill seeding is not disabled"
 
-if [ -f "$CONFIG" ] && grep -qiE 'home_mode:[[:space:]]*real' "$CONFIG"; then
-  ok "terminal.home_mode is real"
-else
-  bad "terminal.home_mode must be real"
-fi
-if [ -f "$CONFIG" ] && grep -qiE 'redact_secrets:[[:space:]]*(true|yes)' "$CONFIG"; then
-  ok "secret redaction enabled"
-else
-  bad "secret redaction is not enabled"
-fi
+check_config_setting 'home_mode:[[:space:]]*real' \
+  "terminal.home_mode is real" "terminal.home_mode must be real"
+check_config_setting 'redact_secrets:[[:space:]]*(true|yes)' \
+  "secret redaction enabled" "secret redaction is not enabled"
 context7_config="$(hermes --profile "$PERSONAL_TUTOR_PROFILE" config get mcp_servers.context7 2>/dev/null || true)"
-if printf '%s\n' "$context7_config" | grep -Fq "url: $PERSONAL_TUTOR_CONTEXT7_URL" && \
-   printf '%s\n' "$context7_config" | grep -qiE 'enabled:[[:space:]]*(true|yes)'; then
+if context7_configured "$context7_config"; then
   ok "Context7 enabled for Hermes"
 else
   bad "Context7 is not enabled at the expected Hermes endpoint"
 fi
-context7_test=""
+context7_ok=0
 for context7_attempt in 1 2; do
   context7_test="$(hermes --profile "$PERSONAL_TUTOR_PROFILE" mcp test context7 2>&1 || true)"
-  if printf '%s\n' "$context7_test" | grep -q 'Tools discovered: 2'; then break; fi
+  if printf '%s\n' "$context7_test" | grep -q 'Tools discovered: 2'; then
+    context7_ok=1
+    break
+  fi
   [ "$context7_attempt" -eq 1 ] && sleep 1
 done
-if printf '%s\n' "$context7_test" | grep -q 'Tools discovered: 2'; then
+if [ "$context7_ok" -eq 1 ]; then
   ok "Hermes Context7 live discovery passes"
 else
   bad "Hermes Context7 live discovery fails after 2 attempts"
 fi
 codex_context7="$(CODEX_HOME="$PERSONAL_TUTOR_CODEX_HOME" codex mcp get context7 2>/dev/null || true)"
-if printf '%s\n' "$codex_context7" | grep -Fq "url: $PERSONAL_TUTOR_CONTEXT7_URL" && \
-   printf '%s\n' "$codex_context7" | grep -qiE 'enabled:[[:space:]]*(true|yes)'; then
+if context7_configured "$codex_context7"; then
   ok "Context7 configured in the isolated Codex home"
 else
   bad "Context7 is not configured at the expected isolated Codex endpoint"
@@ -135,39 +181,16 @@ else
 fi
 
 if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
-  expected=0 linked=0 codex_expected=0 codex_linked=0
-  for skill in "$SOURCE"/plugins/dev-skills/skills/*/; do
-    [ -f "$skill/SKILL.md" ] || continue
-    name="$(basename "$skill")"
-    profile_target="$PERSONAL_TUTOR_PROFILE_DIR/skills/agent-dev-kit/$name"
-    codex_target="$PERSONAL_TUTOR_CODEX_HOME/skills/$name"
-    for wanted in "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"; do
-      if [ "$wanted" = "$name" ]; then
-        expected=$((expected + 1))
-        [ -e "$profile_target" ] && [ "$(readlink -f "$profile_target")" = "$(readlink -f "${skill%/}")" ] && linked=$((linked + 1))
-        break
-      fi
-    done
-    for wanted in "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; do
-      if [ "$wanted" = "$name" ]; then
-        codex_expected=$((codex_expected + 1))
-        [ -e "$codex_target" ] && [ "$(readlink -f "$codex_target")" = "$(readlink -f "${skill%/}")" ] && codex_linked=$((codex_linked + 1))
-        break
-      fi
-    done
-  done
-  [ "$linked" -eq "$expected" ] && ok "all $expected public skills linked into Hermes" || bad "Hermes skill links: $linked/$expected"
-  [ "$codex_linked" -eq "$codex_expected" ] && ok "all $codex_expected worker skills linked into Codex" || bad "Codex worker skill links: $codex_linked/$codex_expected"
+  check_skill_links Hermes "$PERSONAL_TUTOR_PROFILE_DIR/skills/agent-dev-kit" public \
+    "${PERSONAL_TUTOR_HERMES_SKILLS[@]}"
+  check_skill_links Codex "$PERSONAL_TUTOR_CODEX_HOME/skills" worker \
+    "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"
   unexpected_codex=0
   for installed in "$PERSONAL_TUTOR_CODEX_HOME/skills"/*; do
     [ -e "$installed" ] || continue
     name="$(basename "$installed")"
     [ "$name" = graphify ] && continue
-    allowed=0
-    for wanted in "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; do
-      [ "$wanted" = "$name" ] && allowed=1 && break
-    done
-    if [ "$allowed" -eq 0 ]; then
+    if ! personal_tutor_array_contains "$name" "${PERSONAL_TUTOR_CODEX_SKILLS[@]}"; then
       printf '  unexpected isolated Codex skill: %s\n' "$name"
       unexpected_codex=$((unexpected_codex + 1))
     fi
@@ -204,16 +227,12 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
   for installed in "$PERSONAL_TUTOR_PROFILE_DIR/skills/external"/*; do
     [ -e "$installed" ] || continue
     external_name="$(basename "$installed")"
-    case "$external_name" in
-      graphify|caveman|ponytail)
-        expected_external="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/$external_name"
-        ;;
-      *)
-        expected_external=""
-        ;;
-    esac
-    if [ -z "$expected_external" ] || \
-       [ "$(readlink -f "$installed")" != "$(readlink -f "$expected_external")" ]; then
+    if personal_tutor_array_contains "$external_name" graphify "${PERSONAL_TUTOR_BASELINE_SKILLS[@]}"; then
+      expected_external="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/$external_name"
+    else
+      expected_external=""
+    fi
+    if [ -z "$expected_external" ] || ! personal_tutor_paths_match "$installed" "$expected_external"; then
       printf '  unexpected external profile skill: %s\n' "$(basename "$installed")"
       unexpected=$((unexpected + 1))
     fi
@@ -229,7 +248,7 @@ for baseline_skill in "${PERSONAL_TUTOR_BASELINE_SKILLS[@]}"; do
   if [ -f "$baseline_global/SKILL.md" ] && \
      grep -q "^name:[[:space:]]*${baseline_skill}[[:space:]]*$" "$baseline_global/SKILL.md" && \
      [ -L "$baseline_profile" ] && \
-     [ "$(readlink -f "$baseline_profile")" = "$(readlink -f "$baseline_global")" ]; then
+     personal_tutor_paths_match "$baseline_profile" "$baseline_global"; then
     ok "baseline skill available: $baseline_skill"
   else
     bad "baseline skill missing or unmanaged: $baseline_skill"
@@ -237,10 +256,10 @@ for baseline_skill in "${PERSONAL_TUTOR_BASELINE_SKILLS[@]}"; do
 done
 
 gsd_unexpected=0
-for gsd_skill in gsd-new-project gsd-discuss-phase gsd-plan-phase gsd-execute-phase gsd-verify-work gsd-progress; do
+for gsd_skill in "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; do
   candidate="$PERSONAL_TUTOR_PROFILE_DIR/skills/gsd/$gsd_skill"
   expected_gsd="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/gsd/$gsd_skill"
-  if [ -f "$candidate/SKILL.md" ] && [ "$(readlink -f "$candidate")" = "$(readlink -f "$expected_gsd")" ]; then
+  if [ -f "$candidate/SKILL.md" ] && personal_tutor_paths_match "$candidate" "$expected_gsd"; then
     ok "GSD core skill available: $gsd_skill"
   else
     bad "GSD core skill missing or unmanaged: $gsd_skill"
@@ -253,10 +272,11 @@ for gsd_skill in gsd-new-project gsd-discuss-phase gsd-plan-phase gsd-execute-ph
 done
 for installed in "$PERSONAL_TUTOR_PROFILE_DIR/skills/gsd"/*; do
   [ -e "$installed" ] || continue
-  case "$(basename "$installed")" in
-    gsd-new-project|gsd-discuss-phase|gsd-plan-phase|gsd-execute-phase|gsd-verify-work|gsd-progress) ;;
-    *) printf '  unexpected GSD skill: %s\n' "$(basename "$installed")"; gsd_unexpected=$((gsd_unexpected + 1)) ;;
-  esac
+  gsd_skill="$(basename "$installed")"
+  if ! personal_tutor_array_contains "$gsd_skill" "${PERSONAL_TUTOR_GSD_SKILLS[@]}"; then
+    printf '  unexpected GSD skill: %s\n' "$gsd_skill"
+    gsd_unexpected=$((gsd_unexpected + 1))
+  fi
 done
 [ "$gsd_unexpected" -eq 0 ] && ok "GSD skill isolation is clean" || bad "$gsd_unexpected unexpected GSD skills"
 
@@ -269,20 +289,19 @@ fi
 graphify_hermes="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/graphify"
 graphify_codex="$PERSONAL_TUTOR_CODEX_HOME/skills/graphify"
 graphify_profile="$PERSONAL_TUTOR_PROFILE_DIR/skills/external/graphify"
-if [ -f "$graphify_hermes/SKILL.md" ] && [ -f "$graphify_hermes/.graphify_version" ] && \
-   [ "$(cat "$graphify_hermes/.graphify_version")" = "$graphify_version" ]; then
-  ok "Graphify Hermes skill matches the installed CLI"
-else
-  bad "Graphify Hermes skill missing or stale"
-fi
-if [ -f "$graphify_codex/SKILL.md" ] && [ -f "$graphify_codex/.graphify_version" ] && \
-   [ "$(cat "$graphify_codex/.graphify_version")" = "$graphify_version" ]; then
-  ok "Graphify Codex skill matches the installed CLI"
-else
-  bad "Graphify Codex skill missing or stale"
-fi
+check_graphify_skill() {
+  local runtime="$1" skill="$2"
+  if [ -f "$skill/SKILL.md" ] && [ -f "$skill/.graphify_version" ] && \
+     [ "$(cat "$skill/.graphify_version")" = "$graphify_version" ]; then
+    ok "Graphify $runtime skill matches the installed CLI"
+  else
+    bad "Graphify $runtime skill missing or stale"
+  fi
+}
+check_graphify_skill Hermes "$graphify_hermes"
+check_graphify_skill Codex "$graphify_codex"
 if [ -f "$graphify_profile/SKILL.md" ] && \
-   [ "$(readlink -f "$graphify_profile")" = "$(readlink -f "$graphify_hermes")" ]; then
+   personal_tutor_paths_match "$graphify_profile" "$graphify_hermes"; then
   ok "Graphify linked into the isolated tutor profile"
 else
   bad "Graphify is not linked into the isolated tutor profile"
@@ -299,9 +318,10 @@ if tmux has-session -t "$PERSONAL_TUTOR_SESSION" 2>/dev/null; then
   codex_count=0
   if [ -n "$REPO" ] && git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
     while IFS='|' read -r command dead path codex_home; do
-      [ "$command" = codex ] && [ "$dead" = 0 ] || continue
-      [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || continue
-      case "$path" in "$REPO"|"$REPO"/*) codex_count=$((codex_count + 1)) ;; esac
+      personal_tutor_is_live_codex_pane "$command" "$dead" "$codex_home" || continue
+      if personal_tutor_path_is_within "$path" "$REPO"; then
+        codex_count=$((codex_count + 1))
+      fi
     done < <(tmux list-panes -s -t "$PERSONAL_TUTOR_SESSION" -F '#{pane_current_command}|#{pane_dead}|#{pane_current_path}|#{@personal_tutor_codex_home}' 2>/dev/null)
     [ "$codex_count" -gt 0 ] && ok "repository-matched isolated Codex workers available: $codex_count" || warning "no isolated Codex worker pane for $REPO in $PERSONAL_TUTOR_SESSION; start one with personal-tutor-codex"
   else

@@ -5,6 +5,7 @@ set -euo pipefail
 # Do not let a caller-controlled PATH substitute host-side boundary tools.
 # Preserve the original path only for resolving the requested sandbox command.
 ORIGINAL_PATH="${PATH:-}"
+IFS=: read -r -a ORIGINAL_PATH_ENTRIES <<< "$ORIGINAL_PATH"
 export PATH="/usr/local/bin:/usr/bin:/bin:/nix/var/nix/profiles/default/bin"
 
 SELF_PATH="${BASH_SOURCE[0]}"
@@ -59,13 +60,15 @@ for trusted_tool in "$BWRAP_BIN" "$PYTHON_BIN"; do
   case "$trusted_tool" in /usr/*|/nix/store/*) ;; *) echo "untrusted host tool path: $trusted_tool"; exit 1 ;; esac
 done
 
-if [ -z "$repo" ]; then
-  repo="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
+requested_repo="$repo"
+if ! repo="$(personal_tutor_git_root "$repo")"; then
+  if [ -n "$requested_repo" ]; then
+    echo "not a Git repository: $requested_repo"
+  else
+    echo "unable to resolve a Git worktree; pass --repo"
+  fi
+  exit 2
 fi
-[ -n "$repo" ] || { echo "unable to resolve a Git worktree; pass --repo"; exit 2; }
-git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a Git repository: $repo"; exit 2; }
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
 
 git_entry="$repo/.git"
 [ -e "$git_entry" ] || { echo "Git metadata entry is missing: $git_entry"; exit 2; }
@@ -105,14 +108,10 @@ if [ -f "$git_entry" ]; then
   [ ! -L "$git_entry" ] || { echo "refusing symlinked Git metadata: $git_entry"; exit 2; }
   [ -d "$git_dir" ] || { echo "linked-worktree Git directory is missing: $git_dir"; exit 2; }
   [ -d "$git_common_dir" ] || { echo "linked-worktree common Git directory is missing: $git_common_dir"; exit 2; }
-  case "$git_common_dir" in
-    "$repo"|"$repo"/*) ;;
-    *) mounts+=(--ro-bind "$git_common_dir" "$git_common_dir") ;;
-  esac
-  case "$git_dir" in
-    "$repo"|"$repo"/*|"$git_common_dir"|"$git_common_dir"/*) ;;
-    *) mounts+=(--ro-bind "$git_dir" "$git_dir") ;;
-  esac
+  personal_tutor_path_is_within "$git_common_dir" "$repo" || \
+    mounts+=(--ro-bind "$git_common_dir" "$git_common_dir")
+  personal_tutor_path_is_within "$git_dir" "$repo" || personal_tutor_path_is_within "$git_dir" "$git_common_dir" || \
+    mounts+=(--ro-bind "$git_dir" "$git_dir")
 fi
 
 # Mount only runtime/toolchain trees, not the real home. /bin and /lib are
@@ -154,10 +153,10 @@ for requested in "${writes[@]}"; do
   write_source="$repo/$requested"
   [ -e "$write_source" ] || { echo "--write path must already exist: $requested"; exit 2; }
   write_source="$(readlink -f "$write_source")"
-  case "$write_source" in
-    "$repo"|"$repo"/*) ;;
-    *) echo "--write resolves outside the worktree: $requested"; exit 2 ;;
-  esac
+  personal_tutor_path_is_within "$write_source" "$repo" || {
+    echo "--write resolves outside the worktree: $requested"
+    exit 2
+  }
   relative="${write_source#$repo}"
   mounts+=(--bind "$write_source" "/workspace$relative")
 done
@@ -191,9 +190,7 @@ trap - EXIT
 
 build_path() {
   local result="/usr/local/bin:/usr/bin:/bin" entry resolved suffix
-  local -a host_entries
-  IFS=: read -r -a host_entries <<< "$ORIGINAL_PATH"
-  for entry in "${host_entries[@]}"; do
+  for entry in "${ORIGINAL_PATH_ENTRIES[@]}"; do
     [ -d "$entry" ] || continue
     resolved="$(readlink -f "$entry" 2>/dev/null || true)"
     case "$resolved" in
@@ -211,12 +208,10 @@ mounts+=(--setenv PATH "$sandbox_path" --chdir /workspace)
 
 resolve_command() {
   local requested="$1" found="" resolved suffix entry
-  local -a host_entries
   if [[ "$requested" == */* ]]; then
     if [[ "$requested" = /* ]]; then found="$requested"; else found="$repo/$requested"; fi
   else
-    IFS=: read -r -a host_entries <<< "$ORIGINAL_PATH"
-    for entry in "${host_entries[@]}"; do
+    for entry in "${ORIGINAL_PATH_ENTRIES[@]}"; do
       [ -n "$entry" ] || entry=.
       if [ -f "$entry/$requested" ] && [ -x "$entry/$requested" ]; then
         found="$entry/$requested"
@@ -244,7 +239,6 @@ resolve_command() {
 launch() {
   local executable="$1"; shift
   "$PYTHON_BIN" -c '
-import os
 import sys
 
 bwrap_bin = sys.argv[1]
@@ -252,10 +246,6 @@ timeout_seconds = float(sys.argv[2])
 mount_count = int(sys.argv[3])
 mounts = sys.argv[4:4 + mount_count]
 command = sys.argv[4 + mount_count:]
-try:
-    maximum = os.sysconf("SC_OPEN_MAX")
-except (ValueError, OSError):
-    maximum = 65536
 import subprocess
 try:
     process = subprocess.Popen([bwrap_bin, *mounts, "--", *command], close_fds=True)

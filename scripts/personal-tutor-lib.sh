@@ -17,6 +17,41 @@ personal_tutor_real_home() {
   printf '%s\n' "${HOME:?unable to resolve real user home}"
 }
 
+personal_tutor_git_root() {
+  local requested="${1:-}" root
+
+  if [ -z "$requested" ]; then
+    root="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
+    [ -n "$root" ] || return 1
+  else
+    root="$requested"
+  fi
+
+  git -C "$root" rev-parse --git-dir >/dev/null 2>&1 || return 2
+  root="$(git -C "$root" rev-parse --show-toplevel)" || return 2
+  (cd "$root" && pwd -P)
+}
+
+personal_tutor_path_is_within() {
+  local path="$1" root="$2"
+  case "$path" in
+    "$root"|"$root"/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+personal_tutor_paths_match() {
+  [ "$(readlink -f "$1")" = "$(readlink -f "$2")" ]
+}
+
+personal_tutor_resolve_path() {
+  python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$1"
+}
+
+personal_tutor_path_key() {
+  printf '%s' "$1" | sha256sum | cut -c1-16
+}
+
 personal_tutor_prepare_tmux() {
   local uid runtime
   uid="$(id -u)"
@@ -36,6 +71,20 @@ personal_tutor_graphify() {
     cd "$runtime_dir"
     HOME="$PERSONAL_TUTOR_USER_HOME" command graphify "$@"
   )
+}
+
+personal_tutor_array_contains() {
+  local needle="$1" value
+  shift
+  for value in "$@"; do
+    [ "$value" = "$needle" ] && return 0
+  done
+  return 1
+}
+
+personal_tutor_is_live_codex_pane() {
+  local command="$1" dead="$2" codex_home="$3"
+  [ "$command" = codex ] && [ "$dead" = 0 ] && [ "$codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ]
 }
 
 PERSONAL_TUTOR_USER_HOME="$(personal_tutor_real_home)"
@@ -62,13 +111,9 @@ PERSONAL_TUTOR_GRAPHIFY_VERSION="0.9.25"
 PERSONAL_TUTOR_CONTEXT7_URL="https://mcp.context7.com/mcp"
 PERSONAL_TUTOR_BASELINE_SKILLS=(caveman ponytail)
 
-# The flagship profile intentionally excludes the two alternative orchestrators
-# and dynamic skill discovery. GSD is the only lifecycle authority here.
-PERSONAL_TUTOR_HERMES_SKILLS=(
-  personal-development-mentor diagram-render drawio-skill excel-xlsx
-  git-essentials human-writing-style image-finalize improve java-development
-  knip live-qa pdf playwright-stability security-checklist semgrep stagehand
-  tex-render web-browse word-docx
+PERSONAL_TUTOR_GSD_SKILLS=(
+  gsd-new-project gsd-discuss-phase gsd-plan-phase
+  gsd-execute-phase gsd-verify-work gsd-progress
 )
 
 # Worker capabilities only. Tutor/orchestrator and skill-discovery skills remain
@@ -78,6 +123,10 @@ PERSONAL_TUTOR_CODEX_SKILLS=(
   image-finalize improve java-development knip live-qa pdf playwright-stability
   security-checklist semgrep stagehand tex-render web-browse word-docx
 )
+
+# The flagship profile intentionally excludes the two alternative orchestrators
+# and dynamic skill discovery. GSD is the only lifecycle authority here.
+PERSONAL_TUTOR_HERMES_SKILLS=(personal-development-mentor "${PERSONAL_TUTOR_CODEX_SKILLS[@]}")
 
 export PATH="$PERSONAL_TUTOR_USER_HOME/.nix-profile/bin:$PERSONAL_TUTOR_USER_HOME/.local/bin:$PATH"
 personal_tutor_prepare_tmux

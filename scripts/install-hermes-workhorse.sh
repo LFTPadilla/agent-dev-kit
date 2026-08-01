@@ -2,22 +2,22 @@
 # Install the pinned caveman + ponytail baseline for Hermes and expose it to profiles.
 set -euo pipefail
 
-if [ -n "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:+x}" ] ||
-   [ -n "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:+x}" ]; then
-  if [ -z "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:+x}" ] ||
-     [ -z "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:+x}" ]; then
-    echo "caveman source and SHA-256 overrides must be set together" >&2
-    exit 2
+validate_override_pair() {
+  local name="$1" source_override="$2" checksum_override="$3"
+  if [ -n "$source_override" ] || [ -n "$checksum_override" ]; then
+    if [ -z "$source_override" ] || [ -z "$checksum_override" ]; then
+      echo "$name source and SHA-256 overrides must be set together" >&2
+      exit 2
+    fi
   fi
-fi
-if [ -n "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:+x}" ] ||
-   [ -n "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:+x}" ]; then
-  if [ -z "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:+x}" ] ||
-     [ -z "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:+x}" ]; then
-    echo "ponytail source and SHA-256 overrides must be set together" >&2
-    exit 2
-  fi
-fi
+}
+
+validate_override_pair caveman \
+  "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:-}" \
+  "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:-}"
+validate_override_pair ponytail \
+  "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:-}" \
+  "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:-}"
 
 HERMES_ROOT="${AGENT_DEV_KIT_HERMES_HOME:-${HERMES_HOME:-${HOME:?HOME is required}/.hermes}}"
 CAVEMAN_SOURCE="${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:-https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.1/skills/caveman/SKILL.md}"
@@ -102,51 +102,56 @@ restore_workhorse_signal_traps() {
   trap 'exit 143' TERM
 }
 
+rollback_managed_skill() {
+  local target="$1" backup="$2" was_absent="$3" remove_error="$4"
+  local absent_error="${5:-$remove_error}"
+  if [ -n "$backup" ] && [ -e "$backup" ]; then
+    if ! rm -rf "$target"; then
+      echo "$remove_error: $target" >&2
+      return 1
+    fi
+    if ! mv "$backup" "$target"; then
+      echo "CRITICAL: unable to restore managed skill backup: $backup" >&2
+      return 1
+    fi
+  elif [ "$was_absent" -eq 1 ] && ! rm -rf "$target"; then
+    echo "$absent_error: $target" >&2
+    return 1
+  fi
+}
+
+reset_managed_skill_refresh() {
+  REFRESH_ACTIVE=0
+  REFRESH_TARGET_WAS_ABSENT=1
+  REFRESH_TARGET=""
+  REFRESH_BACKUP=""
+}
+
+clear_managed_skill_history() {
+  UPDATED_SKILL_TARGETS=()
+  UPDATED_SKILL_BACKUPS=()
+  UPDATED_SKILL_WAS_ABSENT=()
+}
+
 cleanup_managed_skill_refresh() {
   local status="${1:-0}" index target backup was_absent
   trap '' HUP INT TERM
   if [ "$REFRESH_ACTIVE" -eq 1 ]; then
-    if [ -n "$REFRESH_BACKUP" ] && [ -e "$REFRESH_BACKUP" ]; then
-      if ! rm -rf "$REFRESH_TARGET"; then
-        echo "CRITICAL: unable to remove partial managed skill: $REFRESH_TARGET" >&2
-        status=1
-      elif ! mv "$REFRESH_BACKUP" "$REFRESH_TARGET"; then
-        echo "CRITICAL: unable to restore managed skill backup: $REFRESH_BACKUP" >&2
-        status=1
-      fi
-    elif [ "$REFRESH_TARGET_WAS_ABSENT" -eq 1 ]; then
-      if ! rm -rf "$REFRESH_TARGET"; then
-        echo "CRITICAL: unable to remove partial managed skill: $REFRESH_TARGET" >&2
-        status=1
-      fi
-    fi
+    rollback_managed_skill "$REFRESH_TARGET" "$REFRESH_BACKUP" \
+      "$REFRESH_TARGET_WAS_ABSENT" "CRITICAL: unable to remove partial managed skill" || status=1
   fi
   if [ "$SKILLS_COMMITTED" -eq 0 ]; then
     for ((index=${#UPDATED_SKILL_TARGETS[@]} - 1; index >= 0; index--)); do
       target="${UPDATED_SKILL_TARGETS[$index]}"
       backup="${UPDATED_SKILL_BACKUPS[$index]}"
       was_absent="${UPDATED_SKILL_WAS_ABSENT[$index]}"
-      if [ -n "$backup" ] && [ -e "$backup" ]; then
-        if ! rm -rf "$target"; then
-          echo "CRITICAL: unable to remove updated managed skill: $target" >&2
-          status=1
-        elif ! mv "$backup" "$target"; then
-          echo "CRITICAL: unable to restore managed skill backup: $backup" >&2
-          status=1
-        fi
-      elif [ "$was_absent" -eq 1 ] && ! rm -rf "$target"; then
-        echo "CRITICAL: unable to roll back newly installed skill: $target" >&2
-        status=1
-      fi
+      rollback_managed_skill "$target" "$backup" "$was_absent" \
+        "CRITICAL: unable to remove updated managed skill" \
+        "CRITICAL: unable to roll back newly installed skill" || status=1
     done
   fi
-  REFRESH_ACTIVE=0
-  REFRESH_TARGET_WAS_ABSENT=1
-  REFRESH_TARGET=""
-  REFRESH_BACKUP=""
-  UPDATED_SKILL_TARGETS=()
-  UPDATED_SKILL_BACKUPS=()
-  UPDATED_SKILL_WAS_ABSENT=()
+  reset_managed_skill_refresh
+  clear_managed_skill_history
   if [ "$EXIT_CLEANUP" -eq 0 ] && [ "$WORKHORSE_LOCK_ACTIVE" -eq 1 ]; then
     restore_workhorse_signal_traps
   fi
@@ -161,10 +166,7 @@ finish_managed_skill_refresh() {
     UPDATED_SKILL_BACKUPS+=("$REFRESH_BACKUP")
     UPDATED_SKILL_WAS_ABSENT+=("$REFRESH_TARGET_WAS_ABSENT")
   fi
-  REFRESH_ACTIVE=0
-  REFRESH_TARGET_WAS_ABSENT=1
-  REFRESH_TARGET=""
-  REFRESH_BACKUP=""
+  reset_managed_skill_refresh
   restore_workhorse_signal_traps
 }
 
@@ -177,9 +179,7 @@ commit_managed_skill_refreshes() {
       status=1
     fi
   done
-  UPDATED_SKILL_TARGETS=()
-  UPDATED_SKILL_BACKUPS=()
-  UPDATED_SKILL_WAS_ABSENT=()
+  clear_managed_skill_history
   return "$status"
 }
 
@@ -342,7 +342,7 @@ link_profile_skill() {
   }
   mkdir -p "$target_dir"
   if [ -L "$target" ]; then
-    if [ "$(readlink -f "$target" 2>/dev/null || true)" = "$(readlink -f "$source")" ]; then
+    if [ "$(readlink -f "$target" 2>/dev/null)" = "$(readlink -f "$source")" ]; then
       return
     fi
     echo "refusing to replace foreign skill link: $target" >&2
@@ -385,8 +385,9 @@ for profile in "${profiles[@]}"; do
   case " ${linked_profiles[*]} " in
     *" $profile "*) continue ;;
   esac
-  link_profile_skill "$profile" caveman
-  link_profile_skill "$profile" ponytail
+  for skill in caveman ponytail; do
+    link_profile_skill "$profile" "$skill"
+  done
   linked_profiles+=("$profile")
 done
 

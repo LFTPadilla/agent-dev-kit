@@ -54,38 +54,35 @@ graphify_version="$(personal_tutor_graphify --version 2>/dev/null | awk '{print 
   exit 1
 }
 
-if [ -z "$repo" ]; then
-  repo="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
-fi
-[ -n "$repo" ] && git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || {
+reject_cache_path() {
+  local path="$1" message="$2"
+  if personal_tutor_path_is_within "$path" "$repo"; then
+    echo "$message: $path"
+    exit 2
+  fi
+}
+
+if ! repo="$(personal_tutor_git_root "$repo")"; then
   echo "repository/worktree unavailable; run from a Git worktree or pass --repo"
   exit 2
-}
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
+fi
 
 umask 077
 cache_root="${PERSONAL_TUTOR_GRAPH_CACHE_ROOT:-${XDG_CACHE_HOME:-$PERSONAL_TUTOR_USER_HOME/.cache}/personal-dev-tutor/graphify}"
 [ ! -L "$cache_root" ] || { echo "refusing symlinked graph cache root: $cache_root"; exit 2; }
-cache_candidate="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$cache_root")"
-case "$cache_candidate/" in
-  "$repo/"*) echo "graph cache must be outside the worktree: $cache_candidate"; exit 2 ;;
-esac
+cache_candidate="$(personal_tutor_resolve_path "$cache_root")"
+reject_cache_path "$cache_candidate" "graph cache must be outside the worktree"
 mkdir -p "$cache_root"
 chmod 700 "$cache_root"
 cache_root="$(cd "$cache_root" && pwd -P)"
-case "$cache_root/" in
-  "$repo/"*) echo "graph cache must be outside the worktree: $cache_root"; exit 2 ;;
-esac
-repo_key="$(printf '%s' "$repo" | sha256sum | cut -c1-16)"
+reject_cache_path "$cache_root" "graph cache must be outside the worktree"
+repo_key="$(personal_tutor_path_key "$repo")"
 cache_dir="$cache_root/$(basename "$repo")-$repo_key"
 [ ! -L "$cache_dir" ] || { echo "refusing symlinked repository graph cache: $cache_dir"; exit 2; }
 mkdir -p "$cache_dir"
 chmod 700 "$cache_dir"
 cache_dir="$(cd "$cache_dir" && pwd -P)"
-case "$cache_dir/" in
-  "$repo/"*) echo "repository graph cache resolves inside the worktree: $cache_dir"; exit 2 ;;
-esac
+reject_cache_path "$cache_dir" "repository graph cache resolves inside the worktree"
 graph="$cache_dir/graphify-out/graph.json"
 source_state="$cache_dir/source-state.sha256"
 
@@ -137,6 +134,18 @@ graph_freshness() {
   if [ -n "$recorded" ] && [ "$current" = "$recorded" ]; then printf 'fresh\n'; else printf 'stale\n'; fi
 }
 
+warn_if_graph_stale() {
+  [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
+}
+
+run_graph_action() {
+  local action="$1"
+  shift
+  require_graph
+  warn_if_graph_stale
+  personal_tutor_graphify "$action" "$@" --graph "$graph"
+}
+
 case "$action" in
   refresh)
     [ "${#args[@]}" -eq 0 ] || { usage; exit 2; }
@@ -155,23 +164,13 @@ case "$action" in
     require_graph
     printf 'graph=%s\nstatus=%s\n' "$graph" "$(graph_freshness)"
     ;;
-  query)
+  query|affected)
     [ "${#args[@]}" -eq 1 ] || { usage; exit 2; }
-    require_graph
-    [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
-    personal_tutor_graphify query "${args[0]}" --graph "$graph"
-    ;;
-  affected)
-    [ "${#args[@]}" -eq 1 ] || { usage; exit 2; }
-    require_graph
-    [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
-    personal_tutor_graphify affected "${args[0]}" --graph "$graph"
+    run_graph_action "$action" "${args[0]}"
     ;;
   path)
     [ "${#args[@]}" -eq 2 ] || { usage; exit 2; }
-    require_graph
-    [ "$(graph_freshness)" = fresh ] || printf 'warning: graph is stale; refresh before relying on it\n' >&2
-    personal_tutor_graphify path "${args[0]}" "${args[1]}" --graph "$graph"
+    run_graph_action path "${args[0]}" "${args[1]}"
     ;;
   *) echo "unknown action: $action"; usage; exit 2 ;;
 esac
