@@ -202,14 +202,11 @@ if [ -n "$SOURCE" ] && [ -d "$SOURCE/plugins/dev-skills/skills" ]; then
   for installed in "$PERSONAL_TUTOR_PROFILE_DIR/skills/external"/*; do
     [ -e "$installed" ] || continue
     external_name="$(basename "$installed")"
-    case "$external_name" in
-      graphify|caveman|ponytail)
-        expected_external="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/$external_name"
-        ;;
-      *)
-        expected_external=""
-        ;;
-    esac
+    if personal_tutor_array_contains "$external_name" graphify "${PERSONAL_TUTOR_BASELINE_SKILLS[@]}"; then
+      expected_external="$PERSONAL_TUTOR_USER_HOME/.hermes/skills/$external_name"
+    else
+      expected_external=""
+    fi
     if [ -z "$expected_external" ] || ! paths_match "$installed" "$expected_external"; then
       printf '  unexpected external profile skill: %s\n' "$(basename "$installed")"
       unexpected=$((unexpected + 1))
