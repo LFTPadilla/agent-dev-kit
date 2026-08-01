@@ -231,13 +231,11 @@ repair_skill() {
   local name="$1"
   # Determine target dir
   local target="$SKILLS_DIR/$name"
-  local parent=""
   if [ ! -d "$target" ]; then
     # try depth-2 (parent categories)
     for p in "${SKILL_CATEGORIES[@]}"; do
       if [ -d "$SKILLS_DIR/$p/$name" ]; then
         target="$SKILLS_DIR/$p/$name"
-        parent="$p"
         break
       fi
     done
@@ -246,8 +244,8 @@ repair_skill() {
     if [ ! -d "$target" ]; then
       for p in gsd software-development devops autonomous-ai-agents; do
         if [ -d "$USER_HOME/.hermes/skills/$p/$name" ]; then
-          parent="$p"; mkdir -p "$SKILLS_DIR/$parent"
-          target="$SKILLS_DIR/$parent/$name"
+          mkdir -p "$SKILLS_DIR/$p"
+          target="$SKILLS_DIR/$p/$name"
           break
         fi
       done
