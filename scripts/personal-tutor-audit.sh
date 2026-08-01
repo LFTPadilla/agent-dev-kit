@@ -30,10 +30,11 @@ done
 for value in allowed criteria evidence verification; do
   printf '%s' "${!value}" | grep -q '[^|[:space:]]' || { echo "$value must contain a non-empty value"; exit 2; }
 done
-repo="$(cd "$repo" && pwd -P)"
-git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git repository: $repo"; exit 2; }
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
+requested_repo="$repo"
+repo="$(personal_tutor_git_root "$repo")" || {
+  echo "not a git repository: $requested_repo"
+  exit 2
+}
 actual_branch="$(git -C "$repo" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 branch_ok=1
 [ "$actual_branch" = "$branch" ] || branch_ok=0

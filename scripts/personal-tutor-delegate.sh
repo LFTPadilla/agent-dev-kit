@@ -37,15 +37,17 @@ for value in repo branch goal allowed criteria concept verification; do
 done
 printf '%s' "$criteria" | grep -q '[^|[:space:]]' || { echo "--criteria must contain at least one criterion"; exit 2; }
 printf '%s' "$verification" | grep -q '[^[:space:]]' || { echo "--verification must contain a command"; exit 2; }
-repo="$(cd "$repo" && pwd -P)"
-[ -d "$repo/.git" ] || git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git repository: $repo"; exit 2; }
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
+requested_repo="$repo"
+repo="$(personal_tutor_git_root "$repo")" || {
+  echo "not a git repository: $requested_repo"
+  exit 2
+}
 worktree="${worktree:-$repo}"
-worktree="$(cd "$worktree" && pwd -P)"
-git -C "$worktree" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a git worktree: $worktree"; exit 2; }
-worktree="$(git -C "$worktree" rev-parse --show-toplevel)"
-worktree="$(cd "$worktree" && pwd -P)"
+requested_worktree="$worktree"
+worktree="$(personal_tutor_git_root "$worktree")" || {
+  echo "not a git worktree: $requested_worktree"
+  exit 2
+}
 repo_common="$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)"
 worktree_common="$(git -C "$worktree" rev-parse --path-format=absolute --git-common-dir)"
 [ "$(readlink -f "$repo_common")" = "$(readlink -f "$worktree_common")" ] || {
