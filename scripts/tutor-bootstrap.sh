@@ -136,8 +136,8 @@ skill_frontmatter_field() {
 declare -a declared=()
 declare -a overlay=()
 if [ -n "$MANIFEST" ] && [ -f "$MANIFEST" ]; then
-  while IFS= read -r s; do declared+=("$s"); done < <(read_yaml_list "include_skills" "$MANIFEST")
-  while IFS= read -r s; do overlay+=("$s"); done < <(read_yaml_list "requires_private_overlay" "$MANIFEST")
+  mapfile -t declared < <(read_yaml_list "include_skills" "$MANIFEST")
+  mapfile -t overlay < <(read_yaml_list "requires_private_overlay" "$MANIFEST")
 fi
 
 # Public skills to check/repair: include_skills + critical + any local gsd copies
