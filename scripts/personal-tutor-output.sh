@@ -79,7 +79,7 @@ if personal_tutor_path_is_within "$cache_base" "$repo"; then
   exit 2
 fi
 
-repo_id="$(printf '%s' "$repo" | sha256sum | cut -c1-16)"
+repo_id="$(personal_tutor_path_key "$repo")"
 repo_cache="$cache_base/$repo_id"
 [ ! -L "$repo_cache" ] || { echo "refusing symlinked repository cache: $repo_cache"; exit 2; }
 mkdir -p "$repo_cache"

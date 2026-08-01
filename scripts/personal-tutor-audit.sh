@@ -46,7 +46,7 @@ if personal_tutor_path_is_within "$lane_state_root" "$repo"; then
   echo "lane state cache must be outside the worktree"
   exit 2
 fi
-worktree_key="$(printf '%s' "$repo" | sha256sum | cut -c1-16)"
+worktree_key="$(personal_tutor_path_key "$repo")"
 lane_state="$lane_state_root/$worktree_key-$lane_id.json"
 [ -f "$lane_state" ] || { echo "missing pre-delegation baseline for lane: $lane_id"; exit 1; }
 changed_file="$(mktemp)"

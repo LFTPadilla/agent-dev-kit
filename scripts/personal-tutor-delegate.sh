@@ -95,7 +95,7 @@ if personal_tutor_path_is_within "$lane_state_root" "$worktree"; then
 fi
 mkdir -p "$lane_state_root"
 chmod 700 "$lane_state_root"
-worktree_key="$(printf '%s' "$worktree" | sha256sum | cut -c1-16)"
+worktree_key="$(personal_tutor_path_key "$worktree")"
 lane_state="$lane_state_root/$worktree_key-$lane_id.json"
 python3 - "$worktree" "$branch" "$lane_state" <<'PY'
 from pathlib import Path

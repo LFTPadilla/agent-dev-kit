@@ -74,7 +74,7 @@ if personal_tutor_path_is_within "$cache_root" "$repo"; then
   echo "graph cache must be outside the worktree: $cache_root"
   exit 2
 fi
-repo_key="$(printf '%s' "$repo" | sha256sum | cut -c1-16)"
+repo_key="$(personal_tutor_path_key "$repo")"
 cache_dir="$cache_root/$(basename "$repo")-$repo_key"
 [ ! -L "$cache_dir" ] || { echo "refusing symlinked repository graph cache: $cache_dir"; exit 2; }
 mkdir -p "$cache_dir"

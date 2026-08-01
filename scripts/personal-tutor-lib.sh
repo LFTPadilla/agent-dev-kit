@@ -40,6 +40,10 @@ personal_tutor_path_is_within() {
   esac
 }
 
+personal_tutor_path_key() {
+  printf '%s' "$1" | sha256sum | cut -c1-16
+}
+
 personal_tutor_prepare_tmux() {
   local uid runtime
   uid="$(id -u)"
