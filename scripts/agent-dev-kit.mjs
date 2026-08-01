@@ -128,13 +128,13 @@ function validateSkills(checks) {
   checks.push(ok(`${dirs.length} skill frontmatters checked`))
 }
 
-function validateJsonFiles(checks) {
-  for (const file of walkFiles(root).filter((f) => f.endsWith('.json'))) readJson(file, checks)
+function validateJsonFiles(checks, files) {
+  for (const file of files.filter((f) => f.endsWith('.json'))) readJson(file, checks)
   checks.push(ok('JSON files parse'))
 }
 
-function validateYamlFiles(checks) {
-  for (const file of walkFiles(root).filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))) {
+function validateYamlFiles(checks, files) {
+  for (const file of files.filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))) {
     const text = readFileSync(file, 'utf8')
     if (text.includes('\t')) checks.push(fail(`${rel(file)} contains tabs; use spaces in YAML`))
     if (!text.trim()) checks.push(fail(`${rel(file)} is empty`))
@@ -310,8 +310,8 @@ function validateEvals(checks) {
   checks.push(ok(`eval suite checked (${planted} planted, ${controls} controls)`))
 }
 
-function validateLinks(checks) {
-  const markdown = walkFiles(root).filter((f) => f.endsWith('.md'))
+function validateLinks(checks, files) {
+  const markdown = files.filter((f) => f.endsWith('.md'))
   const linkPattern = /\[[^\]]+\]\(([^)]+)\)/g
   for (const file of markdown) {
     const text = readFileSync(file, 'utf8')
@@ -327,9 +327,9 @@ function validateLinks(checks) {
   checks.push(ok('relative markdown links checked'))
 }
 
-function privacyScan(checks) {
+function privacyScan(checks, files) {
   const offenders = []
-  for (const file of walkFiles(root)) {
+  for (const file of files) {
     if (file.includes('plugins/dev-skills/skills/drawio-skill/data/lobe-icons.json')) continue
     if (!/\.(md|json|ya?ml|mjs|js|ts|tsx|sh)$/.test(file)) continue
     const text = readFileSync(file, 'utf8')
@@ -342,6 +342,7 @@ function privacyScan(checks) {
 
 function validate() {
   const checks = []
+  const files = walkFiles(root)
   for (const validator of [
     validateJsonFiles,
     validateYamlFiles,
@@ -355,7 +356,7 @@ function validate() {
     validateEvals,
     validateLinks,
     privacyScan
-  ]) validator(checks)
+  ]) validator(checks, files)
   return printChecks(checks)
 }
 
