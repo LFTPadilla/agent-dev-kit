@@ -298,11 +298,11 @@ for s in "${all_skills[@]}"; do
     continue
   fi
   [ "$MODE" = "repair" ] || continue
-  repair_skill "$s" || true
+  repair_skill "$s"
   # Re-check after repair: clear prior ok/broken entries for this name
   # so the final counts reflect post-repair reality.
   clear_skill_results "$s"
-  check_skill "$s" >/dev/null 2>&1 || true
+  check_skill "$s" >/dev/null 2>&1
 done
 
 # Overlay skills: missing is expected without a private overlay (not broken).
