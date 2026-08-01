@@ -102,42 +102,40 @@ restore_workhorse_signal_traps() {
   trap 'exit 143' TERM
 }
 
+rollback_managed_skill() {
+  local target="$1" backup="$2" was_absent="$3" remove_error="$4"
+  local absent_error="${5:-$remove_error}"
+  if [ -n "$backup" ] && [ -e "$backup" ]; then
+    if ! rm -rf "$target"; then
+      echo "$remove_error: $target" >&2
+      return 1
+    fi
+    if ! mv "$backup" "$target"; then
+      echo "CRITICAL: unable to restore managed skill backup: $backup" >&2
+      return 1
+    fi
+  elif [ "$was_absent" -eq 1 ] && ! rm -rf "$target"; then
+    echo "$absent_error: $target" >&2
+    return 1
+  fi
+  return 0
+}
+
 cleanup_managed_skill_refresh() {
   local status="${1:-0}" index target backup was_absent
   trap '' HUP INT TERM
   if [ "$REFRESH_ACTIVE" -eq 1 ]; then
-    if [ -n "$REFRESH_BACKUP" ] && [ -e "$REFRESH_BACKUP" ]; then
-      if ! rm -rf "$REFRESH_TARGET"; then
-        echo "CRITICAL: unable to remove partial managed skill: $REFRESH_TARGET" >&2
-        status=1
-      elif ! mv "$REFRESH_BACKUP" "$REFRESH_TARGET"; then
-        echo "CRITICAL: unable to restore managed skill backup: $REFRESH_BACKUP" >&2
-        status=1
-      fi
-    elif [ "$REFRESH_TARGET_WAS_ABSENT" -eq 1 ]; then
-      if ! rm -rf "$REFRESH_TARGET"; then
-        echo "CRITICAL: unable to remove partial managed skill: $REFRESH_TARGET" >&2
-        status=1
-      fi
-    fi
+    rollback_managed_skill "$REFRESH_TARGET" "$REFRESH_BACKUP" \
+      "$REFRESH_TARGET_WAS_ABSENT" "CRITICAL: unable to remove partial managed skill" || status=1
   fi
   if [ "$SKILLS_COMMITTED" -eq 0 ]; then
     for ((index=${#UPDATED_SKILL_TARGETS[@]} - 1; index >= 0; index--)); do
       target="${UPDATED_SKILL_TARGETS[$index]}"
       backup="${UPDATED_SKILL_BACKUPS[$index]}"
       was_absent="${UPDATED_SKILL_WAS_ABSENT[$index]}"
-      if [ -n "$backup" ] && [ -e "$backup" ]; then
-        if ! rm -rf "$target"; then
-          echo "CRITICAL: unable to remove updated managed skill: $target" >&2
-          status=1
-        elif ! mv "$backup" "$target"; then
-          echo "CRITICAL: unable to restore managed skill backup: $backup" >&2
-          status=1
-        fi
-      elif [ "$was_absent" -eq 1 ] && ! rm -rf "$target"; then
-        echo "CRITICAL: unable to roll back newly installed skill: $target" >&2
-        status=1
-      fi
+      rollback_managed_skill "$target" "$backup" "$was_absent" \
+        "CRITICAL: unable to remove updated managed skill" \
+        "CRITICAL: unable to roll back newly installed skill" || status=1
     done
   fi
   REFRESH_ACTIVE=0
