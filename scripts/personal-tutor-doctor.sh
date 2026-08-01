@@ -120,13 +120,16 @@ if context7_configured "$context7_config"; then
 else
   bad "Context7 is not enabled at the expected Hermes endpoint"
 fi
-context7_test=""
+context7_ok=0
 for context7_attempt in 1 2; do
   context7_test="$(hermes --profile "$PERSONAL_TUTOR_PROFILE" mcp test context7 2>&1 || true)"
-  if printf '%s\n' "$context7_test" | grep -q 'Tools discovered: 2'; then break; fi
+  if printf '%s\n' "$context7_test" | grep -q 'Tools discovered: 2'; then
+    context7_ok=1
+    break
+  fi
   [ "$context7_attempt" -eq 1 ] && sleep 1
 done
-if printf '%s\n' "$context7_test" | grep -q 'Tools discovered: 2'; then
+if [ "$context7_ok" -eq 1 ]; then
   ok "Hermes Context7 live discovery passes"
 else
   bad "Hermes Context7 live discovery fails after 2 attempts"
