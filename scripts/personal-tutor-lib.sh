@@ -17,6 +17,21 @@ personal_tutor_real_home() {
   printf '%s\n' "${HOME:?unable to resolve real user home}"
 }
 
+personal_tutor_git_root() {
+  local requested="${1:-}" root
+
+  if [ -z "$requested" ]; then
+    root="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
+    [ -n "$root" ] || return 1
+  else
+    root="$requested"
+  fi
+
+  git -C "$root" rev-parse --git-dir >/dev/null 2>&1 || return 2
+  root="$(git -C "$root" rev-parse --show-toplevel)" || return 2
+  (cd "$root" && pwd -P)
+}
+
 personal_tutor_prepare_tmux() {
   local uid runtime
   uid="$(id -u)"

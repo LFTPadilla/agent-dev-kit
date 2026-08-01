@@ -59,13 +59,15 @@ for trusted_tool in "$BWRAP_BIN" "$PYTHON_BIN"; do
   case "$trusted_tool" in /usr/*|/nix/store/*) ;; *) echo "untrusted host tool path: $trusted_tool"; exit 1 ;; esac
 done
 
-if [ -z "$repo" ]; then
-  repo="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
+requested_repo="$repo"
+if ! repo="$(personal_tutor_git_root "$repo")"; then
+  if [ -n "$requested_repo" ]; then
+    echo "not a Git repository: $requested_repo"
+  else
+    echo "unable to resolve a Git worktree; pass --repo"
+  fi
+  exit 2
 fi
-[ -n "$repo" ] || { echo "unable to resolve a Git worktree; pass --repo"; exit 2; }
-git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a Git repository: $repo"; exit 2; }
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
 
 git_entry="$repo/.git"
 [ -e "$git_entry" ] || { echo "Git metadata entry is missing: $git_entry"; exit 2; }

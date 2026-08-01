@@ -60,13 +60,15 @@ case "$kind" in standard|security) ;; *) echo "--kind must be standard or securi
 [[ "$head_lines" =~ ^[0-9]+$ ]] || { echo "--head must be a non-negative integer"; exit 2; }
 [[ "$tail_lines" =~ ^[0-9]+$ ]] || { echo "--tail must be a non-negative integer"; exit 2; }
 
-if [ -z "$repo" ]; then
-  repo="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
+requested_repo="$repo"
+if ! repo="$(personal_tutor_git_root "$repo")"; then
+  if [ -n "$requested_repo" ]; then
+    echo "not a Git repository: $requested_repo"
+  else
+    echo "unable to resolve a Git worktree; pass --repo"
+  fi
+  exit 2
 fi
-[ -n "$repo" ] || { echo "unable to resolve a Git worktree; pass --repo"; exit 2; }
-git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || { echo "not a Git repository: $repo"; exit 2; }
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
 
 cache_base="${PERSONAL_TUTOR_OUTPUT_CACHE_ROOT:-${XDG_CACHE_HOME:-$PERSONAL_TUTOR_USER_HOME/.cache}/personal-dev-tutor/command-output}"
 mkdir -p "$cache_base"

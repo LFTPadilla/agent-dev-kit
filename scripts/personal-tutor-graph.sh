@@ -54,15 +54,10 @@ graphify_version="$(personal_tutor_graphify --version 2>/dev/null | awk '{print 
   exit 1
 }
 
-if [ -z "$repo" ]; then
-  repo="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)"
-fi
-[ -n "$repo" ] && git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || {
+if ! repo="$(personal_tutor_git_root "$repo")"; then
   echo "repository/worktree unavailable; run from a Git worktree or pass --repo"
   exit 2
-}
-repo="$(git -C "$repo" rev-parse --show-toplevel)"
-repo="$(cd "$repo" && pwd -P)"
+fi
 
 umask 077
 cache_root="${PERSONAL_TUTOR_GRAPH_CACHE_ROOT:-${XDG_CACHE_HOME:-$PERSONAL_TUTOR_USER_HOME/.cache}/personal-dev-tutor/graphify}"
