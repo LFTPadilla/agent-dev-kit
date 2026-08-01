@@ -4,9 +4,10 @@ import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 import { parseDocument } from 'yaml'
 
-const root = path.resolve(new URL('..', import.meta.url).pathname)
+const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)))
 const claudePluginFile = path.join(root, 'plugins/dev-skills/.claude-plugin/plugin.json')
 const privatePatterns = [
   /(?<![A-Za-z0-9_$}])\/home\/(?!(?:example|user|runner|tutor)\b)[A-Za-z0-9._-]+/i,
@@ -65,6 +66,7 @@ function filesWithExtensions(files, extensions) {
 }
 
 function missingFields(value, fields) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return fields.slice()
   return fields.filter((field) => !(field in value))
 }
 

@@ -22,7 +22,7 @@ print_evidence_matches() {
   matches="$(grep -nEim "$limit" "$pattern" "$file" 2>/dev/null || true)"
   while IFS= read -r line; do
     [ -n "$line" ] || continue
-    line="$(printf '%s' "$line" | tr '\t' ' ' | cut -c1-220)"
+    line="$(printf '%s' "$line" | LC_ALL=C tr '\t' ' ' | LC_ALL=C tr -d '\000-\010\013\014\016-\037\177' | cut -c1-220)"
     printf '%s:%s\n' "${file#$root/}" "$line"
   done <<< "$matches"
 }

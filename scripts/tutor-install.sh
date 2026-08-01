@@ -49,9 +49,8 @@ fi
 
 # Default source: this script lives next to the agent-dev-kit repo's profiles/
 # and skills/. If --source is given, use that as the repo root.
-script_dir="$(cd "$(dirname "$0")" && pwd)"
 if [ -z "$SOURCE" ]; then
-  SOURCE="$(cd "$script_dir/.." && pwd)"
+  SOURCE="$(cd "$TUTOR_SCRIPT_DIR/.." && pwd)"
 fi
 
 [ -f "$SOURCE/profiles/agent-tutor-orchestrator.yml" ] || {

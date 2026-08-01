@@ -51,16 +51,20 @@ today="$(date +%Y-%m-%d)"
 
 prompt_required() {
   local initial_prompt="$1" retry_prompt="$2" value=""
-  read -r -p "$initial_prompt" value
-  while [ -z "$value" ]; do read -r -p "$retry_prompt" value; done
+  read -r -p "$initial_prompt" value || return 1
+  while [ -z "$value" ]; do
+    read -r -p "$retry_prompt" value || return 1
+  done
   printf '%s' "$value"
 }
 
 if [ -z "$description" ]; then
-  description="$(prompt_required "Description (English, no semicolons): " "Description: ")"
+  description="$(prompt_required "Description (English, no semicolons): " "Description: ")" \
+    || { echo "input cancelled (EOF)"; exit 0; }
 fi
 if [ -z "$duration" ]; then
-  duration="$(prompt_required "Duration (H:MM, e.g. 1:30): " "Duration: ")"
+  duration="$(prompt_required "Duration (H:MM, e.g. 1:30): " "Duration: ")" \
+    || { echo "input cancelled (EOF)"; exit 0; }
 fi
 
 # Sanity: reject inner semicolons
