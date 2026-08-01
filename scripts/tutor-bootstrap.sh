@@ -153,13 +153,11 @@ source_candidates() {
   # 1. Global ~/.hermes/skills/<name> and nested under known categories
   skill_paths_for_root "$USER_HOME/.hermes/skills" "$name"
   # 2. OTHER profiles only (not $PROFILE) — scan whatever exists locally
-  if [ -d "$USER_HOME/.hermes/profiles" ]; then
-    for pdir in "$USER_HOME/.hermes/profiles"/*/; do
-      [ -d "$pdir" ] || continue
-      [ "$(basename "$pdir")" = "$PROFILE" ] && continue
-      skill_paths_for_root "${pdir%/}/skills" "$name"
-    done
-  fi
+  for pdir in "$USER_HOME/.hermes/profiles"/*/; do
+    [ -d "$pdir" ] || continue
+    [ "$(basename "$pdir")" = "$PROFILE" ] && continue
+    skill_paths_for_root "${pdir%/}/skills" "$name"
+  done
 }
 
 check_skill() {
