@@ -36,7 +36,7 @@ function printChecks(checks) {
   for (const check of checks) {
     console.log(`${checkLabel(check.level)} ${check.msg}`)
     if (check.level === 'fail') failures++
-    if (check.level === 'warn') warnings++
+    else if (check.level === 'warn') warnings++
   }
   console.log(`\n${checks.length} checks: ${failures} failed, ${warnings} warnings`)
   return failures
