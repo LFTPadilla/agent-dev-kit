@@ -2,22 +2,22 @@
 # Install the pinned caveman + ponytail baseline for Hermes and expose it to profiles.
 set -euo pipefail
 
-if [ -n "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:+x}" ] ||
-   [ -n "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:+x}" ]; then
-  if [ -z "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:+x}" ] ||
-     [ -z "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:+x}" ]; then
-    echo "caveman source and SHA-256 overrides must be set together" >&2
-    exit 2
+validate_override_pair() {
+  local name="$1" source_override="$2" checksum_override="$3"
+  if [ -n "$source_override" ] || [ -n "$checksum_override" ]; then
+    if [ -z "$source_override" ] || [ -z "$checksum_override" ]; then
+      echo "$name source and SHA-256 overrides must be set together" >&2
+      exit 2
+    fi
   fi
-fi
-if [ -n "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:+x}" ] ||
-   [ -n "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:+x}" ]; then
-  if [ -z "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:+x}" ] ||
-     [ -z "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:+x}" ]; then
-    echo "ponytail source and SHA-256 overrides must be set together" >&2
-    exit 2
-  fi
-fi
+}
+
+validate_override_pair caveman \
+  "${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:-}" \
+  "${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:-}"
+validate_override_pair ponytail \
+  "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:-}" \
+  "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:-}"
 
 HERMES_ROOT="${AGENT_DEV_KIT_HERMES_HOME:-${HERMES_HOME:-${HOME:?HOME is required}/.hermes}}"
 CAVEMAN_SOURCE="${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:-https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.1/skills/caveman/SKILL.md}"
