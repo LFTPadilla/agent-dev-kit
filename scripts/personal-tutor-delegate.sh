@@ -145,9 +145,9 @@ if [ "$dry_run" -eq 0 ]; then
   if [ -z "$target" ]; then
     while IFS='|' read -r pane command path dead codex_home; do
       personal_tutor_is_live_codex_pane "$command" "$dead" "$codex_home" || continue
-      case "$path" in
-        "$worktree"|"$worktree"/*) target="$PERSONAL_TUTOR_SESSION:$pane"; break ;;
-      esac
+      personal_tutor_path_is_within "$path" "$worktree" || continue
+      target="$PERSONAL_TUTOR_SESSION:$pane"
+      break
     done < <(tmux list-panes -s -t "$PERSONAL_TUTOR_SESSION" -F '#{window_index}.#{pane_index}|#{pane_current_command}|#{pane_current_path}|#{pane_dead}|#{@personal_tutor_codex_home}')
   fi
   [ -n "$target" ] || { echo "no live Codex pane found for worktree '$worktree' in tmux session '$PERSONAL_TUTOR_SESSION'"; exit 1; }
@@ -158,10 +158,10 @@ if [ "$dry_run" -eq 0 ]; then
   pane_codex_home="$(tmux display-message -p -t "$target" '#{@personal_tutor_codex_home}')"
   [ "$pane_command" = codex ] && [ "$pane_dead" = 0 ] || { echo "target is not a live Codex pane: $target command=$pane_command dead=$pane_dead"; exit 1; }
   [ "$pane_codex_home" = "$PERSONAL_TUTOR_CODEX_HOME" ] || { echo "target is not an isolated Personal Tutor Codex pane: $target"; exit 1; }
-  case "$pane_path" in
-    "$worktree"|"$worktree"/*) ;;
-    *) echo "target is not attached to worktree: $target path=$pane_path expected=$worktree"; exit 1 ;;
-  esac
+  personal_tutor_path_is_within "$pane_path" "$worktree" || {
+    echo "target is not attached to worktree: $target path=$pane_path expected=$worktree"
+    exit 1
+  }
 fi
 
 prompt_file="$(mktemp "${TMPDIR:-/tmp}/personal-dev-tutor-${lane_id}.XXXXXX.md")"
