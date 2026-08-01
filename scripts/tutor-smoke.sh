@@ -113,13 +113,12 @@ for baseline_skill in caveman ponytail; do
   check "Hermes baseline skill: $baseline_skill" \
     "[ -f '$baseline_global/SKILL.md' ] && [ -L '$baseline_profile' ] && [ \"\$(readlink -f '$baseline_profile')\" = \"\$(readlink -f '$baseline_global')\" ]"
 done
-check_required_skill ai-workflow-orchestrator
 if [ -L "$SKILLS_DIR/worklog" ] || [ -f "$SKILLS_DIR/worklog/SKILL.md" ]; then
   printf '  OK   worklog available\n'; pass=$((pass+1))
 else
   printf '  FAIL worklog not found\n'; fail=$((fail+1)); failures+=("worklog")
 fi
-for required_skill in delegating-to-tmux-claude kanban-orchestrator kanban-worker; do
+for required_skill in ai-workflow-orchestrator delegating-to-tmux-claude kanban-orchestrator kanban-worker; do
   check_required_skill "$required_skill"
 done
 
