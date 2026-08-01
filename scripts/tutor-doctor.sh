@@ -13,17 +13,18 @@ SCRIPT_DIR="$(cd "$(dirname "$SELF_PATH")" && pwd)"
 echo "==> Agent Tutor Orchestrator doctor"
 echo
 
-if [ -x "$SCRIPT_DIR/tutor-status.sh" ]; then
-  echo "-- status --"
-  "$SCRIPT_DIR/tutor-status.sh" || true
-  echo
-fi
+run_optional_check() {
+  local script="$1" label="$2"
+  shift 2
+  if [ -x "$SCRIPT_DIR/$script" ]; then
+    echo "-- $label --"
+    "$SCRIPT_DIR/$script" "$@" || true
+    echo
+  fi
+}
 
-if [ -x "$SCRIPT_DIR/tutor-bootstrap.sh" ]; then
-  echo "-- bootstrap --check --"
-  "$SCRIPT_DIR/tutor-bootstrap.sh" --check || true
-  echo
-fi
+run_optional_check tutor-status status
+run_optional_check tutor-bootstrap "bootstrap --check" --check
 
 echo "-- smoke --"
 exec "$SCRIPT_DIR/tutor-smoke.sh"
