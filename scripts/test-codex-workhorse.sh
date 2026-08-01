@@ -10,15 +10,20 @@ mkdir -p "$HOME"
 
 HOME="$HOME" bash "$ROOT/sync.sh" >/dev/null
 
+assert_skill_link() {
+  local target="$1" source="$2" label="$3" name="$4"
+  [ -L "$target" ] || { echo "missing $label skill link: $name"; exit 1; }
+  [ "$(readlink -f "$target")" = "$(readlink -f "$source")" ] || {
+    echo "incorrect $label skill link: $name"
+    exit 1
+  }
+}
+
 expected=0
 for skill in "$ROOT"/plugins/dev-skills/skills/*/; do
   name="$(basename "$skill")"
   target="$HOME/.agents/skills/$name"
-  [ -L "$target" ] || { echo "missing Codex skill link: $name"; exit 1; }
-  [ "$(readlink -f "$target")" = "$(readlink -f "${skill%/}")" ] || {
-    echo "incorrect Codex skill link: $name"
-    exit 1
-  }
+  assert_skill_link "$target" "${skill%/}" Codex "$name"
   expected=$((expected + 1))
 done
 
@@ -110,11 +115,7 @@ HOME="$OVERNIGHT_HOME" bash "$ROOT/overnight-task-kit/install.sh" >/dev/null
 for skill in overnight-task multi-harness; do
   OVERNIGHT_SOURCE="$ROOT/overnight-task-kit/skills/$skill"
   CODEX_TARGET="$OVERNIGHT_HOME/.agents/skills/$skill"
-  [ -L "$CODEX_TARGET" ] || { echo "missing overnight Codex skill link: $skill"; exit 1; }
-  [ "$(readlink -f "$CODEX_TARGET")" = "$(readlink -f "$OVERNIGHT_SOURCE")" ] || {
-    echo "incorrect overnight Codex skill link: $skill"
-    exit 1
-  }
+  assert_skill_link "$CODEX_TARGET" "$OVERNIGHT_SOURCE" "overnight Codex" "$skill"
   [ -L "$OVERNIGHT_HOME/.claude/skills/$skill" ] || {
     echo "missing overnight Claude skill link: $skill"
     exit 1
