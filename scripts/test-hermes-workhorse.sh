@@ -86,6 +86,18 @@ export HERMES_TEST_LOG="$FIXTURE/hermes.log"
 export AGENT_DEV_KIT_HERMES_HOME="$HERMES_HOME"
 export PATH="$FAKE_BIN:$PATH"
 
+wait_for_refresh_marker() {
+  local marker="$1" pid="$2" failure_message="$3"
+  for _ in $(seq 1 200); do
+    [ -e "$marker" ] && return 0
+    sleep 0.05
+  done
+  kill "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  echo "FAIL $failure_message"
+  exit 1
+}
+
 fixture_skill_sha() {
   local name="$1" source="$2"
   printf '%s\n' '---' "name: $name" 'description: test fixture' \
@@ -389,16 +401,8 @@ HERMES_TEST_BLOCK_SOURCE="$concurrent_caveman_source" \
   AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$default_ponytail_sha" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>&1 &
 concurrent_pid=$!
-for _ in $(seq 1 200); do
-  [ -e "$block_started" ] && break
-  sleep 0.05
-done
-if [ ! -e "$block_started" ]; then
-  kill "$concurrent_pid" 2>/dev/null || true
-  wait "$concurrent_pid" 2>/dev/null || true
-  echo "FAIL concurrent refresh fixture did not reach the critical section"
-  exit 1
-fi
+wait_for_refresh_marker "$block_started" "$concurrent_pid" \
+  "concurrent refresh fixture did not reach the critical section"
 if AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$concurrent_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$concurrent_caveman_source")" \
   AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$default_ponytail_source" \
@@ -434,16 +438,8 @@ HERMES_TEST_BLOCK_SOURCE="$bundle_ponytail_source" \
   AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256="$(fixture_skill_sha ponytail "$bundle_ponytail_source")" \
   "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null 2>&1 &
 bundle_pid=$!
-for _ in $(seq 1 200); do
-  [ -e "$bundle_started" ] && break
-  sleep 0.05
-done
-if [ ! -e "$bundle_started" ]; then
-  kill "$bundle_pid" 2>/dev/null || true
-  wait "$bundle_pid" 2>/dev/null || true
-  echo "FAIL bundle refresh fixture did not reach the second skill"
-  exit 1
-fi
+wait_for_refresh_marker "$bundle_started" "$bundle_pid" \
+  "bundle refresh fixture did not reach the second skill"
 if AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE="$competing_caveman_source" \
   AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256="$(fixture_skill_sha caveman "$competing_caveman_source")" \
   AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE="$bundle_ponytail_source" \
