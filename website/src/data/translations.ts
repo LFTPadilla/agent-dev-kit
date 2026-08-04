@@ -119,13 +119,15 @@ export const TRANSLATIONS = {
       labelNum: '04',
       labelTitle: 'Evaluación y Calidad',
       title: 'Laboratorio de PR-Review Adversarial.',
-      intro: 'Comprueba el pipeline de auditoría de Pull Requests con 4 lentes de verificación y tasa de falsos positivos del 0.0%.'
+      intro: '15 casos reales evaluados (12 escenarios de prueba con fallos reales + 3 controles de código seguro). Medido en precisión de detección (recall) y tasa de falsos positivos.'
     },
     tutor: {
       labelNum: '05',
       labelTitle: 'Perfil Tutor Socrático',
       title: 'Personal Dev Tutor.',
-      intro: 'Simula la interacción con un tutor socrático que te guía en el desarrollo sin editar código a tus espaldas.'
+      intro: 'Tutoría Socrática + Orquestación en tmux: Te guía paso a paso mediante preguntas para afianzar el aprendizaje sin editar código a tus espaldas.',
+      termTitle: 'Tutoría Socrática',
+      termClickHint: 'Haz clic para ver la definición'
     },
     setup: {
       labelNum: '06',
@@ -258,13 +260,15 @@ export const TRANSLATIONS = {
       labelNum: '04',
       labelTitle: 'Evaluation & Quality',
       title: 'Adversarial PR-Review Lab.',
-      intro: 'Inspect the 4-lens Pull Request audit pipeline with 0.0% false positive rate verification.'
+      intro: '15 real-world evaluation cases (12 test scenarios with real defects + 3 clean control cases). Measured by detection recall and false-positive rate.'
     },
     tutor: {
       labelNum: '05',
       labelTitle: 'Socratic Tutor Profile',
       title: 'Personal Dev Tutor.',
-      intro: 'Simulate interaction with a Socratic tutor that guides your development without modifying code behind your back.'
+      intro: 'Socratic Tutoring + Tmux Orchestration: Guides you step-by-step through interactive questions without writing code behind your back.',
+      termTitle: 'Socratic Tutoring',
+      termClickHint: 'Click to see definition'
     },
     setup: {
       labelNum: '06',
