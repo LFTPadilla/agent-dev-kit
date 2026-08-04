@@ -82,26 +82,26 @@ export function App() {
           <>
             <HeroSection setActiveTab={setActiveTab} language={language} />
             <TerminalSimulator language={language} />
-            <ArchitectureExplorer />
+            <ArchitectureExplorer language={language} />
             <SkillCatalogExplorer language={language} />
-            <PrReviewEvalLab />
-            <PersonalTutorSim />
-            <TierSetupWizard />
+            <PrReviewEvalLab language={language} />
+            <PersonalTutorSim language={language} />
+            <TierSetupWizard language={language} />
           </>
         )}
 
-        {activeTab === 'architecture' && <ArchitectureExplorer />}
+        {activeTab === 'architecture' && <ArchitectureExplorer language={language} />}
 
         {activeTab === 'skills' && <SkillCatalogExplorer language={language} />}
 
-        {activeTab === 'evals' && <PrReviewEvalLab />}
+        {activeTab === 'evals' && <PrReviewEvalLab language={language} />}
 
-        {activeTab === 'tutor' && <PersonalTutorSim />}
+        {activeTab === 'tutor' && <PersonalTutorSim language={language} />}
 
-        {activeTab === 'setup' && <TierSetupWizard />}
+        {activeTab === 'setup' && <TierSetupWizard language={language} />}
       </main>
 
-      <Footer />
+      <Footer language={language} />
     </div>
   );
 }

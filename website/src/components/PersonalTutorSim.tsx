@@ -1,60 +1,94 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
+import type { Language } from '../data/translations';
+import { TRANSLATIONS } from '../data/translations';
+
+interface ScenarioStep {
+  question: string;
+  questionEn: string;
+  hint: string;
+  hintEn: string;
+  answer: string;
+  answerEn: string;
+  explanation: string;
+  explanationEn: string;
+}
 
 interface Scenario {
   id: string;
   title: string;
+  titleEn: string;
   concept: string;
-  steps: {
-    question: string;
-    hint: string;
-    answer: string;
-    explanation: string;
-  }[];
+  conceptEn: string;
+  steps: ScenarioStep[];
 }
 
 const SCENARIOS: Scenario[] = [
   {
     id: 'spring-boot',
     title: 'Caso A: Rollback en Spring Boot @Transactional',
+    titleEn: 'Case A: Rollback in Spring Boot @Transactional',
     concept: 'Excepciones comprobadas vs no comprobadas en JPA',
+    conceptEn: 'Checked vs Unchecked Exceptions in JPA',
     steps: [
       {
         question: 'Si una función con `@Transactional` lanza una `Exception` estándar comprobada (Checked Exception), ¿la transacción hace rollback automático?',
+        questionEn: 'If a `@Transactional` function throws a standard Checked `Exception`, does the transaction automatically roll back?',
         hint: 'Piensa en la diferencia por defecto entre RuntimeException y Exception en Spring Framework.',
+        hintEn: 'Think about Spring Framework default behavior for RuntimeException vs Exception.',
         answer: 'No',
-        explanation: 'Por defecto, Spring solo hace rollback automático para `RuntimeException` y `Error`. Para excepciones comprobadas se requiere `@Transactional(rollbackFor = Exception.class)`.'
+        answerEn: 'No',
+        explanation: 'Por defecto, Spring solo hace rollback automático para `RuntimeException` y `Error`. Para excepciones comprobadas se requiere `@Transactional(rollbackFor = Exception.class)`.',
+        explanationEn: 'By default, Spring only rolls back automatically for `RuntimeException` and `Error`. Checked exceptions require `@Transactional(rollbackFor = Exception.class)`.'
       },
       {
         question: '¿Qué sucede si un método `@Transactional` es llamado internamente desde la misma clase (Self-invocation)?',
+        questionEn: 'What happens if a `@Transactional` method is called internally from within the same class (Self-invocation)?',
         hint: 'Recuerda que Spring AOP usa Dynamic Proxies.',
+        hintEn: 'Remember Spring AOP uses Dynamic Proxies.',
         answer: 'No se aplica el proxy',
-        explanation: 'El proxy de Spring AOP es bypass-eado en llamadas internas (`this.method()`), por lo que la transacción no se inicia a menos que se use AspectJ weaving directo.'
+        answerEn: 'Proxy bypassed',
+        explanation: 'El proxy de Spring AOP es bypass-eado en llamadas internas (`this.method()`), por lo que la transacción no se inicia a menos que se use AspectJ weaving directo.',
+        explanationEn: 'Spring AOP dynamic proxies are bypassed during internal calls (`this.method()`), so transactions do not start unless using AspectJ weaving.'
       }
     ]
   },
   {
     id: 'react-leak',
     title: 'Caso B: Memory Leak en useEffect Event Listener',
+    titleEn: 'Case B: Memory Leak in useEffect Event Listener',
     concept: 'Limpieza de Subscripciones y closures en React',
+    conceptEn: 'Subscription cleanup and closures in React',
     steps: [
       {
         question: '¿Por qué `window.addEventListener("resize", handleResize)` dentro de `useEffect` sin una función de retorno produce un Memory Leak?',
+        questionEn: 'Why does `window.addEventListener("resize", handleResize)` inside `useEffect` without a cleanup return function cause a memory leak?',
         hint: 'Analiza la acumulación de event listeners en cada re-render.',
+        hintEn: 'Analyze event listener accumulation on every re-render.',
         answer: 'Acumula listeners duplicados',
-        explanation: 'En cada re-render, se suscribe un nuevo listener a `window` sin remover el anterior, consumiendo memoria e invocando múltiples handlers en cascada.'
+        answerEn: 'Accumulates duplicate listeners',
+        explanation: 'En cada re-render, se suscribe un nuevo listener a `window` sin remover el anterior, consumiendo memoria e invocando múltiples handlers en cascada.',
+        explanationEn: 'On every re-render, a new listener is attached to `window` without removing the previous one, wasting memory and invoking duplicate handlers.'
       },
       {
         question: 'Si `handleResize` captura una variable de estado sin `useCallback` ni refs, ¿qué problema de closures ocurre?',
+        questionEn: 'If `handleResize` captures state without `useCallback` or refs, what closure issue occurs?',
         hint: 'Piensa en el "stale closure" de JavaScript.',
+        hintEn: 'Think about JavaScript "stale closure".',
         answer: 'Stale closure',
-        explanation: 'El listener guardará la referencia del estado en el instante que fue creado (Stale Closure), leyendo valores desactualizados en renders posteriores.'
+        answerEn: 'Stale closure',
+        explanation: 'El listener guardará la referencia del estado en el instante que fue creado (Stale Closure), leyendo valores desactualizados en renders posteriores.',
+        explanationEn: 'The listener retains the state reference from when it was created (Stale Closure), reading stale state values in future renders.'
       }
     ]
   }
 ];
 
-export const PersonalTutorSim: React.FC = () => {
+interface PersonalTutorSimProps {
+  language?: Language;
+}
+
+export const PersonalTutorSim: React.FC<PersonalTutorSimProps> = ({ language = 'en' }) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>('spring-boot');
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [userAnswer, setUserAnswer] = useState<string>('');
@@ -64,17 +98,24 @@ export const PersonalTutorSim: React.FC = () => {
 
   const scenario = SCENARIOS.find(s => s.id === selectedScenarioId) || SCENARIOS[0];
   const step = scenario.steps[currentStepIndex];
+  const t = TRANSLATIONS[language].tutor;
+  const isEn = language === 'en';
+
+  const currentStepQuestion = isEn ? step.questionEn : step.question;
+  const currentStepHint = isEn ? step.hintEn : step.hint;
+  const currentStepAnswer = isEn ? step.answerEn : step.answer;
+  const currentStepExplanation = isEn ? step.explanationEn : step.explanation;
 
   const handleAnswerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userAnswer.trim()) return;
 
-    const isMatch = userAnswer.toLowerCase().includes(step.answer.toLowerCase());
+    const isMatch = userAnswer.toLowerCase().includes(currentStepAnswer.toLowerCase()) || userAnswer.toLowerCase().includes(step.answer.toLowerCase());
 
     if (isMatch) {
       setFeedback({
         isCorrect: true,
-        text: `¡Correcto! ${step.explanation}`
+        text: isEn ? `Correct! ${currentStepExplanation}` : `¡Correcto! ${currentStepExplanation}`
       });
 
       if (currentStepIndex + 1 < scenario.steps.length) {
@@ -94,7 +135,7 @@ export const PersonalTutorSim: React.FC = () => {
     } else {
       setFeedback({
         isCorrect: false,
-        text: `Casi. Pista: ${step.hint}`
+        text: isEn ? `Close! Hint: ${currentStepHint}` : `Casi. Pista: ${currentStepHint}`
       });
     }
   };
@@ -111,11 +152,11 @@ export const PersonalTutorSim: React.FC = () => {
     <section style={{ marginBottom: '5rem' }} id="tutor">
       <header>
         <p className="section-label">
-          <span className="num">04</span>
+          <span className="num">{t.labelNum}</span>
           <span className="divider">⁄</span>
-          <span>Personal Dev Tutor</span>
+          <span>{t.labelTitle}</span>
         </p>
-        <h2 className="section-title">Personal Dev Tutor.</h2>
+        <h2 className="section-title">{t.title}</h2>
       </header>
 
       <p className="section-intro" style={{ position: 'relative' }}>
@@ -128,11 +169,11 @@ export const PersonalTutorSim: React.FC = () => {
             color: 'var(--accent)',
             transition: 'color 0.2s ease'
           }}
-          title="Haz clic para ver la definición"
+          title={t.termClickHint}
         >
-          Tutoría Socrática
+          {t.termTitle}
         </span>
-        {' '}+ Orquestación en tmux: No escribe código a tus espaldas. Te guía paso a paso mediante preguntas para afianzar el aprendizaje.
+        {' '}+ {isEn ? 'Tmux Orchestration: Does not write code behind your back. Guides you step-by-step through interactive questions to build real mastery.' : 'Orquestación en tmux: No escribe código a tus espaldas. Te guía paso a paso mediante preguntas para afianzar el aprendizaje.'}
 
         {showGlossary && (
           <>
@@ -171,7 +212,7 @@ export const PersonalTutorSim: React.FC = () => {
                   padding: '0.2rem 0.5rem',
                   borderRadius: '3px'
                 }}>
-                  Glosario
+                  {isEn ? 'Glossary' : 'Glosario'}
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowGlossary(false); }}
@@ -184,7 +225,7 @@ export const PersonalTutorSim: React.FC = () => {
                     lineHeight: 1,
                     padding: '0.2rem'
                   }}
-                  aria-label="Cerrar glosario"
+                  aria-label={isEn ? 'Close glossary' : 'Cerrar glosario'}
                 >
                   ✕
                 </button>
@@ -196,7 +237,7 @@ export const PersonalTutorSim: React.FC = () => {
                 marginBottom: '0.5rem',
                 color: 'var(--text-primary)'
               }}>
-                Tutoría Socrática
+                {t.termTitle}
               </h4>
               <p style={{
                 fontSize: '0.88rem',
@@ -204,11 +245,22 @@ export const PersonalTutorSim: React.FC = () => {
                 color: 'var(--text-secondary)',
                 margin: 0
               }}>
-                Método pedagógico basado en el <strong>diálogo mayéutico de Sócrates</strong>: el tutor nunca da la respuesta directamente.
-                En su lugar, formula preguntas progresivas que llevan al estudiante a descubrir la solución por sí mismo. En agent-dev-kit,
-                el <code style={{ background: 'var(--bg-subtle)', padding: '0.1rem 0.35rem', borderRadius: '3px', fontSize: '0.82rem' }}>
-                personal-dev-tutor</code> usa este enfoque para enseñar conceptos de programación: descompone el problema,
-                presenta pistas contextuales y valida cada respuesta antes de avanzar al siguiente checkpoint.
+                {isEn ? (
+                  <>
+                    A teaching method based on <strong>Socrates’ maieutic dialogue</strong>: the tutor never gives away the answer directly.
+                    Instead, it asks progressive questions that guide the student to discover solutions independently. In agent-dev-kit,
+                    the <code style={{ background: 'var(--bg-subtle)', padding: '0.1rem 0.35rem', borderRadius: '3px', fontSize: '0.82rem' }}>
+                    personal-dev-tutor</code> uses this approach to teach programming concepts: it breaks down problems, provides contextual hints, and verifies understanding before advancing to the next checkpoint.
+                  </>
+                ) : (
+                  <>
+                    Método pedagógico basado en el <strong>diálogo mayéutico de Sócrates</strong>: el tutor nunca da la respuesta directamente.
+                    En su lugar, formula preguntas progresivas que llevan al estudiante a descubrir la solución por sí mismo. En agent-dev-kit,
+                    el <code style={{ background: 'var(--bg-subtle)', padding: '0.1rem 0.35rem', borderRadius: '3px', fontSize: '0.82rem' }}>
+                    personal-dev-tutor</code> usa este enfoque para enseñar conceptos de programación: descompone el problema,
+                    presenta pistas contextuales y valida cada respuesta antes de avanzar al siguiente checkpoint.
+                  </>
+                )}
               </p>
             </div>
           </>
@@ -224,7 +276,7 @@ export const PersonalTutorSim: React.FC = () => {
             className={selectedScenarioId === sc.id ? 'hm-btn-primary' : 'hm-btn-secondary'}
             style={{ fontSize: '0.85rem' }}
           >
-            <span>{sc.title}</span>
+            <span>{isEn ? sc.titleEn : sc.title}</span>
           </button>
         ))}
       </div>
@@ -240,7 +292,7 @@ export const PersonalTutorSim: React.FC = () => {
               </span>
             </div>
             <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-              Paso {currentStepIndex + 1} / {scenario.steps.length}
+              {isEn ? 'Step' : 'Paso'} {currentStepIndex + 1} / {scenario.steps.length}
             </span>
           </div>
 
@@ -248,10 +300,10 @@ export const PersonalTutorSim: React.FC = () => {
             <div>
               <div style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '4px', border: '1px solid var(--border-color)', marginBottom: '1.2rem' }}>
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                  [TUTOR SOCRÁTICO · {scenario.concept}]
+                  [{isEn ? 'SOCRATIC TUTOR' : 'TUTOR SOCRÁTICO'} · {isEn ? scenario.conceptEn : scenario.concept}]
                 </p>
                 <p style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-                  {step.question}
+                  {currentStepQuestion}
                 </p>
               </div>
 
@@ -261,7 +313,7 @@ export const PersonalTutorSim: React.FC = () => {
                     type="text"
                     value={userAnswer}
                     onChange={(e) => setUserAnswer(e.target.value)}
-                    placeholder="Escribe tu respuesta corta..."
+                    placeholder={isEn ? 'Type your short answer...' : 'Escribe tu respuesta corta...'}
                     style={{
                       flex: 1,
                       padding: '0.6rem 0.9rem',
@@ -274,7 +326,7 @@ export const PersonalTutorSim: React.FC = () => {
                     }}
                   />
                   <button type="submit" className="hm-btn-primary" style={{ padding: '0.6rem 1.2rem' }}>
-                    <span>Responder</span>
+                    <span>{isEn ? 'Submit' : 'Responder'}</span>
                   </button>
                 </div>
               </form>
@@ -296,13 +348,17 @@ export const PersonalTutorSim: React.FC = () => {
             <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎉</div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', marginBottom: '0.5rem' }}>
-                ¡Lección Completada!
+                {isEn ? 'Lesson Completed!' : '¡Lección Completada!'}
               </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                Has completado la sesión Socrática de <strong>{scenario.title}</strong>. El tutor registrara tu progreso en <code>.planning/ROADMAP.md</code>.
+                {isEn ? (
+                  <>You have completed the Socratic session for <strong>{scenario.titleEn}</strong>. The tutor will record your learning in <code>.planning/ROADMAP.md</code>.</>
+                ) : (
+                  <>Has completado la sesión Socrática de <strong>{scenario.title}</strong>. El tutor registrará tu progreso en <code>.planning/ROADMAP.md</code>.</>
+                )}
               </p>
               <button onClick={() => resetScenario(selectedScenarioId)} className="hm-btn-secondary">
-                <span>Repetir Escenario</span>
+                <span>{isEn ? 'Repeat Scenario' : 'Repetir Escenario'}</span>
               </button>
             </div>
           )}
@@ -311,7 +367,7 @@ export const PersonalTutorSim: React.FC = () => {
         {/* Live File Tree & Session Specs */}
         <div className="hm-card">
           <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--accent)', marginBottom: '1rem' }}>
-            Estructura de Sesión (.planning & Context)
+            {isEn ? 'Session Tree (.planning & Context)' : 'Estructura de Sesión (.planning & Context)'}
           </h4>
 
           {/* Styled File Tree */}
@@ -338,10 +394,10 @@ export const PersonalTutorSim: React.FC = () => {
             {/* Tree items */}
             <div style={{ padding: '0.5rem 0' }}>
               {[
-                { icon: '📋', name: 'ROADMAP.md', desc: 'Objetivos y roadmap de aprendizaje', color: '#58a6ff' },
-                { icon: '⚡', name: 'STATE.md', desc: 'Estado actual de la sesión', color: '#3fb950' },
-                { icon: '✏️', name: 'TASK-01.md', desc: 'Checkpoint Socrático activo', color: '#d29922' },
-                { icon: '📁', name: 'LOGS/', desc: 'Transcripción untruncated (JSONL)', color: '#bc8cff', isDir: true },
+                { icon: '📋', name: 'ROADMAP.md', desc: isEn ? 'Learning goals & roadmap' : 'Objetivos y roadmap de aprendizaje', color: '#58a6ff' },
+                { icon: '⚡', name: 'STATE.md', desc: isEn ? 'Current session state' : 'Estado actual de la sesión', color: '#3fb950' },
+                { icon: '✏️', name: 'TASK-01.md', desc: isEn ? 'Active Socratic checkpoint' : 'Checkpoint Socrático activo', color: '#d29922' },
+                { icon: '📁', name: 'LOGS/', desc: isEn ? 'Untruncated transcript (JSONL)' : 'Transcripción untruncated (JSONL)', color: '#bc8cff', isDir: true },
               ].map((item, i, arr) => (
                 <div
                   key={item.name}
@@ -380,15 +436,15 @@ export const PersonalTutorSim: React.FC = () => {
           <table className="dna-table">
             <tbody>
               <tr>
-                <td className="dna-k">Perfil</td>
+                <td className="dna-k">{isEn ? 'Profile' : 'Perfil'}</td>
                 <td className="dna-v"><code>personal-dev-tutor</code></td>
               </tr>
               <tr>
-                <td className="dna-k">Ambiente</td>
-                <td className="dna-v">Sesión aislada tmux <code>tutor</code></td>
+                <td className="dna-k">{isEn ? 'Environment' : 'Ambiente'}</td>
+                <td className="dna-v">{isEn ? 'Isolated tmux session (tutor)' : 'Sesión aislada tmux tutor'}</td>
               </tr>
               <tr>
-                <td className="dna-k">Orquestador</td>
+                <td className="dna-k">{isEn ? 'Orchestrator' : 'Orquestador'}</td>
                 <td className="dna-v">GSD Metaprompting + Context7 Docs</td>
               </tr>
             </tbody>

@@ -3,22 +3,29 @@ export interface Skill {
   name: string;
   category: 'orchestration' | 'quality' | 'security' | 'documents' | 'qa' | 'search';
   description: string;
+  descriptionEn?: string;
   triggers: string[];
   examplePrompt: string;
+  examplePromptEn?: string;
   outputPreview: string;
   details: string;
+  detailsEn?: string;
 }
 
 export interface EvalCase {
   id: string;
   name: string;
+  nameEn?: string;
   type: 'planted_bug' | 'clean_control';
   category: string;
+  categoryEn?: string;
   description: string;
+  descriptionEn?: string;
   semgrepResult: 'MISSED' | 'CAUGHT' | 'PASS';
   prReviewResult: 'CAUGHT' | 'PASS';
   snippet: string;
   reason: string;
+  reasonEn?: string;
 }
 
 export interface SetupTier {
@@ -29,6 +36,25 @@ export interface SetupTier {
   requirements: string[];
   commands: string[];
   features: string[];
+}
+
+export function getSkillField(skill: Skill, field: 'description' | 'examplePrompt' | 'details', lang: 'es' | 'en'): string {
+  if (lang === 'en') {
+    if (field === 'description' && skill.descriptionEn) return skill.descriptionEn;
+    if (field === 'examplePrompt' && skill.examplePromptEn) return skill.examplePromptEn;
+    if (field === 'details' && skill.detailsEn) return skill.detailsEn;
+  }
+  return skill[field];
+}
+
+export function getEvalCaseField(caseItem: EvalCase, field: 'name' | 'category' | 'description' | 'reason', lang: 'es' | 'en'): string {
+  if (lang === 'en') {
+    if (field === 'name' && caseItem.nameEn) return caseItem.nameEn;
+    if (field === 'category' && caseItem.categoryEn) return caseItem.categoryEn;
+    if (field === 'description' && caseItem.descriptionEn) return caseItem.descriptionEn;
+    if (field === 'reason' && caseItem.reasonEn) return caseItem.reasonEn;
+  }
+  return caseItem[field];
 }
 
 export const REPO_STATS = {
@@ -51,11 +77,12 @@ export const ARCHITECTURE_LAYERS = [
     bgGradient: "linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(79, 70, 229, 0.05))",
     borderColor: "rgba(99, 102, 241, 0.4)",
     description: "Governs how the agent speaks, builds, and executes multi-step workflows.",
+    descriptionEs: "Gobierna cómo habla, construye y ejecuta flujos de trabajo el agente.",
     components: [
-      { name: "caveman", type: "Style", desc: "Concise, zero-fluff communication plugin." },
-      { name: "ponytail", type: "Build Directives", desc: "Strict architectural and visual quality standards." },
-      { name: "GSD (Get-Shit-Done)", type: "Workflow Engine", desc: "Plan ➔ Execute ➔ Verify lifecycle engine." },
-      { name: "dev-skills (22)", type: "Discrete Tools", desc: "Curated skills for QA, security, docs, and code quality." }
+      { name: "caveman", type: "Style", desc: "Concise, zero-fluff communication plugin.", descEs: "Plugin de comunicación concisa y directa sin adorno." },
+      { name: "ponytail", type: "Build Directives", desc: "Strict architectural and visual quality standards.", descEs: "Estándares estrictos de calidad visual y arquitectura." },
+      { name: "GSD (Get-Shit-Done)", type: "Workflow Engine", desc: "Plan ➔ Execute ➔ Verify lifecycle engine.", descEs: "Motor de ciclo de vida: Planifica ➔ Ejecuta ➔ Verifica." },
+      { name: "dev-skills (22)", type: "Discrete Tools", desc: "Curated skills for QA, security, docs, and code quality.", descEs: "22 habilidades curadas para QA, seguridad, docs y calidad." }
     ]
   },
   {
@@ -65,11 +92,12 @@ export const ARCHITECTURE_LAYERS = [
     bgGradient: "linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.05))",
     borderColor: "rgba(16, 185, 129, 0.4)",
     description: "Keeps the AI honest before code is merged into main.",
+    descriptionEs: "Mantiene al agente honesto antes de fusionar código en la rama principal.",
     components: [
-      { name: "/pr-review", type: "Adversarial PR Gate", desc: "Multi-lens audit with refuter panel to eliminate LLM false positives." },
-      { name: "semgrep", type: "Deterministic SAST", desc: "Fast baseline static security analysis." },
-      { name: "no-mistakes", type: "Ship Gate", desc: "Pre-merge safety check prohibiting unchecked errors." },
-      { name: "evals (15 cases)", type: "Benchmarking", desc: "Planted bug suite measuring recall and false-positive rate." }
+      { name: "/pr-review", type: "Adversarial PR Gate", desc: "Multi-lens audit with refuter panel to eliminate LLM false positives.", descEs: "Auditoría multilente con panel refutador para eliminar falsos positivos." },
+      { name: "semgrep", type: "Deterministic SAST", desc: "Fast baseline static security analysis.", descEs: "Análisis estático de seguridad determinista de alta velocidad." },
+      { name: "no-mistakes", type: "Ship Gate", desc: "Pre-merge safety check prohibiting unchecked errors.", descEs: "Verificación de seguridad previa al merge sin errores ignorados." },
+      { name: "evals (15 cases)", type: "Benchmarking", desc: "Planted bug suite measuring recall and false-positive rate.", descEs: "Suite de 15 casos para medir recall y falsos positivos." }
     ]
   },
   {
@@ -79,11 +107,12 @@ export const ARCHITECTURE_LAYERS = [
     bgGradient: "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(147, 51, 234, 0.05))",
     borderColor: "rgba(168, 85, 247, 0.4)",
     description: "Manages long runs, Socratic teaching, and worktree isolation.",
+    descriptionEs: "Gestiona ejecuciones largas, aprendizaje Socrático y aislamiento en worktrees.",
     components: [
-      { name: "Personal Dev Tutor", type: "Flagship Orchestrator", desc: "GSD + Codex workers in tmux + Socratic learning checkpoints." },
-      { name: "Agent Tutor Orchestrator", type: "Pure Orchestrator", desc: "Strict orchestrator that delegates and never edits code directly." },
-      { name: "treehouse", type: "Worktree Isolation", desc: "Parallel agent worktree manager preventing git branch collisions." },
-      { name: "gnhf / overnight-task-kit", type: "Autonomy Loop", desc: "Unsupervised multi-hour task execution runner." }
+      { name: "Personal Dev Tutor", type: "Flagship Orchestrator", desc: "GSD + Codex workers in tmux + Socratic learning checkpoints.", descEs: "GSD + workers en tmux + comprobaciones de aprendizaje Socrático." },
+      { name: "Agent Tutor Orchestrator", type: "Pure Orchestrator", desc: "Strict orchestrator that delegates and never edits code directly.", descEs: "Orquestador estricto que delega y nunca edita código directamente." },
+      { name: "treehouse", type: "Worktree Isolation", desc: "Parallel agent worktree manager preventing git branch collisions.", descEs: "Gestor de worktrees paralelos para evitar colisiones en git." },
+      { name: "gnhf / overnight-task-kit", type: "Autonomy Loop", desc: "Unsupervised multi-hour task execution runner.", descEs: "Ejecutor de tareas autónomas de múltiples horas sin supervisión." }
     ]
   }
 ];
@@ -93,40 +122,49 @@ export const SKILLS_CATALOG: Skill[] = [
     id: "personal-development-mentor",
     name: "personal-development-mentor",
     category: "orchestration",
-    description: "Flagship GSD + Codex tutor-orchestrator with bounded implementation, independent verification, and cognitive-debt checkpoints.",
+    description: "Flagship GSD + Codex tutor-orchestrator con implementación acotada, verificación independiente y checkpoints socráticos.",
+    descriptionEn: "Flagship GSD + Codex tutor-orchestrator with bounded implementation, independent verification, and socratic checkpoints.",
     triggers: ["personal project", "portfolio project", "learning code", "interview prep", "explain architecture"],
     examplePrompt: "Ayúdame a construir una API en Spring Boot mientras aprendo los conceptos clave de JPA y DTOs.",
+    examplePromptEn: "Help me build a Spring Boot API while learning key JPA and DTO concepts step-by-step.",
     outputPreview: `[GSD Plan] Phase 1: Entity & Repository setup
 [Codex Lane] Implemented UserEntity.java and UserRepository.java in tmux session 'personal'
 [Learning Gate Checkpoint] 
 Question: ¿Por qué usamos @Transactional en los métodos de servicio y qué diferencia hay con la propagación REQUIRES_NEW?`,
-    details: "Combina la metodología GSD con workers aislados en Codex dentro de tmux, lectura de AST con Graphify, documentación fresca con Context7 y un diario de aprendizaje duradero."
+    details: "Combina la metodología GSD con workers aislados en Codex dentro de tmux, lectura de AST con Graphify, documentación fresca con Context7 y un diario de aprendizaje duradero.",
+    detailsEn: "Combines GSD methodology with isolated Codex workers inside tmux, AST analysis with Graphify, fresh docs with Context7, and a persistent learning log."
   },
   {
     id: "orchestrate",
     name: "orchestrate",
     category: "orchestration",
     description: "Modo explicit planner/orchestrator: descompone el trabajo, delega a modelos o workers más económicos y verifica de forma independiente.",
+    descriptionEn: "Explicit planner/orchestrator mode: decomposes work, delegates to cost-effective workers, and independently verifies output.",
     triggers: ["$orchestrate", "orchestrate", "delegate to subagents", "use cheaper models"],
     examplePrompt: "Orchestrate: Descompone la migración de la base de datos y asigna las tareas de migración y tests.",
+    examplePromptEn: "Orchestrate: Decompose database migration and assign migration & test tasks.",
     outputPreview: `[Orchestrator] Task breakdown created.
 Worker 1 (Codex/Flash): Generating SQL migration script
 Worker 2 (Codex/Flash): Updating entity definitions
 Verification: Running integration tests independently... PASS`,
-    details: "Mantiene el modelo más inteligente concentrado en el juicio y planificación, delegando tareas repetitivas a ejecuciones paralelas baratas."
+    details: "Mantiene el modelo más inteligente concentrado en el juicio y planificación, delegando tareas repetitivas a ejecuciones paralelas baratas.",
+    detailsEn: "Keeps the primary model focused on planning while delegating routine tasks to cheap parallel executions."
   },
   {
     id: "ai-workflow-orchestrator",
     name: "ai-workflow-orchestrator",
     category: "orchestration",
     description: "Perfil Agent Tutor Orchestrator puro: mantiene el panorama general, encauza en paneles tmux de Claude o Kanban Hermes. Nunca edita directamente.",
+    descriptionEn: "Pure Agent Tutor Orchestrator profile: maintains overview, directs Claude tmux panes or Hermes Kanban. Never edits code directly.",
     triggers: ["ai-workflow-orchestrator", "pure orchestrator", "Hermes kanban"],
     examplePrompt: "Usa ai-workflow-orchestrator para coordinar la refactorización sin tocar el código directamente.",
+    examplePromptEn: "Use ai-workflow-orchestrator to coordinate refactoring without editing code directly.",
     outputPreview: `[Agent Tutor Orchestrator] Board updated.
 Pane 1: Refactoring auth.ts (Claude)
 Pane 2: Updating test suite (Hermes)
 Audit on disk: Checking git diff... CLEAN`,
-    details: "Diseñado para usuarios que desean un orquestador estricto que solo audite y organice el tablero de trabajo."
+    details: "Diseñado para usuarios que desean un orquestador estricto que solo audite y organice el tablero de trabajo.",
+    detailsEn: "Designed for users who want a strict orchestrator that only audits and manages the work board."
   },
   {
     id: "live-qa",
@@ -350,53 +388,69 @@ Summary: Technical specification of REST endpoints for user authentication and b
 export const EVAL_CASES: EvalCase[] = [
   {
     id: "eval-01",
-    name: "Case 01: Custom DB Query SQL Sink",
+    name: "Caso 01: Inyección SQL en filtro de búsqueda",
+    nameEn: "Case 01: SQL Injection in Search Input",
     type: "planted_bug",
-    category: "SQL Injection",
-    description: "Custom `db.query` method with string concatenation instead of parameterized queries.",
+    category: "Inyección SQL",
+    categoryEn: "SQL Injection",
+    description: "Método de búsqueda personalizado que concatena entrada de usuario en la consulta SQL sin parametrizar.",
+    descriptionEn: "Custom search method concatenating untrusted user input directly into SQL query string.",
     semgrepResult: "MISSED",
     prReviewResult: "CAUGHT",
-    snippet: `// Untrusted req.body.userIn put directly formatted
+    snippet: `// Entrada no sanitizada req.body.user concatenada directamente en la consulta
 const query = \`SELECT * FROM users WHERE username = '\${req.body.user}'\`;
 await db.rawQuery(query);`,
-    reason: "Semgrep misses custom wrapper `db.rawQuery` because it isn't in default SAST rulesets. /pr-review traces the untrusted input sink across layers."
+    reason: "Semgrep omite el método personalizado db.rawQuery. /pr-review rastrea el flujo de datos no confiable.",
+    reasonEn: "Semgrep misses custom wrapper db.rawQuery. /pr-review traces untrusted data flow across functions."
   },
   {
     id: "eval-02",
-    name: "Case 02: Loose Regex Auth Bypass",
+    name: "Caso 02: Autenticación permisiva (Bypass de Regex)",
+    nameEn: "Case 02: Weak Login Validation (Auth Bypass)",
     type: "planted_bug",
-    category: "Authentication",
-    description: "Regex checking admin domain lacks end anchor `$`, allowing attacker.domain.com.admin.org.",
+    category: "Autenticación",
+    categoryEn: "Authentication",
+    description: "Expresión regular de verificación de dominio sin ancla $, permitiendo dominios no autorizados como attacker.domain.com.admin.org.",
+    descriptionEn: "Domain validation regex missing end anchor $, allowing unauthorized domains like attacker.domain.com.admin.org.",
     semgrepResult: "MISSED",
     prReviewResult: "CAUGHT",
     snippet: `if (/admin.company.com/.test(userEmail)) {
   grantAdminPrivileges();
 }`,
-    reason: "Static SAST doesn't flag unanchored domain regexes by default. /pr-review evaluates domain validation logic."
+    reason: "El análisis SAST no marca regexes sin ancla por defecto. /pr-review evalúa la lógica de autenticación.",
+    reasonEn: "Static SAST doesn't flag unanchored regexes by default. /pr-review evaluates authentication logic."
   },
   {
     id: "eval-03",
-    name: "Case 03: Floating Point Currency Calculation",
+    name: "Caso 03: Error de cálculo de precio en compras",
+    nameEn: "Case 03: Price Rounding Error in Billing",
     type: "planted_bug",
-    category: "Precision Error",
-    description: "Floating point math used in billing calculation leading to off-by-cent rounding.",
+    category: "Error de Precisión",
+    categoryEn: "Precision Error",
+    description: "Uso de aritmética de coma flotante en cálculos financieros que causa errores de redondeo de centavos.",
+    descriptionEn: "Floating point math used in billing calculation causing off-by-cent rounding errors.",
     semgrepResult: "MISSED",
     prReviewResult: "CAUGHT",
     snippet: `const total = items.reduce((acc, item) => acc + item.price * 0.15, 0);`,
-    reason: "Semgrep considers float arithmetic standard. /pr-review flags currency precision violations."
+    reason: "Semgrep considera estándar la aritmética de flotantes. /pr-review señala violaciones de precisión financiera.",
+    reasonEn: "Semgrep considers float math standard. /pr-review flags currency precision violations."
   },
   {
     id: "eval-04",
-    name: "Case 04: Control Case - Safe Parameterized Query",
+    name: "Caso 04: Caso Control - Consulta Segura Parametrizada",
+    nameEn: "Case 04: Control Case - Safe Parameterized Query",
     type: "clean_control",
-    category: "Database",
-    description: "Clean control case with proper ORM parameterization.",
+    category: "Código Seguro",
+    categoryEn: "Safe Code",
+    description: "Caso de código limpio con parametrización ORM correcta para verificar que no haya falsos positivos.",
+    descriptionEn: "Clean code baseline with proper ORM parameterization verifying 0% false positives.",
     semgrepResult: "PASS",
     prReviewResult: "PASS",
     snippet: `const user = await prisma.user.findUnique({
   where: { id: req.params.userId }
 });`,
-    reason: "Both tools correctly report zero false positives on clean code."
+    reason: "Ambas herramientas reportan correctamente 0 falsos positivos en código limpio.",
+    reasonEn: "Both tools correctly report zero false positives on clean code."
   }
 ];
 
