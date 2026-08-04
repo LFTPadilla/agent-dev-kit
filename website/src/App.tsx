@@ -11,14 +11,60 @@ import { TierSetupWizard } from './components/TierSetupWizard';
 import { Footer } from './components/Footer';
 import type { Language } from './data/translations';
 
+function getInitialTheme(): string {
+  const savedTheme = localStorage.getItem('agent-dev-kit-theme');
+  if (savedTheme) {
+    return savedTheme;
+  }
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return prefersDark ? 'brutal-dark' : 'brutal-light';
+}
+
+function getInitialLanguage(): Language {
+  const savedLang = localStorage.getItem('agent-dev-kit-lang') as Language | null;
+  if (savedLang === 'es' || savedLang === 'en') {
+    return savedLang;
+  }
+  return 'en';
+}
+
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('overview');
-  const [currentTheme, setCurrentTheme] = useState<string>('brutal-dark');
-  const [language, setLanguage] = useState<Language>('es');
+  const [currentTheme, setCurrentTheme] = useState<string>(getInitialTheme);
+  const [language, setLanguage] = useState<Language>(getInitialLanguage);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', currentTheme);
   }, [currentTheme]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('lang', language);
+  }, [language]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      const savedTheme = localStorage.getItem('agent-dev-kit-theme');
+      if (!savedTheme) {
+        setCurrentTheme(e.matches ? 'brutal-dark' : 'brutal-light');
+      }
+    };
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleSystemThemeChange);
+      return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    }
+  }, []);
+
+  const handleSetTheme = (newTheme: string) => {
+    setCurrentTheme(newTheme);
+    localStorage.setItem('agent-dev-kit-theme', newTheme);
+  };
+
+  const handleSetLanguage = (newLang: Language) => {
+    setLanguage(newLang);
+    localStorage.setItem('agent-dev-kit-lang', newLang);
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -26,9 +72,9 @@ export function App() {
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
         currentTheme={currentTheme}
-        setTheme={setCurrentTheme}
+        setTheme={handleSetTheme}
         language={language}
-        setLanguage={setLanguage}
+        setLanguage={handleSetLanguage}
       />
 
       <main className="page-container" style={{ flex: 1 }}>
