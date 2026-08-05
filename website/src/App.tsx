@@ -90,6 +90,8 @@ export function App() {
           </>
         )}
 
+        {activeTab === 'terminal' && <TerminalSimulator language={language} />}
+
         {activeTab === 'architecture' && <ArchitectureExplorer language={language} />}
 
         {activeTab === 'skills' && <SkillCatalogExplorer language={language} />}
