@@ -71,6 +71,17 @@
 | `web-browse` | Real-browser navigation/scrape for dynamic sites | "browse to", "extract from this site" |
 | `human-writing-style` | Direct, human prose (bans filler/AI-isms) | writing docs/messages |
 
+### Optional Design & 3D (Anti-Slop & Interactive UI)
+
+| Skill | Adds | Triggers on / Install |
+|---|---|---|
+| `hallmark` | Anti-AI-slop design skill for greenfield pages, audits, redesigns, and DNA extraction | `npx skills add nutlope/hallmark` · "build landing page", "redesign", "study" |
+| `taste-skill` | Anti-slop frontend framework for AI agents with good design taste | `npx skills add Leonxlnx/taste-skill` · "design taste", "anti-slop frontend" |
+| `impeccable` | 64 patterns exposing AI slop and production defects with 59 detector rules | `npx skills add pbakaus/impeccable` · "impeccable critique", "audit UI slop" |
+| `3d-web-experience` | WebGL / Three.js 3D interactive web experiences | `npx skills add sickn33/antigravity-awesome-skills@3d-web-experience` · "3D canvas", "Three.js" |
+| `lightweight-3d-effects` | Lightweight CSS 3D transforms, particle physics, and shader effects | `npx skills add freshtechbro/claudedesignskills@lightweight-3d-effects` · "3D tilt", "particles" |
+
+
 ## Commands
 
 | Command | Adds |
