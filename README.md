@@ -8,9 +8,10 @@
 ![Skills](https://img.shields.io/badge/skills-22-4f46e5)
 ![Runtimes](https://img.shields.io/badge/runtimes-5-f59e0b)
 ![Evals](https://img.shields.io/badge/evals-12%20planted%20%C2%B7%203%20controls-10b981)
+[![Live Website](https://img.shields.io/badge/live--demo-agent--dev--kit.devpipe.net-00d2ff)](https://agent-dev-kit.devpipe.net/)
 
 **Systems engineering for coding agents** — layered concerns, measurable gates,
-and honest boundaries. Clone once, run one script, and get a replicable
+and honest boundaries. Explore the interactive web platform at **[agent-dev-kit.devpipe.net](https://agent-dev-kit.devpipe.net/)**. Clone once, run one script, and get a replicable
 AI-augmented workflow: plan → build → review → ship → overnight.
 
 ## The whole stack, on one screen
@@ -114,6 +115,7 @@ Install tables: [docs/external-deps.md](docs/external-deps.md).
 ```
 agent-dev-kit/
 ├── .claude-plugin/marketplace.json   # this repo IS a Claude plugin marketplace
+├── website/                          # interactive showcase web application (agent-dev-kit.devpipe.net)
 ├── plugins/dev-skills/               # the bundled skills plugin
 │   ├── skills/<skill>/SKILL.md
 │   └── commands/pr-review.md         # multi-lens review + adversarial verify
