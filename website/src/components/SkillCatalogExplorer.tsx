@@ -104,6 +104,40 @@ export const SkillCatalogExplorer: React.FC<SkillCatalogExplorerProps> = ({ lang
             </button>
           ))}
         </div>
+
+        {/* Quick Tag Chips */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+            {language === 'es' ? 'Filtros rápidos:' : 'Quick tags:'}
+          </span>
+          {['pr-review', 'security', 'tmux', 'orchestrate', 'context7', 'no-mistakes', 'knip', 'playwright'].map((tag) => (
+            <button
+              key={tag}
+              onClick={() => {
+                if (searchTerm === tag) {
+                  setSearchTerm('');
+                } else {
+                  setSearchTerm(tag);
+                  setSelectedCategory('all');
+                }
+                setCurrentPage(1);
+              }}
+              style={{
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-mono)',
+                padding: '0.2rem 0.55rem',
+                borderRadius: '3px',
+                background: searchTerm === tag ? 'var(--accent)' : 'var(--bg-subtle)',
+                color: searchTerm === tag ? '#ffffff' : 'var(--text-secondary)',
+                border: '1px solid var(--border-color)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Skills Grid */}

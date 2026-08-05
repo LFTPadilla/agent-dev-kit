@@ -81,6 +81,35 @@ const SCENARIOS: Scenario[] = [
         explanationEn: 'The listener retains the state reference from when it was created (Stale Closure), reading stale state values in future renders.'
       }
     ]
+  },
+  {
+    id: 'postgres-n1',
+    title: 'Caso C: Consulta N+1 en ORM & PostgreSQL',
+    titleEn: 'Case C: N+1 Query Problem in ORM & PostgreSQL',
+    concept: 'Fetch Joins, Lazy Loading y Optimización de Consultas SQL',
+    conceptEn: 'Fetch Joins, Lazy Loading, and SQL Query Optimization',
+    steps: [
+      {
+        question: '¿Por qué iterar sobre una lista de 100 usuarios invocando `user.getOrders()` con Lazy Loading produce 101 consultas a la base de datos?',
+        questionEn: 'Why does iterating over 100 users calling `user.getOrders()` with Lazy Loading result in 101 database queries?',
+        hint: 'Piensa en la regla N + 1 (1 inicial + N por elemento).',
+        hintEn: 'Think about the N + 1 rule (1 initial + N per item).',
+        answer: 'N+1',
+        answerEn: 'N+1',
+        explanation: 'La consulta inicial obtiene los N usuarios (1 consulta) y luego cada iteración ejecuta una consulta individual adicional por usuario (N consultas).',
+        explanationEn: 'The initial query fetches N users (1 query), and each loop iteration triggers an extra individual query per user (N queries).'
+      },
+      {
+        question: '¿Cuál es la técnica de consulta SQL/ORM para traer usuarios y pedidos en un solo viaje de ida y vuelta (single round-trip)?',
+        questionEn: 'What SQL/ORM query technique fetches users and orders in a single round-trip?',
+        hint: 'Mención de JOIN FETCH o Eager loading.',
+        hintEn: 'Mention JOIN FETCH or Eager loading.',
+        answer: 'JOIN FETCH',
+        answerEn: 'JOIN FETCH',
+        explanation: 'Utilizar `JOIN FETCH` (o `.include()` en Prisma/Eager loading) combina las tablas en la consulta SQL base, reduciendo 101 consultas a solo 1.',
+        explanationEn: 'Using `JOIN FETCH` (or `.include()` in Prisma / Eager loading) joins tables in the primary SQL query, reducing 101 queries down to 1.'
+      }
+    ]
   }
 ];
 
