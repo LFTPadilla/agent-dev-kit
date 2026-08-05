@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { REPO_STATS } from '../data/repoData';
 import { TRANSLATIONS } from '../data/translations';
 import type { Language } from '../data/translations';
+import { Copy, Check, Terminal } from 'lucide-react';
 
 interface HeroSectionProps {
   setActiveTab: (tab: string) => void;
@@ -9,7 +10,16 @@ interface HeroSectionProps {
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ setActiveTab, language }) => {
+  const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
   const t = TRANSLATIONS[language].hero;
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCmd(text);
+    setTimeout(() => setCopiedCmd(null), 2000);
+  };
+
+  const installCmd = 'npx skills add LFTPadilla/agent-dev-kit';
 
   return (
     <section style={{ marginBottom: '4rem', paddingTop: '1rem' }}>
@@ -33,16 +43,54 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ setActiveTab, language
         {t.subtitle}
       </p>
 
-      {/* Interactive Prompt & Terminal Pills */}
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
-        <div className="hm-terminal-pill">
-          <span className="prompt-mark">$</span>
-          <span>git clone https://github.com/LFTPadilla/agent-dev-kit && ./bootstrap.sh</span>
+      {/* Quick 1-Liner Installer & Command Pills */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '2.5rem', maxWidth: '800px' }}>
+        <div 
+          onClick={() => copyToClipboard(installCmd)}
+          className="hm-card" 
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            cursor: 'pointer',
+            padding: '0.9rem 1.2rem',
+            background: 'var(--bg-surface)',
+            border: '1.5px solid var(--accent)',
+            borderRadius: '6px'
+          }}
+          title={language === 'es' ? 'Haz clic para copiar comando de instalación' : 'Click to copy installation command'}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', fontFamily: 'var(--font-mono)', fontSize: '0.92rem' }}>
+            <Terminal size={18} style={{ color: 'var(--accent)' }} />
+            <span style={{ color: 'var(--text-muted)' }}>$</span>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{installCmd}</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600 }}>
+            {copiedCmd === installCmd ? (
+              <>
+                <Check size={16} />
+                <span>{language === 'es' ? '¡Copiado!' : 'Copied!'}</span>
+              </>
+            ) : (
+              <>
+                <Copy size={16} />
+                <span>{language === 'es' ? 'Copiar Installer' : 'Copy Installer'}</span>
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="hm-terminal-pill" style={{ borderColor: 'var(--accent)' }}>
-          <span className="prompt-mark">$</span>
-          <span>/pr-review &lt;PR-URL&gt;</span>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="hm-terminal-pill">
+            <span className="prompt-mark">$</span>
+            <span>git clone https://github.com/LFTPadilla/agent-dev-kit && ./bootstrap.sh</span>
+          </div>
+
+          <div className="hm-terminal-pill" style={{ borderColor: 'var(--border-color)' }}>
+            <span className="prompt-mark">$</span>
+            <span>/pr-review &lt;PR-URL&gt;</span>
+          </div>
         </div>
       </div>
 
