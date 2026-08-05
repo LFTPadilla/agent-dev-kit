@@ -7,6 +7,7 @@ Start with the [stack diagram](diagrams/stack.svg) in the
 
 | Doc | Read it when |
 |---|---|
+| [https://agent-dev-kit.devpipe.net/](https://agent-dev-kit.devpipe.net/) | **Live Web Platform.** Interactive showcase, terminal simulator & 22-skills explorer |
 | [how-it-fits-together.md](how-it-fits-together.md) | You want the one map: runtimes → behavior → orchestration → gates |
 | [skills-catalog.md](skills-catalog.md) | You want to know what the 22 skills do and what triggers them |
 | [external-deps.md](external-deps.md) | You want install commands for everything not vendored here |
