@@ -279,7 +279,7 @@ Before loading any visual ruleset, **read the slim index at [`references/macrost
 
 If the previous output was Specimen (light · high-contrast-serif · warm), the next can be Studio (light · high-contrast-serif · chromatic-green) — the *accent hue* differs. But the next can't be Newsprint (light · roman-serif · warm) which only differs on display style and shares both paper band and accent — pick a more distant theme.
 
-The per-theme axis values live as comments at the top of each theme's tokens block in [`site/css/tokens.css`](../../site/css/tokens.css). When in doubt, name your candidate theme out loud and identify its three axis values; if two of three match the previous output, redirect.
+The per-theme axis values live as comments at the top of each theme's tokens block in `site/css/tokens.css`. When in doubt, name your candidate theme out loud and identify its three axis values; if two of three match the previous output, redirect.
 
 **State your pick.** Before writing any code, say "Macrostructure: <name>. Theme: <name>. Differs from the last on: <axes>." in plain text. This is a deliberate accountability step — picking on the page (not in your head) prevents the default-attractor sameness that kept the skill emitting Specimen output.
 
@@ -387,8 +387,8 @@ The non-negotiables live in [`references/`](references/). **Be precise about wha
 - [`study.md`](references/study.md) — load only when `hallmark study` runs.
 
 **Human-only (do NOT auto-load):**
-- [`../../docs/recipes.md`](../../docs/recipes.md) — eight worked briefs for human readers.
-- [`../../docs/study-examples.md`](../../docs/study-examples.md) — three worked DNA-extractions for human readers.
+- `../../docs/recipes.md` — eight worked briefs for human readers.
+- `../../docs/study-examples.md` — three worked DNA-extractions for human readers.
 
 ### 4. Decide on hero enrichment
 

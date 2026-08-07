@@ -244,7 +244,7 @@ const HOOK_MARKER = /skills\/impeccable\/scripts\/hook(?:-before-edit)?\.mjs/;
 //   * bundle-relative: node ".agents/.../hook.mjs"
 //   * legacy unquoted: node .claude/.../hook.mjs
 //   * guarded (#399):  [ ! -f "PATH" ] || node "PATH"   (PATH twice, identical)
-//   * absolute:        node "/Users/.../hook.mjs"        (user-level installs)
+//   * absolute:        node "/Users/you/.../hook.mjs"     (user-level installs)
 //   * github portable: node "$(git rev-parse --show-toplevel)/.../hook.mjs"
 // A quoted path wins; the guard's two occurrences are identical, so the first
 // quoted match is the path. Otherwise fall back to the whitespace/metachar-

@@ -74,9 +74,43 @@ function addMissingFieldFailures(checks, value, fields, label) {
   for (const field of missingFields(value, fields)) checks.push(fail(`${label} missing ${field}`))
 }
 
+// Vite/TypeScript toolchain config files (tsconfig.*.json) are JSONC by
+// convention: they carry `/* section */` comments. JSONC is a superset of
+// strict JSON, so stripping comments before parsing is safe for every file —
+// valid JSON is unaffected, and the JSONC files the repo ships parse cleanly.
+function stripJsonComments(text) {
+  let out = ''
+  let inString = false
+  let escape = false
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    const next = text[i + 1]
+    if (inString) {
+      out += c
+      if (escape) escape = false
+      else if (c === '\\') escape = true
+      else if (c === '"') inString = false
+      continue
+    }
+    if (c === '"') { inString = true; out += c; continue }
+    if (c === '/' && next === '/') {
+      while (i < text.length && text[i] !== '\n') i++
+      continue
+    }
+    if (c === '/' && next === '*') {
+      i += 2
+      while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) i++
+      i++ // skip the closing `/`
+      continue
+    }
+    out += c
+  }
+  return out
+}
+
 function readJson(file, checks) {
   try {
-    return JSON.parse(readFileSync(file, 'utf8'))
+    return JSON.parse(stripJsonComments(readFileSync(file, 'utf8')))
   } catch (error) {
     checks.push(fail(`${rel(file)} is not valid JSON: ${error.message}`))
     return null
@@ -317,7 +351,12 @@ function validateLinks(checks, { files }) {
   const markdown = filesWithExtensions(files, ['.md'])
   const linkPattern = /\[[^\]]+\]\(([^)]+)\)/g
   for (const file of markdown) {
+    // Strip fenced code blocks and inline code spans before matching links:
+    // `icons[index](illo);` inside a JS sample is code, not a markdown link.
     const text = readFileSync(file, 'utf8')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/~~~[\s\S]*?~~~/g, '')
+      .replace(/`[^`\n]*`/g, '')
     for (const match of text.matchAll(linkPattern)) {
       const target = match[1]
       if (/^(https?:|mailto:|#)/.test(target)) continue
