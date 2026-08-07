@@ -136,6 +136,48 @@ instead of approximating a GSD workflow.
 
 ---
 
+## Role pipeline (canonical structure)
+
+Run every workstream through this fixed role pipeline. The orchestrator (you) is the
+only role that never writes. Primary harness: **OpenCode or Pi** — spawn each role as a
+subagent in the same harness.
+
+```text
+orquestador (primary: OpenCode | Pi)
+ ├─ explorer/researcher    fan-out read-only   → contexto
+ ├─ planner → critic       plan + review del plan (gate)
+ ├─ implementer N          writes, 1 por worktree; SOLO si files disjuntos
+ ├─ reviewer               verificación independiente
+ ├─ test engineer          escribe y corre tests
+ └─ synth → docs           síntesis + documentación
+```
+
+Stage rules:
+
+1. **explorer / researcher** — fan out N read-only subagents in parallel. Each returns
+   compact context (files, stack, risks, unknowns). No writes. Collapse into one context
+   summary before planning.
+2. **planner → critic** — the planner produces the plan (phases, files, ACs). An
+   independent critic reviews it (risks, gaps, ordering). **Gate:** do NOT start
+   implementers until the critic approves; resolve the deltas manually otherwise.
+3. **implementer N** — one role per worktree, one branch each. Parallel ONLY when the
+   file sets are **disjoint**; serialize otherwise. Each writes within its file
+   allowlist; no commit/push unless told.
+4. **reviewer** — independent verification after implementation. Never the implementer.
+   Re-read the diff, check the ACs, flag regressions.
+5. **test engineer** — writes and runs tests for the implemented surface, after reviewer
+   sign-off; reports pass/fail and coverage intent.
+6. **synth → docs** — a synthesis subagent merges lanes, ships docs, and produces the
+   final report.
+
+Fan-out vs serial (concurrency):
+
+- **Parallel:** explorer (read-only); implementers on DISJOINT file sets; reviewer
+  concerns split by concern (correctness / security / tests).
+- **Serial:** the planner→critic gate; implementers on SHARED files; test after reviewer.
+
+---
+
 ## Concurrency rules
 
 - Parallelize read-only discovery across domains.
