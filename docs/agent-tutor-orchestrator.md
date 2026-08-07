@@ -70,6 +70,7 @@ repo. Missing them on a cold clone is expected. Compose later:
 | Piece | Location | Tier |
 | --- | --- | --- |
 | Profile manifest | `profiles/agent-tutor-orchestrator.yml` | B |
+| Persona template | `profiles/agent-tutor-orchestrator/SOUL.md` (copied at install) | B |
 | Public orchestrator skills | `ai-workflow-orchestrator`, `orchestrate` | B |
 | Install / doctor (front door) | `scripts/tutor-install.sh`, `scripts/tutor-doctor.sh` | B |
 | Internal helpers | `scripts/tutor-{smoke,status,bootstrap,delegate,audit,…}.sh` | B |
@@ -279,7 +280,9 @@ agent-dev-kit/
 │   ├── agent-tutor-vs-firstmate.md
 │   └── private-overlays.md
 ├── profiles/
-│   └── agent-tutor-orchestrator.yml
+│   ├── agent-tutor-orchestrator.yml
+│   └── agent-tutor-orchestrator/
+│       └── SOUL.md          # generic persona template (copied at install)
 ├── plugins/dev-skills/skills/
 │   ├── ai-workflow-orchestrator/
 │   │   └── SKILL.md

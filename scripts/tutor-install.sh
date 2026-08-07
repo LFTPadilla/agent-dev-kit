@@ -84,11 +84,19 @@ if ! hermes profile show "$PROFILE" >/dev/null 2>&1; then
   fi
 fi
 
-echo "[3/6] model config (MiniMax-M3, anthropic-compatible)"
-hermes --profile "$PROFILE" config set model.default      MiniMax-M3
-hermes --profile "$PROFILE" config set model.provider    minimax
-hermes --profile "$PROFILE" config set model.base_url    https://api.minimax.io/anthropic
-hermes --profile "$PROFILE" config set model.api_mode    anthropic_messages
+echo "[3/6] model config (deepseek-v4-flash, OpenAI-compatible)"
+# Generic default — deepseek-v4-flash through an OpenAI-compatible router.
+# Override any of these so an installation is not pinned to one provider:
+#   AGENT_TUTOR_MODEL / AGENT_TUTOR_PROVIDER / AGENT_TUTOR_BASE_URL / AGENT_TUTOR_API_KEY_REF
+AGENT_TUTOR_MODEL="${AGENT_TUTOR_MODEL:-deepseek/deepseek-v4-flash}"
+AGENT_TUTOR_PROVIDER="${AGENT_TUTOR_PROVIDER:-custom}"
+AGENT_TUTOR_BASE_URL="${AGENT_TUTOR_BASE_URL:-https://api.tokenrouter.com/v1}"
+AGENT_TUTOR_API_KEY_REF="${AGENT_TUTOR_API_KEY_REF:-HERMES_CUSTOM_API_TOKENROUTER_COM_API_KEY}"
+hermes --profile "$PROFILE" config set model.default  "$AGENT_TUTOR_MODEL"
+hermes --profile "$PROFILE" config set model.provider "$AGENT_TUTOR_PROVIDER"
+hermes --profile "$PROFILE" config set model.base_url "$AGENT_TUTOR_BASE_URL"
+# api_key is stored as a literal env-var reference (resolved at runtime), never a secret.
+hermes --profile "$PROFILE" config set model.api_key  "\${$AGENT_TUTOR_API_KEY_REF}"
 hermes --profile "$PROFILE" config set fallback_providers '[]'
 
 # Sandbox hardening (#6)
@@ -113,6 +121,11 @@ if [ -f "$SOURCE/plugins/dev-skills/skills/orchestrate/SKILL.md" ]; then
 fi
 cp -f "$SOURCE/profiles/agent-tutor-orchestrator.yml" \
       "$PROFILE_DIR/agent-tutor-orchestrator.yml"
+# Persona template — copy a generic SOUL if the repo ships one, so the profile is
+# reproducible and not left to hand-editing per machine.
+if [ -f "$SOURCE/profiles/agent-tutor-orchestrator/SOUL.md" ]; then
+  cp -f "$SOURCE/profiles/agent-tutor-orchestrator/SOUL.md" "$PROFILE_DIR/SOUL.md"
+fi
 AGENT_DEV_KIT_HERMES_HOME="$USER_HOME/.hermes" \
   "$SOURCE/scripts/install-hermes-workhorse.sh" --profile "$PROFILE" || exit 1
 
