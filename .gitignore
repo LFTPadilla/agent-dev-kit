@@ -12,8 +12,6 @@ __pycache__/
 .DS_Store
 .pi/
 private-overlays/
-website/node_modules/
-website/dist/
 
 .agent-runs/
 
