@@ -115,7 +115,6 @@ Install tables: [docs/external-deps.md](docs/external-deps.md).
 ```
 agent-dev-kit/
 ├── .claude-plugin/marketplace.json   # this repo IS a Claude plugin marketplace
-├── website/                          # interactive showcase web application (agent-dev-kit.devpipe.net)
 ├── plugins/dev-skills/               # the bundled skills plugin
 │   ├── skills/<skill>/SKILL.md
 │   └── commands/pr-review.md         # multi-lens review + adversarial verify
