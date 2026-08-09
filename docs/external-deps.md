@@ -23,7 +23,7 @@ don't vendor. Flow map: [`how-it-fits-together.md`](how-it-fits-together.md).
 | **treehouse** | Multi-agent worktree isolation | Curl installer from [kunchenguid/treehouse](https://github.com/kunchenguid/treehouse) |
 | **gnhf** | Overnight / long-running runner (pair with `overnight-task-kit/`) | `npm i -g gnhf` |
 | **gh-axi** | Agent-shaped GitHub CLI output | `npm i -g gh-axi` |
-| **skills CLI** | Install skill packs across harnesses | `npx skills` ([vercel-labs/skills](https://github.com/vercel-labs/skills)) |
+| **skills CLI** | Install skill packs across harnesses; restores this repo's pinned third-party skills | `npx skills` ([vercel-labs/skills](https://github.com/vercel-labs/skills)) |
 | **TOON** | Token-efficient agent-facing structured output | [toonformat.dev](https://toonformat.dev) |
 | **addyosmani/agent-skills** | Lifecycle reference pack (install via skills CLI; do not copy) | `npx skills` against [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) |
 
@@ -63,3 +63,19 @@ Tutor requires the reviewed version 0.9.25 and runs `--code-only` by default. Se
 LLM extraction and document/media/URL ingestion remain opt-in because they can
 cross a provider boundary. Context7 requests should contain library questions,
 not project source, secrets, or private documents.
+
+## Pinned third-party skills (restored, never vendored)
+
+`skills-lock.json` pins 17 third-party design skills by source repo, path, and a
+sha256 of the skill folder. No copy is tracked in this repo. Restore them on a
+host that wants them:
+
+```bash
+npx skills@1.5.22 experimental_install   # → .agents/skills/ (gitignored)
+```
+
+The lock records no git ref, so a restore follows each source's default branch;
+when upstream has moved, the CLI rewrites that skill's `computedHash`, so treat a
+`skills-lock.json` diff as the drift signal and review it before committing. Per
+skill, source and license: [`ATTRIBUTION.md`](../ATTRIBUTION.md). Why these are
+pinned instead of curated in: [`CURATION.md`](../CURATION.md).

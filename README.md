@@ -264,7 +264,9 @@ Full catalog: [`docs/skills-catalog.md`](docs/skills-catalog.md).
 2. **no-mistakes** (external) complements `/pr-review`.
 3. **Sentry MCP** — [`docs/sentry-mcp.md`](docs/sentry-mcp.md).
 4. **security-checklist** + **prompt-injection defense** — [`docs/prompt-defense.md`](docs/prompt-defense.md).
-5. **Skill provenance** — `skill-provenance.json`.
+5. **Skill provenance** — `skill-provenance.json` for the skills this repo ships;
+   `skills-lock.json` for third-party skills that are pinned, never vendored
+   (restore: `npx skills@1.5.22 experimental_install`).
 
 ### Live QA / E2E (layered)
 
