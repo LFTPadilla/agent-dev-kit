@@ -19,8 +19,40 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      # test:java compiles a disposable fixture with `javac --release 17`.
+      # ubuntu-latest happens to default to Temurin 17 today, but the image
+      # default has moved before; pin it so the fixture always compiles instead
+      # of taking its `command -v javac` skip branch. v5 is the newest major of
+      # setup-java (the @v7 pins above are actions that have a v7).
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      # test:personal-tutor guards its Bubblewrap sandbox assertions behind
+      # `command -v bwrap` and prints SKIP otherwise, and bubblewrap is not in the
+      # ubuntu-latest image, so on a stock runner that whole block never runs.
+      # Do not add actions/setup-python to this job: personal-tutor-sandbox.sh
+      # only trusts a python3 resolving under /usr or /nix/store, and the
+      # hostedtoolcache python setup-python installs would fail that check.
+      - name: install bubblewrap (test:personal-tutor sandbox assertions)
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap
+      # actions/checkout leaves a detached HEAD on pull_request events.
+      # test:personal-tutor feeds `git rev-parse --abbrev-ref HEAD` to
+      # `git check-ref-format --branch`, which rejects the literal "HEAD", so the
+      # suite aborts with "invalid branch name" before it asserts anything.
+      # Attach a local branch instead of weakening the delegate's branch contract.
+      - name: attach a local branch when checkout left a detached HEAD
+        run: git symbolic-ref -q HEAD > /dev/null || git switch -c "ci/run-${{ github.run_id }}"
       - run: npm ci
       - run: npm run validate
+      # Discovered from package.json rather than hardcoded so a branch that adds
+      # a new test:* script gets it run without also having to edit this file.
+      - name: contract tests
+        run: |
+          for script in $(node -p "Object.keys(require('./package.json').scripts).filter((name) => name.startsWith('test:')).join(' ')"); do
+            echo "==> npm run $script"
+            npm run "$script"
+          done
       - name: shell syntax
         run: |
           for f in $(git ls-files '*.sh'); do bash -n "$f"; done
