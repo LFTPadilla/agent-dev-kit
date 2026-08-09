@@ -33,15 +33,14 @@ function checkLabel(level) {
   return color(31, 'FAIL')
 }
 
+function countLevel(checks, level) {
+  return checks.filter((check) => check.level === level).length
+}
+
 function printChecks(checks) {
-  let failures = 0
-  let warnings = 0
-  for (const check of checks) {
-    console.log(`${checkLabel(check.level)} ${check.msg}`)
-    if (check.level === 'fail') failures++
-    else if (check.level === 'warn') warnings++
-  }
-  console.log(`\n${checks.length} checks: ${failures} failed, ${warnings} warnings`)
+  for (const check of checks) console.log(`${checkLabel(check.level)} ${check.msg}`)
+  const failures = countLevel(checks, 'fail')
+  console.log(`\n${checks.length} checks: ${failures} failed, ${countLevel(checks, 'warn')} warnings`)
   return failures
 }
 
@@ -427,7 +426,7 @@ function privacyScan(checks, { files }) {
   else checks.push(ok('privacy scan found no private project coupling'))
 }
 
-function validate() {
+function collectValidationChecks() {
   const checks = []
   const validationContext = {
     files: walkFiles(root),
@@ -449,7 +448,11 @@ function validate() {
     validateLinks,
     privacyScan
   ]) validator(checks, validationContext)
-  return printChecks(checks)
+  return checks
+}
+
+function validate() {
+  return printChecks(collectValidationChecks())
 }
 
 function runtimeTargets() {
@@ -480,8 +483,16 @@ function doctor() {
     })
     checks.push(broken.length ? fail(`${label} has broken skill symlinks: ${broken.join(', ')}`) : ok(`${label} target ready: ${target}`))
   }
-  const validationFailures = validate()
-  checks.push(validationFailures ? fail(`validate has ${validationFailures} failures`) : ok('validate passed'))
+  // Collect without printing, so doctor prints one summary instead of two. The
+  // warning level is carried through so a validate warning stays visible here
+  // without turning into a doctor failure.
+  const validationChecks = collectValidationChecks()
+  const validationFailures = countLevel(validationChecks, 'fail')
+  const validationWarnings = countLevel(validationChecks, 'warn')
+  const detail = 'run `agent-dev-kit validate` for detail'
+  if (validationFailures) checks.push(fail(`validate has ${validationFailures} failures; ${detail}`))
+  else if (validationWarnings) checks.push(warn(`validate passed with ${validationWarnings} warnings; ${detail}`))
+  else checks.push(ok('validate passed'))
   return printChecks(checks)
 }
 
