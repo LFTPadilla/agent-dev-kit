@@ -204,6 +204,22 @@ function validateProvenance(checks, { skillDirs: dirs }) {
   if (!missing.length && !stale.length) checks.push(ok('skill provenance covers all skills'))
 }
 
+function validateSkillsLock(checks) {
+  const file = path.join(root, 'skills-lock.json')
+  const data = readJson(file, checks)
+  if (!data) return
+  const tracked = spawnSync('git', ['ls-files', '--', '.agents'], { cwd: root, encoding: 'utf8' })
+  if (tracked.error || tracked.status !== 0) checks.push(warn('git unavailable; skipped the .agents tracking check'))
+  else if (tracked.stdout.trim()) checks.push(fail('.agents is tracked in git; third-party skills must stay untracked and be restored from skills-lock.json'))
+  const skills = data.skills || {}
+  const names = Object.keys(skills)
+  if (!names.length) checks.push(fail('skills-lock.json pins no third-party skills'))
+  for (const [name, item] of Object.entries(skills)) {
+    addMissingFieldFailures(checks, item, ['source', 'skillPath', 'computedHash', 'license'], `skills-lock.json ${name}`)
+  }
+  checks.push(ok(`${names.length} pinned third-party skills checked`))
+}
+
 function validateProfiles(checks) {
   const dir = path.join(root, 'profiles')
   if (!existsSync(dir)) {
@@ -355,6 +371,7 @@ function validate() {
     validateReleaseVersions,
     validateSkills,
     validateProvenance,
+    validateSkillsLock,
     validateProfiles,
     validatePiPackageResearch,
     validatePolicies,
