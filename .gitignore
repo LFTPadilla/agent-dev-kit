@@ -5,6 +5,9 @@ venv/
 __pycache__/
 *.pyc
 
+# Runtime skills target — third-party skills restored from skills-lock.json, never committed.
+.agents/
+
 # Secrets / local
 .env
 .env.*
