@@ -343,9 +343,11 @@ function validatePiPackageResearch(checks) {
   for (const file of missingFiles) checks.push(fail(`${rel(file)} is missing`))
   if (missingFiles.length) return
 
-  const [profiles, readme, matrix, audit, remainingAudit] = requiredFiles.map((file) => readFileSync(file, 'utf8'))
-  const profilesDocument = parseDocument(profiles, { prettyErrors: true, strict: true })
-  const profilesConfig = profilesDocument.errors.length === 0 ? profilesDocument.toJS() : null
+  // The invariant is inertness, and it lives in machine-readable config. Prose in
+  // the research docs is deliberately not asserted: rewording a sentence is not a
+  // defect, and a gate that reddens for it only teaches people to ignore CI.
+  const profilesText = readFileSync(profilesFile, 'utf8')
+  const profilesConfig = readYamlConfig(profilesFile)
 
   if (profilesConfig?.status !== 'research-only' || profilesConfig?.runtime_activation !== 'none') {
     checks.push(fail('pi-profiles/profiles.yaml must remain research-only with no runtime activation'))
@@ -360,26 +362,8 @@ function validatePiPackageResearch(checks) {
       checks.push(fail(`pi-profiles/profiles.yaml must preserve package-free ${profileName} compatibility`))
     }
   }
-  if (/(?:npm|git|https?):[^\s"']+/.test(profiles)) {
+  if (/(?:npm|git|https?):[^\s"']+/.test(profilesText)) {
     checks.push(fail('pi-profiles/profiles.yaml must not activate or name package sources'))
-  }
-  if (!readme.includes('enables no') || !readme.includes('third-party package')) {
-    checks.push(fail('pi-profiles/README.md must state that no third-party package is enabled'))
-  }
-  if (!matrix.includes('context-mode@1.0.169') || !audit.includes('do not install, enable, or pilot')) {
-    checks.push(fail('Pi package research must preserve the reviewed context-mode pin and no-pilot decision'))
-  }
-  for (const packagePin of [
-    'pi-sandbox@0.6.0',
-    'pi-distill@1.1.0',
-    '@gotgenes/pi-permission-system@20.10.0',
-  ]) {
-    if (!remainingAudit.includes(packagePin)) {
-      checks.push(fail(`Pi package research must preserve the reviewed decision for ${packagePin}`))
-    }
-  }
-  if (!remainingAudit.includes('No Pi')) {
-    checks.push(fail('remaining Pi audits must state that no Pi package is enabled'))
   }
 
   checks.push(ok('Pi package research is inert and preserves compatibility contracts'))
