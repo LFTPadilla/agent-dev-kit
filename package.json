@@ -14,6 +14,7 @@
     "test:hermes-workhorse": "bash scripts/test-hermes-workhorse.sh",
     "test:codex-workhorse": "bash scripts/test-codex-workhorse.sh",
     "test:personal-tutor": "bash scripts/test-personal-dev-tutor.sh",
+    "test:tutor-home": "bash scripts/test-tutor-home-lib.sh",
     "render:diagrams": "bash scripts/render-diagrams.sh",
     "overnight:init": "node overnight-task-kit/scripts/overnight-runner.mjs init",
     "eval:semgrep": "node evals/run.mjs",
