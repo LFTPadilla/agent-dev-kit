@@ -35,7 +35,15 @@ jobs:
       # only trusts a python3 resolving under /usr or /nix/store, and the
       # hostedtoolcache python setup-python installs would fail that check.
       - name: install bubblewrap (test:personal-tutor sandbox assertions)
-        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap
+          # Installing bwrap is not enough: Ubuntu 24.04 confines unprivileged user
+          # namespaces via AppArmor, so bwrap is present but inoperable and the suite
+          # still prints "not operable on this host". Lift the restriction so the
+          # containment assertions actually execute. Tolerate failure (older images
+          # lack the knob) — the suite then degrades to a visible SKIP, never a pass.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          bwrap --dev-bind / / --unshare-net true && echo "bwrap operable"
       # actions/checkout leaves a detached HEAD on pull_request events.
       # test:personal-tutor feeds `git rev-parse --abbrev-ref HEAD` to
       # `git check-ref-format --branch`, which rejects the literal "HEAD", so the
