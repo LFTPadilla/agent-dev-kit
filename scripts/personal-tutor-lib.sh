@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
 # Shared runtime helpers for the Personal Dev Tutor profile.
 
+# Resolve this library's own real location first: it is copied into
+# ~/.hermes/profiles/<profile>/scripts/ and reached through symlinks in
+# ~/.local/bin, so both the shared home helper below and the profile inference
+# further down need the followed path rather than the invocation path.
+PERSONAL_TUTOR_LIB_PATH="${BASH_SOURCE[0]}"
+if [ -L "$PERSONAL_TUTOR_LIB_PATH" ]; then PERSONAL_TUTOR_LIB_PATH="$(readlink -f "$PERSONAL_TUTOR_LIB_PATH")"; fi
+PERSONAL_TUTOR_LIB_DIR="$(cd "$(dirname "$PERSONAL_TUTOR_LIB_PATH")" && pwd)"
+# shellcheck source=tutor-home-lib.sh
+source "$PERSONAL_TUTOR_LIB_DIR/tutor-home-lib.sh"
+
+# Echoes the real user home. See tutor_home_resolve in tutor-home-lib.sh for the
+# resolution precedence, which is shared with the Agent Tutor Orchestrator
+# scripts. PERSONAL_TUTOR_USER_HOME remains the highest-priority override.
 personal_tutor_real_home() {
-  if [ -n "${PERSONAL_TUTOR_USER_HOME:-}" ] && [ -d "$PERSONAL_TUTOR_USER_HOME" ]; then
-    (cd "$PERSONAL_TUTOR_USER_HOME" && pwd -P)
-    return
-  fi
-
-  local passwd_home
-  passwd_home="$(getent passwd "$(id -u)" 2>/dev/null | cut -d: -f6)"
-  if [ -n "$passwd_home" ] && [ -d "$passwd_home" ]; then
-    printf '%s\n' "$passwd_home"
-    return
-  fi
-
-  printf '%s\n' "${HOME:?unable to resolve real user home}"
+  tutor_home_resolve "$PERSONAL_TUTOR_LIB_PATH" PERSONAL_TUTOR_USER_HOME
 }
 
 personal_tutor_git_root() {
@@ -89,8 +90,6 @@ personal_tutor_is_live_codex_pane() {
 
 PERSONAL_TUTOR_USER_HOME="$(personal_tutor_real_home)"
 PERSONAL_TUTOR_INFERRED_PROFILE=""
-PERSONAL_TUTOR_LIB_PATH="${BASH_SOURCE[0]}"
-if [ -L "$PERSONAL_TUTOR_LIB_PATH" ]; then PERSONAL_TUTOR_LIB_PATH="$(readlink -f "$PERSONAL_TUTOR_LIB_PATH")"; fi
 case "$PERSONAL_TUTOR_LIB_PATH" in
   "$PERSONAL_TUTOR_USER_HOME"/.hermes/profiles/*/scripts/*)
     PERSONAL_TUTOR_INFERRED_PROFILE="${PERSONAL_TUTOR_LIB_PATH#"$PERSONAL_TUTOR_USER_HOME/.hermes/profiles/"}"
