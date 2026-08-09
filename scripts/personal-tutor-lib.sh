@@ -46,7 +46,7 @@ personal_tutor_paths_match() {
 }
 
 personal_tutor_resolve_path() {
-  python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve(strict=False))' "$1"
+  tutor_home_resolve_path "$1"
 }
 
 personal_tutor_path_key() {

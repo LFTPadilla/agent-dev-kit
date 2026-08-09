@@ -86,3 +86,14 @@ tutor_home_resolve() {
   fi
   printf '%s\n' "$HOME"
 }
+
+# tutor_home_resolve_path <path>
+#
+# Canonicalize <path> without requiring it to exist, so callers can validate a
+# cache or state location before creating it. `readlink -m` is the direct
+# equivalent of Python's `Path(...).resolve(strict=False)`; plain `readlink -f`
+# is not, because it fails when a parent component is missing (which is the
+# normal case for a first-run cache root).
+tutor_home_resolve_path() {
+  readlink -m "$1"
+}
