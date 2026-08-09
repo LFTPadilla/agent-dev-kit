@@ -67,6 +67,7 @@ for file in \
   "$SOURCE/templates/personal-dev-tutor-SOUL.md" \
   "$SOURCE/templates/personal-codex-lane-prompt.md" \
   "$SOURCE/plugins/dev-skills/skills/personal-development-mentor/SKILL.md" \
+  "$SOURCE/scripts/tutor-home-lib.sh" \
   "$SOURCE/scripts/install-hermes-workhorse.sh"; do
   [ -f "$file" ] || { echo "missing source artifact: $file"; exit 1; }
 done
@@ -290,7 +291,11 @@ printf '  Codex home: %s\n' "$CODEX_HOME"
 
 printf '[7/8] Runtime helpers and launchers\n'
 rm -f "$PROFILE_DIR/scripts/render-diagrams.sh"
-cp -f "$SOURCE"/scripts/personal-tutor-*.sh "$PROFILE_DIR/scripts/"
+# tutor-home-lib.sh is outside the personal-tutor-* glob but every helper sources
+# it through personal-tutor-lib.sh, so it must be copied explicitly or the
+# installed profile is broken.
+cp -f "$SOURCE"/scripts/personal-tutor-*.sh "$SOURCE/scripts/tutor-home-lib.sh" \
+  "$PROFILE_DIR/scripts/"
 chmod +x "$PROFILE_DIR/scripts/"*.sh
 mkdir -p "$PERSONAL_TUTOR_USER_HOME/.local/bin"
 write_runtime_launcher() {
