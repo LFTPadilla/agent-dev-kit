@@ -34,6 +34,8 @@ cat <<'EOF'
 
   Skill packs:
     npx skills
+    # restore the third-party skills pinned in skills-lock.json into .agents/skills:
+    npx skills@1.5.22 experimental_install
     # install reference lifecycle pack from addyosmani/agent-skills via the CLI
     # do not copy that pack into this repo tree
 
