@@ -8,7 +8,7 @@ SKILL="$ROOT/plugins/dev-skills/skills/personal-development-mentor/SKILL.md"
 SOUL="$ROOT/templates/personal-dev-tutor-SOUL.md"
 PROMPT="$ROOT/templates/personal-codex-lane-prompt.md"
 DOC="$ROOT/docs/personal-dev-tutor.md"
-D2="$ROOT/docs/diagrams/personal-dev-tutor-architecture.d2"
+DIAGRAM_SRC="$ROOT/docs/diagrams/personal-dev-tutor-architecture.html"
 GRAPH="$ROOT/scripts/personal-tutor-graph.sh"
 OUTPUT="$ROOT/scripts/personal-tutor-output.sh"
 SANDBOX="$ROOT/scripts/personal-tutor-sandbox.sh"
@@ -19,7 +19,7 @@ required_files=(
   "$SOUL"
   "$PROMPT"
   "$DOC"
-  "$D2"
+  "$DIAGRAM_SRC"
   "$ROOT/scripts/personal-tutor-install.sh"
   "$ROOT/scripts/personal-tutor-doctor.sh"
   "$ROOT/scripts/personal-tutor-status.sh"
@@ -134,7 +134,7 @@ assert_contains "$PROMPT" \
   'continue through the trusted workstation path' \
   'Codex' \
   'Learning checkpoint'
-assert_contains "$DOC" '```mermaid' 'personal-dev-tutor-architecture.d2'
+assert_contains "$DOC" '```mermaid' 'personal-dev-tutor-architecture.html'
 assert_contains "$ROOT/docs/diagrams/personal-dev-tutor-flow.mmd" \
   '^flowchart TB$' \
   'Graphify local AST cache' \
