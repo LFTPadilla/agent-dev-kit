@@ -1,13 +1,13 @@
 # Docs index
 
-Start with the [stack diagram](diagrams/stack.svg) in the
-[root README](../README.md), then pick a lane.
+Start with the [kit architecture diagram](../docs/diagrams/agent-dev-kit-architecture.svg)
+in the [root README](../README.md), then pick a lane.
 
 ## Start here
 
 | Doc | Read it when |
 |---|---|
-| [https://agent-dev-kit.devpipe.net/](https://agent-dev-kit.devpipe.net/) | **Live Web Platform.** Interactive showcase, terminal simulator & 22-skills explorer |
+| [https://agent-dev-kit.devpipe.net/](https://agent-dev-kit.devpipe.net/) | **Live Web Platform.** Interactive showcase, terminal simulator & 22-skills explorer (source: `agent-dev-kit-web`, a separate repo) |
 | [how-it-fits-together.md](how-it-fits-together.md) | You want the one map: runtimes → behavior → orchestration → gates |
 | [skills-catalog.md](skills-catalog.md) | You want to know what the 22 skills do and what triggers them |
 | [external-deps.md](external-deps.md) | You want install commands for everything not vendored here |
@@ -46,23 +46,25 @@ Start with the [stack diagram](diagrams/stack.svg) in the
 
 ## Diagrams
 
-Sources live in [`diagrams/`](diagrams) — `.d2` and `.mmd`. Rebuild every SVG:
+Two source styles live in [`diagrams/`](diagrams):
 
-```bash
-npm run render:diagrams
-```
+- **D2 / Mermaid** — rebuild every SVG with `npm run render:diagrams`.
+- **Editorial (diagram-design)** — `*.html` is the source of truth; SVG/PNG
+  exports are produced from it (see `references/export.md` in the skill).
 
 | Source | Renders |
 |---|---|
 | [`stack.d2`](diagrams/stack.d2) | Hero: the whole tool stack |
+| [`agent-dev-kit-architecture.html`](diagrams/agent-dev-kit-architecture.html) | README hero — the kit, on one screen (diagram-design) |
 | [`personal-dev-tutor-architecture.html`](diagrams/personal-dev-tutor-architecture.html) | Flagship orchestrator internals (diagram-design) |
 | [`personal-dev-tutor-flow.mmd`](diagrams/personal-dev-tutor-flow.mmd) | Flagship request → verification flow |
-| [`social-preview.svg`](diagrams/social-preview.svg) | `social-preview.png` (1280×640) |
+| [`agent-dev-kit-architecture.html`](diagrams/agent-dev-kit-architecture.html) | `social-preview.png` (1200×640) — the manual upload |
 
-**Social preview is the one manual step.** GitHub has no API for it: after
-`npm run render:diagrams`, upload `diagrams/social-preview.png` under
-*repo → Settings → General → Social preview*. That image is what renders when
-the repo link is pasted into Slack, X, or LinkedIn.
+**Social preview is the one manual step.** GitHub has no API for it: export
+`social-preview.png` from `agent-dev-kit-architecture.html` (diagram-only
+render), then upload it under *repo → Settings → General → Social preview*.
+That image is what renders when the repo link is pasted into Slack, X, or
+LinkedIn.
 
 ## Demo
 

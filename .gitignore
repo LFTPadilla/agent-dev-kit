@@ -8,6 +8,10 @@ __pycache__/
 # Runtime skills target — third-party skills restored from skills-lock.json, never committed.
 .agents/
 
+# Local agent worktrees and overnight run logs — never commit.
+.claude/
+.gnhf/
+
 # Secrets / local
 .env
 .env.*

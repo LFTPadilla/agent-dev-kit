@@ -6,7 +6,7 @@
 ![Codex](https://img.shields.io/badge/Codex-compatible-000000)
 ![Hermes](https://img.shields.io/badge/Hermes-profiles-4B0082)
 ![Skills](https://img.shields.io/badge/skills-22-4f46e5)
-![Runtimes](https://img.shields.io/badge/runtimes-5-f59e0b)
+![Profiles](https://img.shields.io/badge/profiles-7-f59e0b)
 ![Evals](https://img.shields.io/badge/evals-12%20planted%20%C2%B7%203%20controls-10b981)
 [![Live Website](https://img.shields.io/badge/live--demo-agent--dev--kit.devpipe.net-00d2ff)](https://agent-dev-kit.devpipe.net/)
 
@@ -285,6 +285,14 @@ Full catalog: [`docs/skills-catalog.md`](docs/skills-catalog.md).
 4. Bump plugin versions with `package.json`.
 5. Add `skill-provenance.json` entry.
 6. Run `npm run validate`.
+
+## About the author
+
+Built by **Luis Felipe Tejada Padilla** — AI-native software engineer working
+on agentic development systems. See the [GitHub profile](https://github.com/LFTPadilla)
+(readme + pinned projects) and the [live platform](https://agent-dev-kit.devpipe.net/).
+The website source lives in the companion `agent-dev-kit-web` repository; this
+repo stays focused on the kit itself.
 
 ## License
 
