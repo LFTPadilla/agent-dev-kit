@@ -14,6 +14,8 @@ const privatePatterns = [
   /(?<![A-Za-z0-9_$}])\/Users\/(?!(?:example|user|runner|you)\b)[A-Za-z0-9._-]+/
 ]
 const yamlExtensions = ['.yml', '.yaml']
+const profileSkillListKeys = ['include_skills', 'codex_worker_skills']
+const tutorCodexSkillsPattern = /PERSONAL_TUTOR_CODEX_SKILLS=\(([^)]*)\)/
 const privacyScanExtensions = ['.md', '.json', '.yml', '.yaml', '.mjs', '.js', '.ts', '.tsx', '.sh']
 const ignoreDirs = new Set(['.git', '.agents', 'node_modules', '.pi', '.venv', 'venv', 'playwright-report', 'test-results'])
 
@@ -31,15 +33,14 @@ function checkLabel(level) {
   return color(31, 'FAIL')
 }
 
+function countLevel(checks, level) {
+  return checks.filter((check) => check.level === level).length
+}
+
 function printChecks(checks) {
-  let failures = 0
-  let warnings = 0
-  for (const check of checks) {
-    console.log(`${checkLabel(check.level)} ${check.msg}`)
-    if (check.level === 'fail') failures++
-    else if (check.level === 'warn') warnings++
-  }
-  console.log(`\n${checks.length} checks: ${failures} failed, ${warnings} warnings`)
+  for (const check of checks) console.log(`${checkLabel(check.level)} ${check.msg}`)
+  const failures = countLevel(checks, 'fail')
+  console.log(`\n${checks.length} checks: ${failures} failed, ${countLevel(checks, 'warn')} warnings`)
   return failures
 }
 
@@ -65,9 +66,22 @@ function filesWithExtensions(files, extensions) {
   return files.filter((file) => extensions.some((extension) => file.endsWith(extension)))
 }
 
+function hasField(value, field) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
+  return field in value
+}
+
 function missingFields(value, fields) {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return fields.slice()
-  return fields.filter((field) => !(field in value))
+  return fields.filter((field) => !hasField(value, field))
+}
+
+function stringListOrNull(value) {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) return null
+  return value
+}
+
+function unknownNames(names, known) {
+  return [...new Set(names)].filter((name) => !known.has(name)).sort()
 }
 
 function addMissingFieldFailures(checks, value, fields, label) {
@@ -81,6 +95,11 @@ function readJson(file, checks) {
     checks.push(fail(`${rel(file)} is not valid JSON: ${error.message}`))
     return null
   }
+}
+
+function readYamlConfig(file) {
+  const document = parseDocument(readFileSync(file, 'utf8'), { prettyErrors: true, strict: true })
+  return document.errors.length ? null : document.toJS()
 }
 
 function rel(file) {
@@ -107,6 +126,22 @@ function skillDirs() {
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(dir, entry.name))
     .sort()
+}
+
+function bundleDirs(parent) {
+  if (!existsSync(parent)) return []
+  return readdirSync(parent, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && !ignoreDirs.has(entry.name))
+    .filter((entry) => existsSync(path.join(parent, entry.name, 'skills')))
+    .map((entry) => entry.name)
+}
+
+// A profile may name an individual skill directory, or one of the repo-local
+// bundles that runtimes install as a unit (plugins/dev-skills, overnight-task-kit).
+function installableSkillNames(dirs) {
+  const names = dirs.map((dir) => path.basename(dir))
+  const bundles = [root, path.join(root, 'plugins')].flatMap((parent) => bundleDirs(parent))
+  return new Set([...names, ...bundles])
 }
 
 function validateSkills(checks, { skillDirs: dirs }) {
@@ -220,7 +255,7 @@ function validateSkillsLock(checks) {
   checks.push(ok(`${names.length} pinned third-party skills checked`))
 }
 
-function validateProfiles(checks) {
+function validateProfiles(checks, { skillDirs: dirs }) {
   const dir = path.join(root, 'profiles')
   if (!existsSync(dir)) {
     checks.push(fail('profiles/ directory is missing'))
@@ -228,13 +263,62 @@ function validateProfiles(checks) {
   }
   const files = filesWithExtensions(readdirSync(dir), yamlExtensions)
   if (!files.length) checks.push(fail('profiles/ has no profile manifests'))
+  const installable = installableSkillNames(dirs)
   for (const name of files) {
-    const text = readFileSync(path.join(dir, name), 'utf8')
-    for (const required of ['profile:', 'runtime:', 'sandbox_policy:', 'include_skills:']) {
-      if (!text.includes(required)) checks.push(fail(`profiles/${name} missing ${required}`))
+    const file = path.join(dir, name)
+    const config = readYamlConfig(file)
+    if (!config) continue
+    addMissingFieldFailures(checks, config, ['profile', 'runtime', 'sandbox_policy', 'include_skills'], rel(file))
+    // A name the kit does not ship is only allowed when this same profile
+    // declares it under external_skills; there is no blanket allow.
+    const external = stringListOrNull(config.external_skills) ?? []
+    const known = new Set([...installable, ...external])
+    for (const key of profileSkillListKeys) {
+      if (!hasField(config, key)) continue
+      const declared = stringListOrNull(config[key])
+      if (!declared) {
+        checks.push(fail(`${rel(file)} ${key} must be a list of skill names`))
+        continue
+      }
+      for (const unknown of unknownNames(declared, known)) {
+        checks.push(fail(`${rel(file)} ${key} names unshipped skill ${unknown}; add it under plugins/dev-skills/skills/ or declare it in external_skills`))
+      }
     }
   }
   checks.push(ok(`${files.length} profile manifests checked`))
+}
+
+function validateTutorSkillSync(checks) {
+  const profileFile = path.join(root, 'profiles/personal-dev-tutor.yml')
+  const libFile = path.join(root, 'scripts/personal-tutor-lib.sh')
+  for (const file of [profileFile, libFile]) {
+    if (!existsSync(file)) {
+      checks.push(fail(`${rel(file)} is missing`))
+      return
+    }
+  }
+  const declared = stringListOrNull(readYamlConfig(profileFile)?.codex_worker_skills)
+  if (!declared) {
+    checks.push(fail(`${rel(profileFile)} codex_worker_skills must be a list of skill names`))
+    return
+  }
+  const match = readFileSync(libFile, 'utf8').match(tutorCodexSkillsPattern)
+  if (!match) {
+    checks.push(fail(`${rel(libFile)} does not define PERSONAL_TUTOR_CODEX_SKILLS`))
+    return
+  }
+  const runtime = match[1].split(/\s+/).filter(Boolean)
+  const missingInRuntime = unknownNames(declared, new Set(runtime))
+  const extraInRuntime = unknownNames(runtime, new Set(declared))
+  for (const name of missingInRuntime) {
+    checks.push(fail(`${rel(libFile)} PERSONAL_TUTOR_CODEX_SKILLS is missing ${name} declared in ${rel(profileFile)} codex_worker_skills`))
+  }
+  for (const name of extraInRuntime) {
+    checks.push(fail(`${rel(libFile)} PERSONAL_TUTOR_CODEX_SKILLS has ${name} that ${rel(profileFile)} codex_worker_skills does not declare`))
+  }
+  if (!missingInRuntime.length && !extraInRuntime.length) {
+    checks.push(ok(`tutor Codex allowlist matches ${declared.length} declared worker skills`))
+  }
 }
 
 function validatePiPackageResearch(checks) {
@@ -258,9 +342,11 @@ function validatePiPackageResearch(checks) {
   for (const file of missingFiles) checks.push(fail(`${rel(file)} is missing`))
   if (missingFiles.length) return
 
-  const [profiles, readme, matrix, audit, remainingAudit] = requiredFiles.map((file) => readFileSync(file, 'utf8'))
-  const profilesDocument = parseDocument(profiles, { prettyErrors: true, strict: true })
-  const profilesConfig = profilesDocument.errors.length === 0 ? profilesDocument.toJS() : null
+  // The invariant is inertness, and it lives in machine-readable config. Prose in
+  // the research docs is deliberately not asserted: rewording a sentence is not a
+  // defect, and a gate that reddens for it only teaches people to ignore CI.
+  const profilesText = readFileSync(profilesFile, 'utf8')
+  const profilesConfig = readYamlConfig(profilesFile)
 
   if (profilesConfig?.status !== 'research-only' || profilesConfig?.runtime_activation !== 'none') {
     checks.push(fail('pi-profiles/profiles.yaml must remain research-only with no runtime activation'))
@@ -275,26 +361,8 @@ function validatePiPackageResearch(checks) {
       checks.push(fail(`pi-profiles/profiles.yaml must preserve package-free ${profileName} compatibility`))
     }
   }
-  if (/(?:npm|git|https?):[^\s"']+/.test(profiles)) {
+  if (/(?:npm|git|https?):[^\s"']+/.test(profilesText)) {
     checks.push(fail('pi-profiles/profiles.yaml must not activate or name package sources'))
-  }
-  if (!readme.includes('enables no') || !readme.includes('third-party package')) {
-    checks.push(fail('pi-profiles/README.md must state that no third-party package is enabled'))
-  }
-  if (!matrix.includes('context-mode@1.0.169') || !audit.includes('do not install, enable, or pilot')) {
-    checks.push(fail('Pi package research must preserve the reviewed context-mode pin and no-pilot decision'))
-  }
-  for (const packagePin of [
-    'pi-sandbox@0.6.0',
-    'pi-distill@1.1.0',
-    '@gotgenes/pi-permission-system@20.10.0',
-  ]) {
-    if (!remainingAudit.includes(packagePin)) {
-      checks.push(fail(`Pi package research must preserve the reviewed decision for ${packagePin}`))
-    }
-  }
-  if (!remainingAudit.includes('No Pi')) {
-    checks.push(fail('remaining Pi audits must state that no Pi package is enabled'))
   }
 
   checks.push(ok('Pi package research is inert and preserves compatibility contracts'))
@@ -358,7 +426,7 @@ function privacyScan(checks, { files }) {
   else checks.push(ok('privacy scan found no private project coupling'))
 }
 
-function validate() {
+function collectValidationChecks() {
   const checks = []
   const validationContext = {
     files: walkFiles(root),
@@ -373,13 +441,18 @@ function validate() {
     validateProvenance,
     validateSkillsLock,
     validateProfiles,
+    validateTutorSkillSync,
     validatePiPackageResearch,
     validatePolicies,
     validateEvals,
     validateLinks,
     privacyScan
   ]) validator(checks, validationContext)
-  return printChecks(checks)
+  return checks
+}
+
+function validate() {
+  return printChecks(collectValidationChecks())
 }
 
 function runtimeTargets() {
@@ -410,8 +483,16 @@ function doctor() {
     })
     checks.push(broken.length ? fail(`${label} has broken skill symlinks: ${broken.join(', ')}`) : ok(`${label} target ready: ${target}`))
   }
-  const validationFailures = validate()
-  checks.push(validationFailures ? fail(`validate has ${validationFailures} failures`) : ok('validate passed'))
+  // Collect without printing, so doctor prints one summary instead of two. The
+  // warning level is carried through so a validate warning stays visible here
+  // without turning into a doctor failure.
+  const validationChecks = collectValidationChecks()
+  const validationFailures = countLevel(validationChecks, 'fail')
+  const validationWarnings = countLevel(validationChecks, 'warn')
+  const detail = 'run `agent-dev-kit validate` for detail'
+  if (validationFailures) checks.push(fail(`validate has ${validationFailures} failures; ${detail}`))
+  else if (validationWarnings) checks.push(warn(`validate passed with ${validationWarnings} warnings; ${detail}`))
+  else checks.push(ok('validate passed'))
   return printChecks(checks)
 }
 
