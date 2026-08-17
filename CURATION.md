@@ -52,6 +52,28 @@ Adopt as day-to-day companions; do not copy into `plugins/dev-skills/`:
 5. **vercel-labs/skills** — skill install CLI
 6. **addyosmani/agent-skills** — reference lifecycle packs via skills CLI
 
+### Two tiers — curated *into* the repo vs. merely *pinned*
+
+Not every skill this workflow uses is a skill this repo redistributes.
+
+1. **Curated in** — `plugins/dev-skills/skills/`. Read end to end, scrubbed by
+   the rule at the top of this file, tracked here, shipped through the
+   marketplace, and covered by `skill-provenance.json`. This repo redistributes
+   them, so their licenses and attribution are our problem
+   ([ATTRIBUTION.md](ATTRIBUTION.md)).
+2. **Pinned only** — `skills-lock.json`. 17 third-party design skills installed
+   locally and never tracked here; restore with
+   `npx skills@1.5.22 experimental_install`, which writes into the gitignored
+   `.agents/skills/`. Not reviewed line by line, not scrubbed, not
+   redistributed — install-time dependencies, recorded for provenance.
+
+Promoting a pinned skill into tier 1 means doing tier 1 in full: read it, scrub
+it, confirm the upstream license permits redistribution, keep that license text
+beside it, add an `ATTRIBUTION.md` entry. A skill recorded as
+`UNLICENSED-UPSTREAM` is **install-only and never redistributable** — it cannot
+be promoted at all until upstream adds a license. No current entry is
+`UNLICENSED-UPSTREAM`.
+
 **Not adopted as runtime:** firstmate (compare in
 [docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md); Personal Dev Tutor is the
 flagship learning orchestrator, while Agent Tutor Orchestrator remains the strict pure-orchestrator alternative).

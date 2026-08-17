@@ -59,6 +59,51 @@ does not vendor their binaries or full skill trees.
 Layer plugins already called out in README / external-deps (caveman, ponytail,
 GSD/pi-gsd, hypa) remain external with their own licenses and update channels.
 
+## Third-party design skills — pinned, not vendored
+
+These 17 skills are other people's work. They are **not** vendored here: no copy
+is tracked in this repo, and `.agents/` — where the skills CLI installs
+project-scope skills — is gitignored. `skills-lock.json` pins each one by source
+repo, path inside that repo, and `computedHash` (sha256 over the sorted
+relative-path + content of the whole skill folder), so a restore is reproducible
+and auditable. Restore with the upstream CLI:
+
+```bash
+npx skills@1.5.22 experimental_install   # → .agents/skills/<name>
+```
+
+| Skill | Source | License |
+|---|---|---|
+| 3d-web-experience | [sickn33/antigravity-awesome-skills](https://github.com/sickn33/agentic-awesome-skills) | MIT |
+| brandkit | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| design-taste-frontend | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| design-taste-frontend-v1 | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| full-output-enforcement | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| gpt-taste | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| hallmark | [nutlope/hallmark](https://github.com/Nutlope/hallmark) | MIT |
+| high-end-visual-design | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| image-to-code | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| imagegen-frontend-mobile | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| imagegen-frontend-web | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| impeccable | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Apache-2.0 |
+| industrial-brutalist-ui | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| lightweight-3d-effects | [freshtechbro/claudedesignskills](https://github.com/freshtechbro/claudedesignskills) | MIT |
+| minimalist-ui | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| redesign-existing-projects | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| stitch-design-taste | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+
+Licenses were read from each repo's GitHub-detected license, not inferred. Every
+source resolves to a real license, so no entry carries the
+`UNLICENSED-UPSTREAM` marker that `skills-lock.json` reserves for sources with
+no detectable license. `sickn33/antigravity-awesome-skills` has since been
+renamed to `sickn33/agentic-awesome-skills`; the lock keeps the name it was
+pinned under and GitHub redirects the clone.
+
+impeccable is Apache-2.0, which attaches notice obligations to *redistribution*.
+This repo redistributes none of these skills, so nothing is carried here — a
+downstream project that vendors one instead of pinning it inherits those
+obligations itself.
+
 ## Judgment notes (not attribution of code)
 
 1. **Agent Tutor Orchestrator vs firstmate** — this kit ships Agent Tutor Orchestrator as a generalist
