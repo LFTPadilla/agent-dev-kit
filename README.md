@@ -14,17 +14,17 @@
 and honest boundaries. Explore the interactive web platform at **[agent-dev-kit.devpipe.net](https://agent-dev-kit.devpipe.net/)**. Clone once, run one script, and get a replicable
 AI-augmented workflow: plan → build → review → ship → overnight.
 
-## The whole stack, on one screen
+## The kit, on one screen
 
-[![The agent development stack](docs/diagrams/stack.svg)](docs/how-it-fits-together.md)
+[![agent-dev-kit architecture](docs/diagrams/agent-dev-kit-architecture.svg)](docs/how-it-fits-together.md)
 
-<sub>
-🟪 <b>flagship</b> · 🟦 <b>built in this repo</b> · ⬛ <b>external — installed, never vendored</b> ·
-🟨 <b>runtime</b> · 🔷 <b>context source</b> · 🟩 <b>ship gate</b>
-</sub>
+External toolchain layers (caveman · ponytail · GSD) and private org overlays feed the
+public kit — the `AGENTS.md` contract routes to curated skills, runtime profiles, the
+overnight protocol kit, docs, and quality gates — and Hermes, Codex, Pi, Claude, and DSH
+consume it. The full stack (runtimes, context, gates, distribution) is covered in
+[`docs/how-it-fits-together.md`](docs/how-it-fits-together.md).
 
-Left column is what the agent *can do*. Right column is what keeps it *honest*.
-Source: [`docs/diagrams/stack.d2`](docs/diagrams/stack.d2) — `npm run render:diagrams`.
+<sub>Source: [`docs/diagrams/agent-dev-kit-architecture.html`](docs/diagrams/agent-dev-kit-architecture.html) — self-contained HTML, exports to SVG/PNG.</sub>
 
 ## 60-second start
 
@@ -210,6 +210,9 @@ hermes --profile agent-tutor-orchestrator
 
 Default tmux session: `tutor`. Env knobs: `AGENT_TUTOR_SESSION`,
 `AGENT_TUTOR_CLONE_FROM`, `AGENT_TUTOR_WORKLOG_DIR`, `AGENT_TUTOR_PROFILE`.
+The orchestrator defaults to `openai-codex/gpt-5.6-sol`; Hermes-native delegated
+workers default to `openai-codex/gpt-5.6-luna`. Override them with the
+`AGENT_TUTOR_*_MODEL` and `AGENT_TUTOR_*_PROVIDER` variables or installer flags.
 Other `tutor-*.sh` helpers are internal (delegate, audit, lane-update, …).
 Details: [`docs/agent-tutor-orchestrator.md`](docs/agent-tutor-orchestrator.md).
 

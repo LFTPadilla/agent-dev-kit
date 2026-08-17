@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1200 640" role="img" aria-labelledby="aki-arch-title aki-arch-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="aki-arch-title">Agent-dev-kit architecture</title>
+    <desc id="aki-arch-desc">Architecture of the agent-dev-kit repo: external toolchain plugins (caveman, ponytail, GSD) and private org overlays feed a public kit made of the AGENTS.md contract, curated dev-skills, runtime profiles, the overnight-task-kit, docs, and quality gates; Hermes, Codex, Pi, Claude, and DSH runtimes consume the kit.</desc>
+
+    <defs><style>@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;family=Instrument+Serif:ital@0;1&amp;display=swap');</style>
+      <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#a1a1aa"/>
+      </marker>
+      <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+      </marker>
+    </defs>
+
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="#09090b"/>
+
+    <!-- Zones -->
+    <rect x="40" y="80" width="400" height="400" rx="8" fill="rgba(245,245,245,0.02)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+    <rect x="140" y="84" width="200" height="12" rx="2" fill="#09090b"/>
+    <text x="240" y="93" fill="rgba(245,245,245,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">EXTERNAL — TOOLCHAIN &amp; OVERLAYS</text>
+
+    <rect x="480" y="80" width="640" height="400" rx="8" fill="rgba(245,245,245,0.02)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+    <rect x="740" y="84" width="120" height="12" rx="2" fill="#09090b"/>
+    <text x="800" y="93" fill="rgba(245,245,245,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">REPO — PUBLIC KIT</text>
+
+    <!-- Arrows (before nodes) -->
+    <!-- 1. layers -> AGENTS.md : govern (accent, primary flow) -->
+    <line x1="300" y1="156" x2="540" y2="156" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+    <rect x="376" y="134" width="72" height="12" rx="2" fill="#09090b"/>
+    <text x="412" y="144" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">GOVERN</text>
+
+    <!-- 2. AGENTS.md -> dev-skills : route & curate -->
+    <line x1="740" y1="156" x2="840" y2="156" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="744" y="134" width="88" height="12" rx="2" fill="#09090b"/>
+    <text x="788" y="144" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ROUTE &amp; CURATE</text>
+
+    <!-- 3. AGENTS.md -> profiles : select -->
+    <line x1="640" y1="204" x2="640" y2="260" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="648" y="224" width="56" height="12" rx="2" fill="#09090b"/>
+    <text x="676" y="234" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">SELECT</text>
+
+    <!-- 4. profiles -> runtimes : load into -->
+    <line x1="640" y1="324" x2="640" y2="520" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="648" y="452" width="72" height="12" rx="2" fill="#09090b"/>
+    <text x="684" y="462" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">LOAD INTO</text>
+
+    <!-- 5. dev-skills -> runtimes : right margin route -->
+    <path d="M 1040,172 H 1152 Q 1152,172 1152,180 V 540 Q 1152,548 1144,548 H 1080" fill="none" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+    <!-- 6. overlays -> dev-skills : compose (dashed, bridge over arrow 4 at x 640) -->
+    <path d="M 240,436 V 476 Q 240,480 248,480 H 632 a 8,8 0 0,1 16,0 H 1080 Q 1080,480 1080,472 V 196 Q 1080,188 1072,188 H 1040" fill="none" stroke="#a1a1aa" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <rect x="268" y="456" width="64" height="12" rx="2" fill="#09090b"/>
+    <text x="300" y="466" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">COMPOSE</text>
+
+    <!-- 7. gates -> AGENTS.md : validate -->
+    <path d="M 840,412 H 768 Q 768,412 768,404 V 196 Q 768,188 776,188 H 540" fill="none" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="700" y="356" width="56" height="12" rx="2" fill="#09090b"/>
+    <text x="728" y="366" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">VALIDATE</text>
+
+    <!-- Nodes -->
+    <!-- layers : external -->
+    <rect x="100" y="140" width="200" height="64" rx="6" fill="#09090b"/>
+    <rect x="100" y="140" width="200" height="64" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.30)" stroke-width="1"/>
+    <rect x="112" y="146" width="36" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="130" y="155" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PLUGINS</text>
+    <text x="200" y="176" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">Caveman · Ponytail · GSD</text>
+    <text x="200" y="192" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">how agents talk · build · work</text>
+
+    <!-- overlays : external -->
+    <rect x="100" y="380" width="200" height="64" rx="6" fill="#09090b"/>
+    <rect x="100" y="380" width="200" height="64" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.30)" stroke-width="1"/>
+    <rect x="112" y="386" width="36" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="130" y="395" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">OVERLAY</text>
+    <text x="200" y="416" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">Private overlays</text>
+    <text x="200" y="432" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">~/.agents/skills · org skills</text>
+
+    <!-- AGENTS.md : focal -->
+    <rect x="540" y="140" width="200" height="64" rx="6" fill="#09090b"/>
+    <rect x="540" y="140" width="200" height="64" rx="6" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+    <rect x="552" y="146" width="40" height="12" rx="2" fill="transparent" stroke="rgba(239,68,68,0.50)" stroke-width="0.8"/>
+    <text x="572" y="155" fill="#ef4444" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CONTRACT</text>
+    <text x="640" y="176" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">AGENTS.md</text>
+    <text x="640" y="192" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">how agents use this repo</text>
+
+    <!-- dev-skills : backend -->
+    <rect x="840" y="140" width="200" height="64" rx="6" fill="#09090b"/>
+    <rect x="840" y="140" width="200" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="852" y="146" width="32" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="868" y="155" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SKILLS</text>
+    <text x="940" y="176" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">plugins/dev-skills</text>
+    <text x="940" y="192" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">22 curated skills · plugin manifests</text>
+
+    <!-- profiles : backend -->
+    <rect x="540" y="260" width="200" height="64" rx="6" fill="#09090b"/>
+    <rect x="540" y="260" width="200" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="552" y="266" width="40" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="572" y="275" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PROFILES</text>
+    <text x="640" y="296" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">profiles/</text>
+    <text x="640" y="312" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">7 runtime profiles</text>
+
+    <!-- overnight-kit : backend -->
+    <rect x="840" y="260" width="200" height="64" rx="6" fill="#09090b"/>
+    <rect x="840" y="260" width="200" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="852" y="266" width="40" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="872" y="275" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PROTOCOL</text>
+    <text x="940" y="296" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">overnight-task-kit</text>
+    <text x="940" y="312" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">protocol · templates · gnhf</text>
+
+    <!-- docs : backend -->
+    <rect x="540" y="380" width="200" height="64" rx="6" fill="#09090b"/>
+    <rect x="540" y="380" width="200" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="552" y="386" width="24" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="564" y="395" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DOCS</text>
+    <text x="640" y="416" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">docs/</text>
+    <text x="640" y="432" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">catalog · guides · external deps</text>
+
+    <!-- gates : backend -->
+    <rect x="840" y="380" width="200" height="64" rx="6" fill="#09090b"/>
+    <rect x="840" y="380" width="200" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="852" y="386" width="32" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="868" y="395" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GATES</text>
+    <text x="940" y="416" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">quality gates</text>
+    <text x="940" y="432" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">evals · provenance · CI · scripts</text>
+
+    <!-- runtimes : external strip -->
+    <rect x="40" y="520" width="1040" height="56" rx="6" fill="#09090b"/>
+    <rect x="40" y="520" width="1040" height="56" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.30)" stroke-width="1"/>
+    <rect x="52" y="526" width="40" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="72" y="535" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">RUNTIMES</text>
+    <text x="560" y="548" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">Agent runtimes</text>
+    <text x="560" y="562" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Hermes · Codex · Pi · Claude · DSH</text>
+
+    <!-- Legend -->
+    <line x1="40" y1="596" x2="1160" y2="596" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+    <text x="40" y="612" fill="#71717a" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+    <line x1="140" y1="608" x2="168" y2="608" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+    <text x="176" y="612" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">PRIMARY FLOW</text>
+    <line x1="340" y1="608" x2="368" y2="608" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <text x="376" y="612" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CORE FLOW</text>
+    <line x1="540" y1="608" x2="568" y2="608" stroke="#a1a1aa" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <text x="576" y="612" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">OPTIONAL / ASYNC</text>
+    <rect x="756" y="602" width="16" height="12" rx="3" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+    <text x="784" y="612" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">FOCAL NODE</text>
+  </svg>
