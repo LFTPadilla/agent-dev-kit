@@ -55,7 +55,7 @@ npm run render:diagrams
 | Source | Renders |
 |---|---|
 | [`stack.d2`](diagrams/stack.d2) | Hero: the whole tool stack |
-| [`personal-dev-tutor-architecture.d2`](diagrams/personal-dev-tutor-architecture.d2) | Flagship orchestrator internals |
+| [`personal-dev-tutor-architecture.html`](diagrams/personal-dev-tutor-architecture.html) | Flagship orchestrator internals (diagram-design) |
 | [`personal-dev-tutor-flow.mmd`](diagrams/personal-dev-tutor-flow.mmd) | Flagship request → verification flow |
 | [`social-preview.svg`](diagrams/social-preview.svg) | `social-preview.png` (1280×640) |
 

@@ -1,9 +1,43 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 1200 740" role="img" aria-labelledby="pdt-arch-title pdt-arch-desc" xmlns="http://www.w3.org/2000/svg">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Dev Tutor — architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #09090b;
+    --ink: #ffffff;
+    --muted: #a1a1aa;
+    --soft: #71717a;
+    --accent: #ef4444;
+    --rule: rgba(255,255,255,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Geist', 'Space Grotesk', sans-serif; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 1240px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--soft); margin-bottom: 0.75rem; }
+  .eyebrow .num { color: var(--accent); font-weight: 700; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 2.2rem; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 0.75rem; }
+  .subtitle { color: var(--muted); max-width: 720px; font-size: 1.05rem; margin-bottom: 2.5rem; }
+  figure { margin: 0; }
+  svg { display: block; width: 100%; height: auto; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: 'Geist Mono', monospace; font-size: 8px; letter-spacing: 0.08em; color: var(--soft); text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow"><span class="num">02</span> — flagship profile</p>
+  <h1>Personal Dev Tutor — bounded GSD orchestration</h1>
+  <p class="subtitle">GSD phases, learning gates, and independent verification route bounded units to Codex workers in tmux; mastery evidence lands in the project repository, and context intelligence feeds back into the loop.</p>
+
+  <figure>
+  <svg viewBox="0 0 1200 740" role="img" aria-labelledby="pdt-arch-title pdt-arch-desc" xmlns="http://www.w3.org/2000/svg">
     <title id="pdt-arch-title">Personal Dev Tutor architecture</title>
     <desc id="pdt-arch-desc">Architecture of the Personal Dev Tutor profile: a developer's intent and plans enter the tutor, which runs GSD phases through a learning gate and a tool-and-worker router, delegates bounded prompts to Codex workers in a tmux session, independently verifies diffs and tests, and writes durable evidence to the project repository while context and evidence feed back into the loop.</desc>
 
-    <defs><style>@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;family=Instrument+Serif:ital@0;1&amp;display=swap');</style>
+    <defs>
       <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
         <polygon points="0 0, 8 3, 0 6" fill="#a1a1aa"/>
       </marker>
@@ -148,3 +182,9 @@
     <rect x="756" y="702" width="16" height="12" rx="3" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
     <text x="784" y="712" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">FOCAL NODE</text>
   </svg>
+  </figure>
+
+  <footer>Diagram Design · onboarded skin: agent-dev-kit.devpipe.net (brutal-dark) · Space Grotesk / Geist Mono</footer>
+</div>
+</body>
+</html>

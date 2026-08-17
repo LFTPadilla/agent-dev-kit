@@ -51,8 +51,8 @@ flowchart LR
 
 For a polished view, see:
 
-- [D2 source](diagrams/personal-dev-tutor-architecture.d2)
-- [Rendered D2 architecture](diagrams/personal-dev-tutor-architecture.svg)
+- [HTML source](diagrams/personal-dev-tutor-architecture.html)
+- [Rendered architecture](diagrams/personal-dev-tutor-architecture.svg)
 - [Mermaid source](diagrams/personal-dev-tutor-flow.mmd)
 - [Rendered Mermaid flow](diagrams/personal-dev-tutor-flow.svg)
 
@@ -426,7 +426,7 @@ scripts/personal-tutor-graph.sh
 scripts/personal-tutor-output.sh
 scripts/personal-tutor-sandbox.sh
 docs/personal-dev-tutor.md
-docs/diagrams/personal-dev-tutor-architecture.{d2,svg}
+docs/diagrams/personal-dev-tutor-architecture.{html,svg,png}
 docs/diagrams/personal-dev-tutor-flow.{mmd,svg}
 ```
 
