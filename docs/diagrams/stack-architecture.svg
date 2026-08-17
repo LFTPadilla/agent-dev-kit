@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 736" role="img" aria-labelledby="stack-arch-title stack-arch-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="stack-arch-title">The whole stack — what the agent can do, what keeps it honest</title>
+    <desc id="stack-arch-desc">Two-column overview of the agent-dev-kit stack: the left column shows what the agent can do — runtimes, context, behavior, contracts, orchestration with the Personal Dev Tutor flagship, and 22 curated skills; the right column shows what keeps it honest — ship gates with the /pr-review flagship, evals and security scanning, then distribution and proof.</desc>
+
+    <defs><style>@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;family=Instrument+Serif:ital@0;1&amp;display=swap');</style>
+      <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#a1a1aa"/>
+      </marker>
+      <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+      </marker>
+    </defs>
+
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="#09090b"/>
+
+    <!-- Zones -->
+    <rect x="40" y="80" width="680" height="576" rx="8" fill="rgba(245,245,245,0.02)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+    <rect x="304" y="84" width="152" height="12" rx="2" fill="#09090b"/>
+    <text x="380" y="94" fill="rgba(245,245,245,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">WHAT THE AGENT CAN DO</text>
+
+    <rect x="760" y="80" width="480" height="576" rx="8" fill="rgba(245,245,245,0.02)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+    <rect x="932" y="84" width="136" height="12" rx="2" fill="#09090b"/>
+    <text x="1000" y="94" fill="rgba(245,245,245,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">WHAT KEEPS IT HONEST</text>
+
+    <!-- Arrows (before nodes) -->
+    <!-- 1. RUNTIMES -> CONTEXT : pull context -->
+    <line x1="180" y1="176" x2="180" y2="208" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="188" y="180" width="88" height="12" rx="2" fill="#09090b"/>
+    <text x="232" y="190" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">PULL CONTEXT</text>
+
+    <!-- 2. ORCHESTRATION -> SHIP GATES : must pass gates (accent, primary honest flow) -->
+    <path d="M 700,528 H 992 Q 1000,528 1000,520 V 176" fill="none" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+    <rect x="896" y="460" width="96" height="12" rx="2" fill="#09090b"/>
+    <text x="944" y="470" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">MUST PASS GATES</text>
+
+    <!-- 3. SHIP GATES -> DISTRIBUTION & PROOF : verify then ship -->
+    <line x1="1120" y1="176" x2="1120" y2="592" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="1128" y="380" width="96" height="12" rx="2" fill="#09090b"/>
+    <text x="1176" y="390" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">VERIFY THEN SHIP</text>
+
+    <!-- 4. DISTRIBUTION & PROOF -> RUNTIMES : install (dashed return loop) -->
+    <path d="M 1160,656 V 672 Q 1160,680 1152,680 H 28 Q 20,680 20,672 V 144 H 60" fill="none" stroke="#a1a1aa" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <rect x="360" y="660" width="56" height="12" rx="2" fill="#09090b"/>
+    <text x="388" y="670" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">INSTALL</text>
+
+    <!-- Nodes -->
+    <!-- RUNTIMES : capability band 1 -->
+    <rect x="60" y="112" width="640" height="64" rx="6" fill="#09090b"/>
+    <rect x="60" y="112" width="640" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="72" y="120" width="32" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="88" y="128" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">RUN</text>
+    <text x="380" y="148" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">RUNTIMES</text>
+    <text x="380" y="164" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Claude Code · Codex CLI · Hermes · Pi · OpenCode · tmux</text>
+
+    <!-- CONTEXT : capability band 2 -->
+    <rect x="60" y="208" width="640" height="64" rx="6" fill="#09090b"/>
+    <rect x="60" y="208" width="640" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="72" y="216" width="32" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="88" y="224" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CTX</text>
+    <text x="380" y="244" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">CONTEXT</text>
+    <text x="380" y="260" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Graphify · Context7 MCP · Sentry MCP · Playwright MCP · web-browse · find-skills</text>
+
+    <!-- BEHAVIOR : capability band 3 -->
+    <rect x="60" y="304" width="640" height="64" rx="6" fill="#09090b"/>
+    <rect x="60" y="304" width="640" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="72" y="312" width="36" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="90" y="320" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MODE</text>
+    <text x="380" y="340" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">BEHAVIOR</text>
+    <text x="380" y="356" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">GSD · caveman · ponytail · hypa</text>
+
+    <!-- CONTRACTS : capability band 4 -->
+    <rect x="60" y="400" width="640" height="64" rx="6" fill="#09090b"/>
+    <rect x="60" y="400" width="640" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="72" y="408" width="56" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="100" y="416" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CONTRACT</text>
+    <text x="380" y="436" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">CONTRACTS</text>
+    <text x="380" y="452" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">TOON · gh-axi · skill-provenance.json · policies/</text>
+
+    <!-- ORCHESTRATION : capability band 5 — focal (Personal Dev Tutor flagship) -->
+    <rect x="60" y="496" width="640" height="64" rx="6" fill="#09090b"/>
+    <rect x="60" y="496" width="640" height="64" rx="6" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+    <rect x="72" y="504" width="36" height="12" rx="2" fill="transparent" stroke="rgba(239,68,68,0.50)" stroke-width="0.8"/>
+    <text x="90" y="512" fill="#ef4444" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ORCH</text>
+    <text x="380" y="532" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">ORCHESTRATION</text>
+    <text x="380" y="548" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">★ Personal Dev Tutor · orchestrate · ai-workflow-orchestrator · treehouse · gnhf</text>
+
+    <!-- CAPABILITIES : capability band 6 -->
+    <rect x="60" y="592" width="640" height="64" rx="6" fill="#09090b"/>
+    <rect x="60" y="592" width="640" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="72" y="600" width="48" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="96" y="608" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SKILLS</text>
+    <text x="380" y="628" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">CAPABILITIES</text>
+    <text x="380" y="644" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">22 skills — Quality · Languages · QA/E2E · Security · Docs · Diagrams · Writing · Mentoring</text>
+
+    <!-- SHIP GATES : honesty band 1 — focal (/pr-review flagship) -->
+    <rect x="780" y="112" width="440" height="64" rx="6" fill="#09090b"/>
+    <rect x="780" y="112" width="440" height="64" rx="6" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+    <rect x="792" y="120" width="40" height="12" rx="2" fill="transparent" stroke="rgba(239,68,68,0.50)" stroke-width="0.8"/>
+    <text x="812" y="128" fill="#ef4444" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GATES</text>
+    <text x="1000" y="148" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">SHIP GATES</text>
+    <text x="1000" y="164" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">★ /pr-review · no-mistakes · evals/ · lefthook · gitleaks · pip-audit</text>
+
+    <!-- DISTRIBUTION & PROOF : honesty band 2 -->
+    <rect x="780" y="592" width="440" height="64" rx="6" fill="#09090b"/>
+    <rect x="780" y="592" width="440" height="64" rx="6" fill="#18181b" stroke="#3f3f46" stroke-width="1"/>
+    <rect x="792" y="600" width="36" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+    <text x="810" y="608" fill="#a1a1aa" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DIST</text>
+    <text x="1000" y="628" fill="#ffffff" font-size="12" font-weight="600" font-family="'Space Grotesk', sans-serif" text-anchor="middle">DISTRIBUTION &amp; PROOF</text>
+    <text x="1000" y="644" fill="#a1a1aa" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">marketplace · bootstrap.sh · skills CLI · overlay · profiles/ · docs/</text>
+
+    <!-- Legend -->
+    <line x1="40" y1="696" x2="1240" y2="696" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+    <text x="40" y="712" fill="#71717a" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+    <line x1="140" y1="708" x2="168" y2="708" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+    <text x="176" y="712" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">PRIMARY FLOW</text>
+    <line x1="340" y1="708" x2="368" y2="708" stroke="#a1a1aa" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <text x="376" y="712" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CORE FLOW</text>
+    <line x1="540" y1="708" x2="568" y2="708" stroke="#a1a1aa" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <text x="576" y="712" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">OPTIONAL / ASYNC</text>
+    <rect x="756" y="702" width="16" height="12" rx="3" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+    <text x="784" y="712" fill="#a1a1aa" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">FOCAL NODE</text>
+  </svg>

@@ -125,9 +125,72 @@ live `/pr-review <PR-URL>` Workflow.
 |---|---|---|---|---|
 | `/pr-review` protocol (per-file lenses + adversarial verify) | 12 / 12 | **12/12** | 0 / 3 | **0** |
 
-**Still not scored:** a live `/pr-review <PR-URL>` Workflow against a real GitHub
-PR (multi-file diff, `gh` scout, full Workflow pipeline). That row stays empty
-until measured.
+### Live `/pr-review` against a real GitHub PR — 2026-08-17
+
+**Label: first live run, closed PR.** Method: an agent followed
+`plugins/dev-skills/commands/pr-review.md` against the live PR — `gh` scout
+(`pr view` metadata, file list, `pr diff`), then the five lenses (correctness,
+security, performance, quality + ponytail advisory) with the pre-report gate,
+then adversarial verification of every BLOCKER/HIGH/MEDIUM finding by
+attempting to disprove each one against the real code (default refute). Not
+executed as the literal Workflow fan-out and not CI: the agent ran the lenses +
+verify pass directly.
+
+- **PR:** LFTPadilla/agent-dev-kit#3 "chore: unvendor third-party agent skills,
+  make skills-lock.json the source of truth". Closed; never merged via the PR —
+  its content reached `main` as squash `92bdc61`, with stacked #4/#5 on top.
+- **Diff measured: 10 files, +249/−4 — not the ~300-file deletion the brief
+  expected.** The 286-file / ~95k-line `.agents` deletion (commit `00bc0840`)
+  is in the branch history but not in GitHub's computed PR diff (the branch
+  diverged/rebased; the same deletion reached `main` via the squash). Reviewed
+  target: docs + `skills-lock.json` + one new validator — `.gitignore`,
+  `ATTRIBUTION.md`, `CURATION.md`, `README.md`, `bootstrap.sh`,
+  `docs/README.md`, `docs/external-deps.md`, `docs/skills-catalog.md`,
+  `scripts/agent-dev-kit.mjs`, `skills-lock.json`.
+- **Verdict: BLOCKER 0 · HIGH 0 · MEDIUM 2 · LOW 3 — no blocking issues found.**
+
+Surviving findings:
+
+| Severity | Finding | Evidence |
+|---|---|---|
+| MEDIUM | Restore is unpinned and hash-soft: no lock entry records a git `ref`, so restore follows each source's default branch, and the CLI *rewrites* `computedHash` on reinstall instead of failing — changed/compromised upstream content installs silently, with manual lock-diff review as the only guard. Author documents it as accepted risk. | `skills-lock.json` (17 entries, no `ref`); `docs/external-deps.md:77-79`; CLI `skills@1.5.22` source (`addSkillToLocalLock` wholesale-replaces the entry) |
+| MEDIUM | New `validateSkillsLock` has no automated test; its two failure modes were exercised manually only (PR body). No validator in this repo has tests (no harness exists), so this is a repo-wide gap, not new to this PR. | `scripts/agent-dev-kit.mjs:242-255` (validator), `:442` (registration); `package.json` has no `test:validate` |
+| LOW | `validateSkillsLock` checks `license` presence only, not SPDX validity — a hand-edited wrong value passes validate. Deliberate (guards the CLI dropping the field on reinstall), but a bad license edit goes green. | `scripts/agent-dev-kit.mjs:253` |
+| LOW | Stray blank line added in `.gitignore` (between `private-overlays/` and `.agent-runs/`) and a double blank line after the new table. | PR diff, `.gitignore` hunk 2; `docs/skills-catalog.md:83-84` |
+| LOW | `docs/skills-catalog.md` mixes install syntaxes in one table: bare-repo rows (`npx skills add Leonxlnx/taste-skill`, `…pbakaus/impeccable`) vs `@skill` rows (`…@3d-web-experience`); ambiguous what a bare-repo add installs for multi-skill repos. | `docs/skills-catalog.md:78-82` |
+
+Refuted / dropped by the adversarial pass (false positives caught):
+
+- "`validateSkillsLock` fail-opens (`warn`) when git is missing" — deliberate
+  and documented; the bad outcome is vacuous (no git ⇒ nothing can be tracked).
+- "docs' `computedHash` claim is wrong (whole-folder sha256)" — confirmed
+  accurate against CLI `skills@1.5.22` source and an exact Node replication.
+- "hallmark's lock hash is stale/wrong" — initial mismatch vs hallmark HEAD
+  looked like a defect; the lock hash exactly matches the deleted pinned copy at
+  `7f9fc4d` (`8a8ecafd…`), and the HEAD mismatch is upstream drift (hallmark
+  moved 2026-08-06) — the documented drift signal. Most instructive FP.
+- "README/docs advertise a dead website" — `agent-dev-kit.devpipe.net`
+  returned HTTP 200; claims true.
+- "upstream licenses misrecorded" — `gh api …/license` for all five sources
+  matches the lock (16 MIT + Apache-2.0).
+- "renamed `sickn33/antigravity-awesome-skills` breaks the lock" — still
+  resolves (GitHub redirect), MIT verified, rename documented.
+- "PR risk note overstates the license drop" — confirmed: `addSkillToLocalLock`
+  replaces entries wholesale, so a reinstall does drop `license`.
+
+Ponytail advisory (advisory only — never blocks, never counted): the stray
+blank lines above are trims; `README.md:11,14` point at the same URL twice
+(badge + prose); "pinned, not vendored" + the restore command are re-explained
+in four places (`ATTRIBUTION.md`, `CURATION.md`, `README.md`,
+`docs/external-deps.md`) where cross-references would do.
+
+**Caveats:** run by an agent following the command spec, not the literal
+Workflow fan-out and not the CI Workflow; the PR is closed and its content is on
+`main` (squash), so this scores the reviewer against the PR's current diff, not
+a merge decision; the diff is small and mostly additive, so lens coverage
+(especially performance — zero findings, thin by construction) is limited; only
+`hallmark`'s `computedHash` was independently recomputed, not all 17; the run
+was read-only — the 17 skills were never installed.
 
 **Reading it honestly:**
 

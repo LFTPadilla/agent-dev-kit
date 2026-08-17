@@ -5,7 +5,7 @@ Flagship orchestrator detail lives in [`personal-dev-tutor.md`](personal-dev-tut
 
 ## Everything at once
 
-[![The agent development stack](diagrams/stack.svg)](diagrams/stack.d2)
+[![The whole agent stack](diagrams/stack-architecture.svg)](diagrams/stack-architecture.html)
 
 Left column: what the agent can do. Right column: what keeps it honest.
 Regenerate with `npm run render:diagrams`.
