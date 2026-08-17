@@ -65,6 +65,12 @@ fi
   echo "missing executable $SOURCE/scripts/install-hermes-workhorse.sh"
   exit 1
 }
+# Copied by the tutor-*.sh glob below, but every runtime helper sources it via
+# tutor-lib.sh, so a missing copy would ship a broken profile. Fail loudly here.
+[ -f "$SOURCE/scripts/tutor-home-lib.sh" ] || {
+  echo "missing $SOURCE/scripts/tutor-home-lib.sh"
+  exit 1
+}
 
 echo "[1/6] hermes binary"
 command -v hermes >/dev/null || {
