@@ -40,6 +40,7 @@
 |---|---|---|
 | `knip` | Find dead code / unused exports / unused deps (TS/JS) | "clean up bloat", "find unused code", before a refactor |
 | `improve` | Senior-advisor audit (read-only) → writes prioritized implementation plans for *other* agents to execute. Pairs your most-capable model (audit) with cheaper executors. | "audit this codebase", "where should this project go", "write a plan for X" |
+| `agent-native-scaffold` | Audit, scaffold or refactor any repository to the ANRS-1.0 Agent-Native specification (Hub AGENTS.md, O(1) REGISTRY.yaml, shallow trees). | "make this repo agent-native", "organize codebase for AI", "scaffold agent-native" |
 | `git-essentials` | Git command/workflow reference | git workflow questions |
 
 ### Languages & frameworks

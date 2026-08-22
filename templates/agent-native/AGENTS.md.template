@@ -1,0 +1,66 @@
+# AGENTS.md — Master Agent Context (Hub)
+
+> **LOAD THIS FIRST.** This is the canonical, lightweight entry point (~100 lines) for coding agents.
+> Deep subsystem context is progressively disclosed via the Semantic Routing Table below.
+
+---
+
+## 1. Repository Purpose & Boundaries
+
+This repository (`<ORG>/<REPO>`) contains <BRIEF_DESCRIPTION>.
+
+1. **Mandatory Worktrees (Never edit directly on `main` / `master`):**
+   - The primary checkout is **integration-only** and must stay on `main`.
+   - **ALL task/ticket work MUST use a dedicated worktree** under `.worktrees/<task-slug>`:
+     ```bash
+     git worktree add -b <branch-name> .worktrees/<task-slug> origin/main
+     ```
+   - Work, test, and commit strictly inside `.worktrees/<task-slug>`.
+   - Submit changes via a scoped PR against `main`.
+
+2. **Single Sources of Truth (SSoT):**
+   - **Backlog / Issues:** GitHub Issues / Plane (never track backlog in loose markdown files).
+   - **Secrets & Credentials:** Infisical / Secret Manager (never commit plaintext credentials or `.env`).
+   - **Declarative State:** Git repository is the canonical source for code, manifests, and skills.
+
+3. **Multi-Agent & Tool Safety Boundaries:**
+   - Autonomous changes must pass local verifiers before pushing.
+   - Non-negotiable safety policies: <LIST_ANY_STRICT_PROJECT_POLICIES>.
+
+---
+
+## 2. Global Coordinates & Environment
+
+| Component | Target / Coordinate | Role / Access |
+|---|---|---|
+| Runtime | Node.js / Python / Go / Rust | Primary application runtime |
+| Local Dev | `http://localhost:<PORT>` | Local development server |
+| CI/CD | GitHub Actions (`.github/workflows/`) | Automated test and deployment pipeline |
+
+---
+
+## 3. Semantic Routing Table (Agent Sitemap)
+
+| If your task relates to... | Read this context file |
+|---|---|
+| **O(1) Service/Port/Tool Catalog** | [`REGISTRY.yaml`](REGISTRY.yaml) |
+| **<SUBSYSTEM_1> (e.g. Frontend / UI)** | [`<PATH_1>/AGENTS.md`](<PATH_1>/AGENTS.md) |
+| **<SUBSYSTEM_2> (e.g. Backend / API)** | [`<PATH_2>/AGENTS.md`](<PATH_2>/AGENTS.md) |
+| **<SUBSYSTEM_3> (e.g. Infrastructure / IaC)** | [`<PATH_3>/AGENTS.md`](<PATH_3>/AGENTS.md) |
+| **Autonomous Agent Personas** | [`agents/AGENTS.md`](agents/AGENTS.md) |
+| **Architectural Decisions (ADRs)** | [`docs/decisions/` or `DECISIONS.md`](DECISIONS.md) |
+
+---
+
+## 4. Standard Verification Commands
+
+```bash
+# Run unit tests
+<TEST_COMMAND>
+
+# Run linter / static analysis
+<LINT_COMMAND>
+
+# Validate Agent-Native compliance
+python3 scripts/audit-agent-native.py
+```

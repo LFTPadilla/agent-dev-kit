@@ -2,6 +2,16 @@
   "version": 1,
   "visibility_contract": "public-safe",
   "skills": {
+    "agent-native-scaffold": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "low",
+      "dependencies": [
+        "python3",
+        "git"
+      ]
+    },
     "ai-workflow-orchestrator": {
       "source": "local",
       "license": "MIT",

@@ -1,0 +1,38 @@
+# REGISTRY.yaml — Canonical Machine-Readable Catalog for agent-dev-kit
+# Standard: ANRS-1.0 (Agent-Native Repository Specification)
+version: "1.0"
+updated: "2026-08-22"
+
+profiles:
+  personal-dev-tutor:
+    path: "profiles/personal-dev-tutor.yml"
+    role: "Flagship GSD + Codex tutor-orchestrator"
+  agent-tutor-orchestrator:
+    path: "profiles/agent-tutor-orchestrator.yml"
+    role: "Strict orchestrator and liaison"
+
+skills:
+  agent-native-scaffold:
+    path: "plugins/dev-skills/skills/agent-native-scaffold"
+    scope: "architecture"
+    requires: [python3, git]
+  orchestrate:
+    path: "plugins/dev-skills/skills/orchestrate"
+    scope: "orchestration"
+  personal-development-mentor:
+    path: "plugins/dev-skills/skills/personal-development-mentor"
+    scope: "mentorship"
+  ai-workflow-orchestrator:
+    path: "plugins/dev-skills/skills/ai-workflow-orchestrator"
+    scope: "orchestration"
+  diagram-render:
+    path: "plugins/dev-skills/skills/diagram-render"
+    scope: "visualization"
+
+tools:
+  agent-dev-kit:
+    entrypoint: "scripts/agent-dev-kit.mjs"
+    commands: [doctor, validate, inventory]
+  audit-agent-native:
+    entrypoint: "scripts/audit-agent-native.py"
+    commands: [audit]

@@ -42,6 +42,10 @@ External installs: [docs/external-deps.md](docs/external-deps.md).
    Use **Agent Tutor Orchestrator** / `ai-workflow-orchestrator` when the user
    specifically wants strict pure orchestration through Claude tmux panes or
    Hermes Kanban. See [docs/personal-dev-tutor.md](docs/personal-dev-tutor.md).
+8. Prefer **Agent-Native Repository Architecture (ANRS-1.0)**: Use lightweight
+   Hub-and-Spoke `AGENTS.md`, declarative `REGISTRY.yaml`, and progressive
+   disclosure. See [docs/agent-native-architecture.md](docs/agent-native-architecture.md)
+   and [`REGISTRY.yaml`](REGISTRY.yaml).
 
 ## Hard rules
 

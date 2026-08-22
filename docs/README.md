@@ -25,6 +25,7 @@ in the [root README](../README.md), then pick a lane.
 | Doc | Read it when |
 |---|---|
 | [profiles.md](profiles.md) | You are wiring a runtime manifest in `profiles/` |
+| [agent-native-architecture.md](agent-native-architecture.md) | **Architecture Standard.** ANRS-1.0 Context Engineering, Hub-and-Spoke AGENTS.md & O(1) REGISTRY.yaml |
 | [private-overlays.md](private-overlays.md) | Employer/org skills must stay out of this tree |
 | [sandbox-policies.md](sandbox-policies.md) | You are changing what a worker is allowed to touch |
 

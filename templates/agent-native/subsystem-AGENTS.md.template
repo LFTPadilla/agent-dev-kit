@@ -1,0 +1,39 @@
+# AGENTS.md — <SUBSYSTEM_NAME> Subsystem Context
+
+> **Progressive Disclosure Context.** Loaded only when working within `<SUBSYSTEM_PATH>/`.
+
+---
+
+## 1. Subsystem Scope & Architectural Invariants
+
+This subsystem owns `<RESPONSIBILITY>`.
+
+1. **Hard Invariants:**
+   - <INVARIANT_1, e.g. "All database mutations must use transactions">
+   - <INVARIANT_2, e.g. "Never import directly from frontend modules">
+
+2. **Dependencies & Upstream Services:**
+   - Depends on: `<SERVICE_A>`, `<SERVICE_B>`.
+
+---
+
+## 2. Directory Structure & Key Files
+
+```text
+<SUBSYSTEM_PATH>/
+├── src/                        # Core source code
+├── tests/                      # Unit and integration test suite
+└── config/                     # Static configuration
+```
+
+---
+
+## 3. Subsystem Commands & Verification
+
+```bash
+# Run local tests for this subsystem only
+<SUBSYSTEM_TEST_CMD>
+
+# Lint / Typecheck
+<SUBSYSTEM_LINT_CMD>
+```
