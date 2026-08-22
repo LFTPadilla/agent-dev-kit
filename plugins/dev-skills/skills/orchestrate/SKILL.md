@@ -134,6 +134,11 @@ instead of approximating a GSD workflow.
 8. Escalate ambiguous or wrong results by tightening the worker prompt and
    rerunning, or by asking the user when the ambiguity is truly external.
 
+9. Isolated implementation: All task and feature implementation work by coding
+   workers must happen in dedicated worktrees under `.worktrees/<task-slug>` to
+   protect the main checkout from in-place edits.
+
+
 ---
 
 ## Concurrency rules
