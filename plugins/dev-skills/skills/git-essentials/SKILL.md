@@ -338,7 +338,24 @@ git clean -fdx
 
 ## Common Workflows
 
-**Feature branch workflow:**
+**Isolated Worktree Workflow (Recommended for tasks & multi-agent development):**
+```bash
+# 1. Main checkout always stays on default branch (main/master)
+# 2. Create isolated worktree under .worktrees/<task-slug>
+git worktree add -b feat/new-feature .worktrees/feat-new-feature origin/main
+
+# 3. Work, validate, and commit inside .worktrees/feat-new-feature
+git add .
+git commit -m "feat: add new feature"
+git push -u origin feat/new-feature
+
+# 4. Open and merge PR
+# 5. Remove worktree and delete local branch
+git worktree remove .worktrees/feat-new-feature
+git branch -d feat/new-feature
+```
+
+**Feature branch workflow (single checkout fallback):**
 ```bash
 git checkout -b feature/new-feature
 # Make changes
