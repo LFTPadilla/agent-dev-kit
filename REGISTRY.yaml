@@ -3,6 +3,16 @@
 version: "1.0"
 updated: "2026-08-22"
 
+subsystems:
+  dev-skills:
+    path: "plugins/dev-skills"
+    context: "plugins/dev-skills/AGENTS.md"
+    description: "Curated discrete skills and plugin manifests for Claude Code & Codex"
+  overnight-task-kit:
+    path: "overnight-task-kit"
+    context: "overnight-task-kit/AGENTS.md"
+    description: "Long-running autonomous protocols, templates, and multi-harness delegation"
+
 profiles:
   personal-dev-tutor:
     path: "profiles/personal-dev-tutor.yml"
@@ -36,3 +46,6 @@ tools:
   audit-agent-native:
     entrypoint: "scripts/audit-agent-native.py"
     commands: [audit]
+  overnight-runner:
+    entrypoint: "overnight-task-kit/scripts/overnight-runner.mjs"
+    commands: [init]
