@@ -86,3 +86,18 @@ External installs: [docs/external-deps.md](docs/external-deps.md).
 3. Update `skill-provenance.json` and `docs/skills-catalog.md`.
 4. Bump plugin versions with `package.json`.
 5. Run `npm run validate`.
+
+## Git Worktree & Multi-Agent Coordination
+
+1. **Main checkout protection:** The primary repository checkout (`~/programming/agent-dev-kit`) MUST ALWAYS remain on `main`. Never switch branches in place or commit directly on `main`.
+2. **Dedicated worktrees in `.worktrees/`:** All task/ticket work must be done in an isolated worktree under `.worktrees/<task-slug>`:
+   ```bash
+   git worktree add -b <branch-name> .worktrees/<task-slug> origin/main
+   ```
+   Work, validate, and commit inside `.worktrees/<task-slug>`.
+   After PR merge, clean up with:
+   ```bash
+   git worktree remove .worktrees/<task-slug>
+   git branch -d <branch-name>
+   ```
+
