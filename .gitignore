@@ -11,6 +11,8 @@ __pycache__/
 # Local agent worktrees and overnight run logs — never commit.
 .claude/
 .gnhf/
+/.worktrees/
+.worktrees/
 
 # Secrets / local
 .env
