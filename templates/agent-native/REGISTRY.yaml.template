@@ -1,0 +1,37 @@
+# REGISTRY.yaml — Canonical Machine-Readable Platform Catalog
+# Standard: ANRS-1.0 (Agent-Native Repository Specification)
+version: "1.0"
+updated: "<YYYY-MM-DD>"
+
+services:
+  api:
+    path: "services/api"
+    port: 8080
+    health_endpoint: "http://localhost:8080/health"
+    env_required: [DATABASE_URL, PORT]
+    description: "Main backend REST / GraphQL API"
+
+  web:
+    path: "apps/web"
+    port: 3000
+    health_endpoint: "http://localhost:3000"
+    description: "Frontend web application"
+
+mcp_servers:
+  database-mcp:
+    path: "mcp/database-mcp/server.ts"
+    scope: "data-access"
+    tools: [query_db, describe_tables]
+    env_required: [DATABASE_URL]
+
+skills:
+  code-reviewer:
+    path: "skills/code-reviewer"
+    scope: "qa"
+    requires: [git, node]
+
+agents:
+  primary-operator:
+    runtime: "hermes / claude / antigravity"
+    identity_source: "agents/primary-operator/"
+    toolset: [mcp/database-mcp, skills/code-reviewer]
