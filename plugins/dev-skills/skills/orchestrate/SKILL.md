@@ -43,10 +43,10 @@ Route subagents according to harness capabilities and task complexity:
 | Verifier / Reviewer | `gpt-5.6-sol` | `high` | independent verification after implementation |
 | GSD worker | `gpt-5.6` | `high` | `.planning/`, phase, milestone, UAT, roadmap, SPEC workflows |
 
-### Claude Code / Anthropic
-- **Orchestrator**: Current session model (`opus` or `sonnet`).
-- **Implementation & Review**: `sonnet` with `high`/`max` effort.
-- **Fast exploration / summaries**: `haiku` (read-only tasks).
+### Claude Code / Anthropic (Frontier-First)
+- **Orchestrator**: `opus-5` (or latest frontier flagship) with maximum reasoning effort.
+- **Implementation & Review**: `opus-5` or `sonnet-5` (for complex logic, auth, migrations, architecture).
+- **Fast exploration / summaries**: `fable-5` or `haiku-5` (read-only sweeps, quick triage, small summaries).
 
 ### Antigravity / Gemini
 - **Orchestrator**: `gemini-3.7-flash (high)` or `gemini-3.7-pro`.
@@ -54,8 +54,17 @@ Route subagents according to harness capabilities and task complexity:
 - **Fast exploration**: `gemini-3.7-flash` (fast read-only sweeps).
 
 ### PI / OpenCode
-Models change frequently. Before spawning executors, ask:
+Models change frequently. Always use the latest frontier models available in the local profile/config. Before spawning executors, confirm:
 > Que modelo quieres usar para los agentes ejecutores? El modelo actual queda como orquestador.
+
+---
+
+## The Frontier-First Principle
+
+Never downgrade execution or review to stale or legacy generations. When delegating:
+1. Always resolve to the latest active frontier model in the host environment.
+2. Reserve the most capable frontier model (`gpt-5.6-sol`, `opus-5`, `gemini-3.7-pro`) for orchestrator judgment, architectural decisions, and independent verification.
+3. Use fast frontier models (`gpt-5.6-luna`, `fable-5`, `gemini-3.7-flash`) only for bounded mechanical tasks and read-heavy sweeps.
 
 ---
 

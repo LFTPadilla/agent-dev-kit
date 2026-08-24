@@ -16,7 +16,7 @@ The founding rule survives unchanged: **the advisor never edits source code.** I
 
 ### Dispatch
 
-Spawn **one** `general-purpose` subagent with `isolation: "worktree"`. Executor model: default `sonnet`; use what the user named if they named one (`execute 003 haiku`).
+Spawn **one** `general-purpose` subagent with `isolation: "worktree"`. Executor model: default frontier executor (`opus-5`, `gpt-5.6-sol`, `gemini-3.7-pro`); use what the user named if they named one (`execute 003 fable-5`).
 
 The subagent prompt must contain:
 
