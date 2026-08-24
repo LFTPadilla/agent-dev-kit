@@ -148,7 +148,7 @@ Write to `/tmp/<topic>_prompt_<n>.md` first. Required elements:
 - **Do not commit / do not push** unless told otherwise.
 - **Acceptance criteria**, numbered, each independently verifiable.
 - **Audit verdict request**: end with
-  `VERDICT: APTO PARA REVIEW` or `VERDICT: NECESITA CORRECCIONES`.
+  `VERDICT: READY FOR REVIEW` or `VERDICT: NEEDS CORRECTIONS`.
 
 ### Inject via the Three-Step
 
@@ -208,7 +208,7 @@ lock files, formatter runs. Revert and re-delegate if needed.
 
 For each acceptance criterion, read the actual diff and answer yes/no with a
 one-line justification. End your report to the user with
-`APTO PARA REVIEW` or `NECESITA CORRECCIONES: <bullet list>`.
+`READY FOR REVIEW` or `NEEDS CORRECTIONS: <bullet list>`.
 
 ## Kanban Delegation — for Restart-Safe Work
 
@@ -316,7 +316,7 @@ Before reporting back to the user:
 - [ ] AskUserQuestion prompts handled (defaulted, delegated, or escalated).
 - [ ] If the next step requires `git push --force-with-lease` or similar destructive
       command, the exact command is staged for the user to copy-paste.
-- [ ] Final verdict: `APTO PARA REVIEW` or `NECESITA CORRECCIONES: …`.
+- [ ] Final verdict: `READY FOR REVIEW` or `NEEDS CORRECTIONS: …`.
 
 ## Termination
 

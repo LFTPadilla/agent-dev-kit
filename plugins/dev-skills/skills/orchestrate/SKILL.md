@@ -30,23 +30,23 @@ Then continue with the task unless a blocking requirement is ambiguous.
 
 ---
 
-## Model routing per harness
+## Dynamic Model Routing per Harness
 
-Route subagents according to harness capabilities and task complexity:
+Subagents are routed dynamically based on task risk and harness capabilities:
 
 ### Codex / OpenAI
-| Route | Model | Effort | Use for |
+| Route | Dynamic Model Tier | Effort | Purpose |
 | --- | --- | --- | --- |
-| Orchestrator | `gpt-5.6-sol` / session default | `high` or `xhigh` | planning, routing, synthesis, final judgment |
-| Complex worker | `gpt-5.6` | `high` | ambiguous bugs, multi-file edits, architecture, migrations, auth, security |
-| Fast worker | `gpt-5.6-luna` | `medium` | read-heavy exploration, summaries, mechanical one-file edits, log triage |
-| Verifier / Reviewer | `gpt-5.6-sol` | `high` | independent verification after implementation |
-| GSD worker | `gpt-5.6` | `high` | `.planning/`, phase, milestone, UAT, roadmap, SPEC workflows |
+| Orchestrator | `gpt-5.6-sol` / session flagship | `high` or `xhigh` | Planning, routing, decomposition, final judgment |
+| Complex worker | `gpt-5.6` / flagship | `high` | Multi-file edits, architecture, migrations, auth, security |
+| Fast worker | `gpt-5.6-luna` / fast tier | `medium` | Read-heavy exploration, summaries, single-file edits, log triage |
+| Verifier / Reviewer | `gpt-5.6-sol` / flagship | `high` | Independent post-implementation verification |
+| GSD worker | `gpt-5.6` / flagship | `high` | `.planning/`, phase, milestone, roadmap, SPEC workflows |
 
-### Claude Code / Anthropic (Frontier-First)
-- **Orchestrator**: `opus-5` (or latest frontier flagship) with maximum reasoning effort.
-- **Implementation & Review**: `opus-5` or `sonnet-5` (for complex logic, auth, migrations, architecture).
-- **Fast exploration / summaries**: `fable-5` or `haiku-5` (read-only sweeps, quick triage, small summaries).
+### Claude Code / Anthropic
+- **Orchestrator**: Active session flagship (e.g. `opus` tier) with maximum reasoning effort.
+- **Implementation & Review**: Flagship or complex executor (`opus` / `sonnet` frontier tier).
+- **Fast exploration / summaries**: Fast frontier tier for read-only sweeps and triage.
 
 ### Antigravity / Gemini
 - **Orchestrator**: `gemini-3.7-flash (high)` or `gemini-3.7-pro`.
@@ -54,17 +54,17 @@ Route subagents according to harness capabilities and task complexity:
 - **Fast exploration**: `gemini-3.7-flash` (fast read-only sweeps).
 
 ### PI / OpenCode
-Models change frequently. Always use the latest frontier models available in the local profile/config. Before spawning executors, confirm:
-> Que modelo quieres usar para los agentes ejecutores? El modelo actual queda como orquestador.
+Models and profiles are dynamic. Always resolve to the latest active frontier models configured locally. Before spawning executors when model choice is ambiguous, ask:
+> Which model would you like to use for the executor agents? The current session will remain as the orchestrator.
 
 ---
 
-## The Frontier-First Principle
+## The Dynamic Frontier-First Principle
 
-Never downgrade execution or review to stale or legacy generations. When delegating:
-1. Always resolve to the latest active frontier model in the host environment.
-2. Reserve the most capable frontier model (`gpt-5.6-sol`, `opus-5`, `gemini-3.7-pro`) for orchestrator judgment, architectural decisions, and independent verification.
-3. Use fast frontier models (`gpt-5.6-luna`, `fable-5`, `gemini-3.7-flash`) only for bounded mechanical tasks and read-heavy sweeps.
+1. **No Stale Anchoring**: Always resolve worker and reviewer tiers to the host runtime's current active frontier models.
+2. **Judgment Tier**: Reserve the highest-capability frontier tier for orchestrator planning, architectural choices, and independent diff verification.
+3. **Bounded Tier**: Use high-speed tiers only for read-only sweeps, search, or mechanical tasks.
+4. **User Override**: If the user specifies an explicit model (e.g. via flags, prompts, or profiles), always honor that choice directly.
 
 ---
 

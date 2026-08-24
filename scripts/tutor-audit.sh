@@ -74,14 +74,14 @@ git diff --stat 2>/dev/null | sed 's/^/    /'
 echo
 echo "VERDICT:"
 if [ "$current_branch" != "$branch" ]; then
-  echo "  NECESITA CORRECCIONES: branch mismatch"
+  echo "  NEEDS CORRECTIONS: branch mismatch"
   exit 1
 fi
 if [ -n "$violations" ]; then
-  echo "  NECESITA CORRECCIONES: files outside allowlist"
+  echo "  NEEDS CORRECTIONS: files outside allowlist"
   exit 1
 fi
-echo "  APTO PARA REVIEW"
+echo "  READY FOR REVIEW"
 # Update lane state
 lane_script="$USER_HOME/.hermes/profiles/$PROFILE/scripts/tutor-lane-update.sh"
 [ -x "$lane_script" ] && \

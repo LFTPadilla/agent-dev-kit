@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Delegate a bounded task to a local agent harness."""
+"""Universal Harness Adapter — Delegate bounded tasks across local agent harnesses."""
 
 from __future__ import annotations
 
@@ -16,13 +16,14 @@ from typing import Any
 
 
 DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
+    # Pi profiles
     "pi-glm-review": {
         "harness": "pi",
         "model": "zai-coding-plan/glm-5.2",
         "thinking": "xhigh",
         "mode": "read",
         "timeout": 1800,
-        "description": "Deep read-only review with GLM 5.2.",
+        "description": "Deep read-only review with GLM 5.2 via Pi.",
     },
     "pi-glm-plan": {
         "harness": "pi",
@@ -30,7 +31,7 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "thinking": "high",
         "mode": "read",
         "timeout": 1800,
-        "description": "Read-only planning and decomposition with GLM 5.2.",
+        "description": "Read-only planning and decomposition with GLM 5.2 via Pi.",
     },
     "pi-glm-debug": {
         "harness": "pi",
@@ -38,7 +39,7 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "thinking": "high",
         "mode": "read",
         "timeout": 1800,
-        "description": "Read-only debugging analysis with GLM 5.2.",
+        "description": "Read-only debugging analysis with GLM 5.2 via Pi.",
     },
     "pi-glm-implement": {
         "harness": "pi",
@@ -46,7 +47,7 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "thinking": "high",
         "mode": "write",
         "timeout": 2400,
-        "description": "Scoped implementation with GLM 5.2. Requires --allow-write.",
+        "description": "Scoped implementation with GLM 5.2 via Pi. Requires --allow-write.",
     },
     "pi-minimax-large": {
         "harness": "pi",
@@ -54,8 +55,9 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "thinking": "medium",
         "mode": "read",
         "timeout": 1800,
-        "description": "Large-context read-only sweep.",
+        "description": "Large-context read-only sweep via Pi.",
     },
+    # OpenCode profiles
     "opencode-fast": {
         "harness": "opencode",
         "model": "default",
@@ -79,17 +81,54 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "timeout": 2400,
         "description": "OpenCode implementation. Requires --allow-write.",
     },
+    # Codex CLI profiles
+    "codex-complex": {
+        "harness": "codex",
+        "model": "gpt-5.6",
+        "mode": "write",
+        "timeout": 2400,
+        "description": "Complex worker via Codex CLI. Requires --allow-write.",
+    },
+    "codex-fast": {
+        "harness": "codex",
+        "model": "gpt-5.6-luna",
+        "mode": "read",
+        "timeout": 1200,
+        "description": "Fast exploration worker via Codex CLI.",
+    },
+    "codex-review": {
+        "harness": "codex",
+        "model": "gpt-5.6-sol",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "Independent verifier/reviewer via Codex CLI.",
+    },
+    # Claude Code CLI profiles
+    "claude-review": {
+        "harness": "claude",
+        "model": "default",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "Adversarial code review via Claude Code CLI.",
+    },
+    "claude-implement": {
+        "harness": "claude",
+        "model": "default",
+        "mode": "write",
+        "timeout": 2400,
+        "description": "Scoped implementation via Claude Code CLI. Requires --allow-write.",
+    },
 }
 
 TASK_TYPE_DEFAULTS = {
-    "review": "pi-glm-review",
-    "security": "pi-glm-review",
+    "review": "codex-review",
+    "security": "codex-review",
     "plan": "pi-glm-plan",
     "research": "pi-minimax-large",
     "debug": "pi-glm-debug",
     "quick": "opencode-fast",
-    "implement": "pi-glm-implement",
-    "verify": "opencode-review",
+    "implement": "codex-complex",
+    "verify": "codex-review",
 }
 
 READ_ONLY_TOOLS = "read,grep,find,ls"
@@ -144,6 +183,18 @@ def available_opencode_models() -> set[str]:
     return found
 
 
+def available_codex_models() -> set[str]:
+    cache_path = Path.home() / ".codex/models_cache.json"
+    data = load_json(cache_path)
+    if not data:
+        return {"gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.6"}
+    found: set[str] = set()
+    for item in data.get("models", []):
+        if isinstance(item, dict) and "id" in item:
+            found.add(item["id"])
+    return found or {"gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.6"}
+
+
 def print_profiles() -> None:
     header = ["profile", "harness", "model", "mode", "description"]
     rows = []
@@ -165,32 +216,34 @@ def print_profiles() -> None:
 
 
 def diagnose() -> int:
-    print("Harness diagnostics")
-    print("===================")
-    for binary in ["pi", "opencode"]:
+    print("Universal Harness Adapter — Diagnostics")
+    print("========================================")
+    harnesses = ["codex", "claude", "pi", "opencode"]
+    for binary in harnesses:
         path = shutil.which(binary)
-        print(f"{binary}: {path or '<missing>'}")
+        print(f"{binary:10}: {path or '<missing>'}")
         if path:
-            print(f"{binary} version: {run_quiet([binary, '--version'])}")
-    pi_models = available_pi_models()
-    opencode_models = available_opencode_models()
+            print(f"  version : {run_quiet([binary, '--version'])}")
     print()
-    print("Pi models:")
-    for model in sorted(pi_models) or ["<none found>"]:
+    print("Detected Models per Harness:")
+    print("Codex:")
+    for model in sorted(available_codex_models()):
         print(f"  - {model}")
-    print("OpenCode models:")
-    for model in sorted(opencode_models) or ["<none found>"]:
+    print("Pi:")
+    for model in sorted(available_pi_models()) or ["<none found>"]:
+        print(f"  - {model}")
+    print("OpenCode:")
+    for model in sorted(available_opencode_models()) or ["<none found>"]:
         print(f"  - {model}")
     print()
     missing = []
     for name, profile in DEFAULT_PROFILES.items():
         harness = profile["harness"]
         model = profile["model"]
-        available = pi_models if harness == "pi" else opencode_models
         binary = shutil.which(harness)
-        ok = bool(binary) and (model == "default" or model in available)
-        marker = "OK" if ok else "CHECK"
-        print(f"{marker:5} {name}: {harness} {model}")
+        ok = bool(binary)
+        marker = "OK" if ok else "MISSING"
+        print(f"{marker:7} {name:20} [{harness}] model={model}")
         if not ok:
             missing.append(name)
     return 1 if missing else 0
@@ -234,6 +287,22 @@ def read_task(args: argparse.Namespace) -> str:
     return task
 
 
+def setup_worktree(repo_root: Path, slug: str) -> Path:
+    worktree_dir = repo_root / ".worktrees" / slug
+    if worktree_dir.exists():
+        return worktree_dir
+    branch = f"task/{slug}"
+    cmd = ["git", "-C", str(repo_root), "worktree", "add", "-b", branch, str(worktree_dir), "HEAD"]
+    proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    if proc.returncode != 0:
+        # Fallback if branch already exists
+        cmd_existing = ["git", "-C", str(repo_root), "worktree", "add", str(worktree_dir), branch]
+        proc2 = subprocess.run(cmd_existing, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+        if proc2.returncode != 0:
+            raise SystemExit(f"Failed to create worktree at {worktree_dir}: {proc.stderr}\n{proc2.stderr}")
+    return worktree_dir
+
+
 def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: str, allow_write: bool) -> str:
     mode = "WRITE_ALLOWED" if profile["mode"] == "write" and allow_write else "READ_ONLY"
     forbidden = [
@@ -250,7 +319,7 @@ def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: st
     forbidden_text = "\n".join(f"- {line}" for line in forbidden)
     return textwrap.dedent(
         f"""
-        You are an external harness delegated by the primary Codex orchestrator.
+        You are a bounded worker delegated by the primary orchestrator.
 
         Working directory: {cwd}
         Profile: {profile_name}
@@ -262,18 +331,26 @@ def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: st
         {task.strip()}
 
         Rules:
-        - Read project instructions such as AGENTS.md before acting.
+        - Read project instructions such as REGISTRY.yaml or AGENTS.md before acting.
         {forbidden_text}
-        - The primary orchestrator will verify your output before accepting it.
+        - The primary orchestrator will verify your output on disk before accepting it.
         - You do not have the full conversation context unless it is written above.
 
-        Return exactly these sections:
-        1. SUMMARY
-        2. FINDINGS_OR_CHANGES
-        3. FILES_INSPECTED
-        4. COMMANDS_RUN
-        5. VERIFICATION
-        6. RISKS
+        Return structured output formatted in compact YAML:
+        ```yaml
+        status: done | blocked | failed
+        files_changed:
+          - path/to/file
+        commands_run:
+          - command string
+        tests: pass | fail | skipped
+        decisions:
+          - "Short rationale for key choices"
+        risks:
+          - "Residual risk or unresolved concern"
+        next_actions:
+          - "Next suggested step"
+        ```
         """
     ).strip()
 
@@ -312,6 +389,21 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
         if profile.get("variant"):
             cmd.extend(["--variant", str(profile["variant"])])
         cmd.append(prompt)
+        return cmd
+
+    if harness == "codex":
+        cmd = ["codex", "exec", "--ephemeral", "-C", str(cwd)]
+        if model != "default":
+            cmd.extend(["-m", model])
+        if allow_write:
+            cmd.append("--yolo")
+        cmd.append(prompt)
+        return cmd
+
+    if harness == "claude":
+        cmd = ["claude", "-p", prompt]
+        if allow_write:
+            cmd.append("--dangerously-skip-permissions")
         return cmd
 
     raise SystemExit(f"Unsupported harness: {harness}")
@@ -353,15 +445,16 @@ def main() -> int:
     parser.add_argument("--task", help="Delegated task text.")
     parser.add_argument("--task-file", help="Read delegated task text from file.")
     parser.add_argument("--cwd", default=os.getcwd(), help="Working directory for the delegated harness.")
+    parser.add_argument("--worktree", help="Isolate task in a dedicated git worktree under .worktrees/<slug>.")
     parser.add_argument("--timeout", type=int, help="Override timeout in seconds.")
     parser.add_argument("--model", help="Override model for the selected profile.")
-    parser.add_argument("--harness", choices=["pi", "opencode"], help="Override harness for the selected profile.")
+    parser.add_argument("--harness", choices=["pi", "opencode", "codex", "claude"], help="Override harness.")
     parser.add_argument("--allow-write", action="store_true", help="Allow a write-capable profile to run.")
-    parser.add_argument("--dry-run", action="store_true", help="Print command metadata and save prompt without executing.")
+    parser.add_argument("--dry-run", action="store_true", help="Print command metadata without executing.")
     parser.add_argument("--no-save", action="store_true", help="Do not write run artifacts.")
     parser.add_argument("--save-dir", default=str(Path.home() / ".cache/multi-harness/runs"))
-    parser.add_argument("--list-profiles", action="store_true")
-    parser.add_argument("--diagnose", action="store_true")
+    parser.add_argument("--list-profiles", action="store_true", help="List configured profiles.")
+    parser.add_argument("--diagnose", action="store_true", help="Run harness and model diagnostics.")
     args = parser.parse_args()
 
     if args.list_profiles:
@@ -374,6 +467,10 @@ def main() -> int:
     cwd = Path(args.cwd).expanduser().resolve()
     if not cwd.exists():
         raise SystemExit(f"Working directory does not exist: {cwd}")
+
+    if args.worktree:
+        cwd = setup_worktree(cwd, args.worktree)
+
     task = read_task(args)
     prompt = build_prompt(profile_name, profile, cwd, task, args.allow_write)
     cmd = command_for(profile, cwd, prompt, args.allow_write)
