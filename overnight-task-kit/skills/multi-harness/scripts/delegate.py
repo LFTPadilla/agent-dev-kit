@@ -16,6 +16,65 @@ from typing import Any
 
 
 DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
+    # Codex CLI profiles
+    "codex-complex": {
+        "harness": "codex",
+        "model": "gpt-5.6",
+        "mode": "write",
+        "timeout": 2400,
+        "description": "Complex worker via Codex CLI. Requires --allow-write or --yolo.",
+    },
+    "codex-fast": {
+        "harness": "codex",
+        "model": "gpt-5.6-luna",
+        "mode": "read",
+        "timeout": 1200,
+        "description": "Fast exploration worker via Codex CLI.",
+    },
+    "codex-review": {
+        "harness": "codex",
+        "model": "gpt-5.6-sol",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "Independent verifier/reviewer via Codex CLI.",
+    },
+    # Claude Code CLI profiles
+    "claude-review": {
+        "harness": "claude",
+        "model": "default",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "Adversarial code review via Claude Code CLI.",
+    },
+    "claude-implement": {
+        "harness": "claude",
+        "model": "default",
+        "mode": "write",
+        "timeout": 2400,
+        "description": "Scoped implementation via Claude Code CLI. Requires --allow-write or --yolo.",
+    },
+    # DHS (Developer Harness Sandbox) profiles
+    "dhs-review": {
+        "harness": "dhs",
+        "model": "default",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "Read-only review via DHS runner.",
+    },
+    "dhs-implement": {
+        "harness": "dhs",
+        "model": "default",
+        "mode": "write",
+        "timeout": 2400,
+        "description": "Scoped implementation via DHS runner. Requires --allow-write or --yolo.",
+    },
+    "dhs-fast": {
+        "harness": "dhs",
+        "model": "default",
+        "mode": "read",
+        "timeout": 1200,
+        "description": "Fast inspection via DHS runner.",
+    },
     # Pi profiles
     "pi-glm-review": {
         "harness": "pi",
@@ -47,7 +106,7 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "thinking": "high",
         "mode": "write",
         "timeout": 2400,
-        "description": "Scoped implementation with GLM 5.2 via Pi. Requires --allow-write.",
+        "description": "Scoped implementation with GLM 5.2 via Pi. Requires --allow-write or --yolo.",
     },
     "pi-minimax-large": {
         "harness": "pi",
@@ -79,44 +138,7 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "agent": "gsd-executor",
         "mode": "write",
         "timeout": 2400,
-        "description": "OpenCode implementation. Requires --allow-write.",
-    },
-    # Codex CLI profiles
-    "codex-complex": {
-        "harness": "codex",
-        "model": "gpt-5.6",
-        "mode": "write",
-        "timeout": 2400,
-        "description": "Complex worker via Codex CLI. Requires --allow-write.",
-    },
-    "codex-fast": {
-        "harness": "codex",
-        "model": "gpt-5.6-luna",
-        "mode": "read",
-        "timeout": 1200,
-        "description": "Fast exploration worker via Codex CLI.",
-    },
-    "codex-review": {
-        "harness": "codex",
-        "model": "gpt-5.6-sol",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Independent verifier/reviewer via Codex CLI.",
-    },
-    # Claude Code CLI profiles
-    "claude-review": {
-        "harness": "claude",
-        "model": "default",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Adversarial code review via Claude Code CLI.",
-    },
-    "claude-implement": {
-        "harness": "claude",
-        "model": "default",
-        "mode": "write",
-        "timeout": 2400,
-        "description": "Scoped implementation via Claude Code CLI. Requires --allow-write.",
+        "description": "OpenCode implementation. Requires --allow-write or --yolo.",
     },
 }
 
@@ -218,7 +240,7 @@ def print_profiles() -> None:
 def diagnose() -> int:
     print("Universal Harness Adapter — Diagnostics")
     print("========================================")
-    harnesses = ["codex", "claude", "pi", "opencode"]
+    harnesses = ["codex", "claude", "dhs", "pi", "opencode"]
     for binary in harnesses:
         path = shutil.which(binary)
         print(f"{binary:10}: {path or '<missing>'}")
@@ -295,7 +317,6 @@ def setup_worktree(repo_root: Path, slug: str) -> Path:
     cmd = ["git", "-C", str(repo_root), "worktree", "add", "-b", branch, str(worktree_dir), "HEAD"]
     proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     if proc.returncode != 0:
-        # Fallback if branch already exists
         cmd_existing = ["git", "-C", str(repo_root), "worktree", "add", str(worktree_dir), branch]
         proc2 = subprocess.run(cmd_existing, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
         if proc2.returncode != 0:
@@ -355,15 +376,19 @@ def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: st
     ).strip()
 
 
-def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bool) -> list[str]:
+def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bool, skip_permissions: bool) -> list[str]:
     harness = profile["harness"]
     model = profile["model"]
     mode = profile["mode"]
-    if mode == "write" and not allow_write:
-        raise SystemExit(f"Profile mode is write for {model}. Re-run with --allow-write if this is intentional.")
+    effective_write = allow_write or skip_permissions
+
+    if mode == "write" and not effective_write:
+        raise SystemExit(
+            f"Profile mode is write for {model}. Re-run with --allow-write, --yolo, or --dangerously-skip-permissions."
+        )
 
     if harness == "pi":
-        tools = WRITE_TOOLS if mode == "write" else READ_ONLY_TOOLS
+        tools = WRITE_TOOLS if effective_write else READ_ONLY_TOOLS
         cmd = [
             "pi",
             "--print",
@@ -395,15 +420,24 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
         cmd = ["codex", "exec", "--ephemeral", "-C", str(cwd)]
         if model != "default":
             cmd.extend(["-m", model])
-        if allow_write:
+        if skip_permissions:
             cmd.append("--yolo")
         cmd.append(prompt)
         return cmd
 
     if harness == "claude":
         cmd = ["claude", "-p", prompt]
-        if allow_write:
+        if skip_permissions:
             cmd.append("--dangerously-skip-permissions")
+        return cmd
+
+    if harness == "dhs":
+        cmd = ["dhs", "exec", "--dir", str(cwd)]
+        if model != "default":
+            cmd.extend(["--model", model])
+        if skip_permissions:
+            cmd.append("--yolo")
+        cmd.append(prompt)
         return cmd
 
     raise SystemExit(f"Unsupported harness: {harness}")
@@ -422,7 +456,7 @@ def write_run_artifacts(
     run_dir = save_dir / f"{timestamp}-{profile_name}"
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "prompt.md").write_text(prompt + "\n", encoding="utf-8")
-    display_cmd = [cmd[0], *cmd[1:-1], "<prompt>"] if cmd else []
+    display_cmd = [arg if arg != prompt else "<prompt>" for arg in cmd]
     meta = {
         "profile": profile_name,
         "cwd": str(cwd),
@@ -448,8 +482,10 @@ def main() -> int:
     parser.add_argument("--worktree", help="Isolate task in a dedicated git worktree under .worktrees/<slug>.")
     parser.add_argument("--timeout", type=int, help="Override timeout in seconds.")
     parser.add_argument("--model", help="Override model for the selected profile.")
-    parser.add_argument("--harness", choices=["pi", "opencode", "codex", "claude"], help="Override harness.")
+    parser.add_argument("--harness", choices=["pi", "opencode", "codex", "claude", "dhs"], help="Override harness.")
     parser.add_argument("--allow-write", action="store_true", help="Allow a write-capable profile to run.")
+    parser.add_argument("--yolo", action="store_true", help="Bypass confirmation prompts and skip permissions.")
+    parser.add_argument("--dangerously-skip-permissions", action="store_true", help="Alias for --yolo.")
     parser.add_argument("--dry-run", action="store_true", help="Print command metadata without executing.")
     parser.add_argument("--no-save", action="store_true", help="Do not write run artifacts.")
     parser.add_argument("--save-dir", default=str(Path.home() / ".cache/multi-harness/runs"))
@@ -463,6 +499,9 @@ def main() -> int:
     if args.diagnose:
         return diagnose()
 
+    skip_permissions = args.yolo or args.dangerously_skip_permissions
+    allow_write = args.allow_write or skip_permissions
+
     profile_name, profile = resolve_profile(args)
     cwd = Path(args.cwd).expanduser().resolve()
     if not cwd.exists():
@@ -472,15 +511,16 @@ def main() -> int:
         cwd = setup_worktree(cwd, args.worktree)
 
     task = read_task(args)
-    prompt = build_prompt(profile_name, profile, cwd, task, args.allow_write)
-    cmd = command_for(profile, cwd, prompt, args.allow_write)
+    prompt = build_prompt(profile_name, profile, cwd, task, allow_write)
+    cmd = command_for(profile, cwd, prompt, allow_write, skip_permissions)
 
+    display_cmd = [arg if arg != prompt else "<prompt>" for arg in cmd]
     run_dir = None
     if args.dry_run:
         if not args.no_save:
             run_dir = write_run_artifacts(Path(args.save_dir).expanduser(), profile_name, prompt, cmd, cwd, None, True)
         print("DRY RUN")
-        print("Command:", " ".join(cmd[:-1]), "<prompt>")
+        print("Command:", " ".join(display_cmd))
         if run_dir:
             print("Run dir:", run_dir)
         return 0
