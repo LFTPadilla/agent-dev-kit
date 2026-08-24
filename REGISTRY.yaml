@@ -35,6 +35,13 @@ skills:
   ai-workflow-orchestrator:
     path: "plugins/dev-skills/skills/ai-workflow-orchestrator"
     scope: "orchestration"
+  multi-harness:
+    path: "overnight-task-kit/skills/multi-harness"
+    scope: "cross-harness"
+    requires: [python3]
+  overnight-task:
+    path: "overnight-task-kit/skills/overnight-task"
+    scope: "autonomous"
   diagram-render:
     path: "plugins/dev-skills/skills/diagram-render"
     scope: "visualization"

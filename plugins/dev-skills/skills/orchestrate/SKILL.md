@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Explicit orchestrator mode for Codex, Claude Code, PI, or OpenCode. Use only when the user says "$orchestrate", "orchestrate", "orquestar", "orquestrar", "delegate to subagents/workers", "use cheaper models", "keep your context clean", or asks to route work through GSD with subagents. Plans, decomposes, chooses worker models, delegates execution, and independently verifies results.
+description: Explicit orchestrator mode for Antigravity, Codex, Claude Code, PI, or OpenCode. Use only when the user says "$orchestrate", "orchestrate", "orquestar", "orquestrar", "delegate to subagents/workers", "use cheaper models", "keep your context clean", or asks to route work through GSD with subagents. Plans, decomposes, chooses worker models, delegates execution, and independently verifies results.
 ---
 
 # orchestrate - planner/orchestrator mode
@@ -30,47 +30,32 @@ Then continue with the task unless a blocking requirement is ambiguous.
 
 ---
 
-## Codex model routing
+## Model routing per harness
 
-Prefer custom Codex agents when available. This skill ships templates in
-`assets/codex-agents/` for:
+Route subagents according to harness capabilities and task complexity:
 
-- `orchestrate-complex-worker`: `gpt-5.5`, `high`
-- `orchestrate-spark-worker`: `gpt-5.3-codex-spark`, `xhigh`
-- `orchestrate-verifier`: `gpt-5.5`, `high`
-- `orchestrate-reviewer`: `gpt-5.5`, `high`
-- `orchestrate-gsd-worker`: `gpt-5.5`, `high`
-
-If those custom agents are not installed, request equivalent spawned agents by
-model and effort directly in the subagent instruction.
-
+### Codex / OpenAI
 | Route | Model | Effort | Use for |
 | --- | --- | --- | --- |
-| Orchestrator | current session, ideally `gpt-5.5` | `high` or `xhigh` | planning, routing, synthesis, final judgment |
-| Complex worker | `gpt-5.5` | `high` | ambiguous bugs, multi-file edits, architecture, migrations, auth, security, data integrity |
-| Spark worker | `gpt-5.3-codex-spark` | `xhigh` | read-heavy exploration, summaries, mechanical one-file edits, log triage, simple docs |
-| Verifier | `gpt-5.5` | `high` | independent verification after implementation |
-| Reviewer | `gpt-5.5` | `high` | correctness, security, regressions, test gaps |
-| GSD worker | `gpt-5.5` | `high` | `.planning/`, phase, milestone, UAT, roadmap, SPEC, or GSD skill workflows |
+| Orchestrator | `gpt-5.6-sol` / session default | `high` or `xhigh` | planning, routing, synthesis, final judgment |
+| Complex worker | `gpt-5.6` | `high` | ambiguous bugs, multi-file edits, architecture, migrations, auth, security |
+| Fast worker | `gpt-5.6-luna` | `medium` | read-heavy exploration, summaries, mechanical one-file edits, log triage |
+| Verifier / Reviewer | `gpt-5.6-sol` | `high` | independent verification after implementation |
+| GSD worker | `gpt-5.6` | `high` | `.planning/`, phase, milestone, UAT, roadmap, SPEC workflows |
 
-Escalate from Spark to `gpt-5.5 high` when the task touches auth,
-permissions, security, schema or database changes, concurrency, money, data
-loss, public APIs, production deploys, failing tests, unclear ownership, or
-more than one implementation area.
+### Claude Code / Anthropic
+- **Orchestrator**: Current session model (`opus` or `sonnet`).
+- **Implementation & Review**: `sonnet` with `high`/`max` effort.
+- **Fast exploration / summaries**: `haiku` (read-only tasks).
 
-### Claude Code
-
-Use the current session as orchestrator. Use `sonnet` with `max` effort for
-implementation and review workers. Use `haiku` only for read-heavy exploration
-or summarization that cannot change files.
+### Antigravity / Gemini
+- **Orchestrator**: `gemini-3.7-flash (high)` or `gemini-3.7-pro`.
+- **Implementation & Review**: `gemini-3.7-pro` or `gemini-3.7-flash (high)`.
+- **Fast exploration**: `gemini-3.7-flash` (fast read-only sweeps).
 
 ### PI / OpenCode
-
 Models change frequently. Before spawning executors, ask:
-
 > Que modelo quieres usar para los agentes ejecutores? El modelo actual queda como orquestador.
-
-Use that answer for executor model selection in this session.
 
 ---
 
@@ -109,34 +94,37 @@ instead of approximating a GSD workflow.
 1. Never implement directly while subagents are available. Delegate searches,
    edits, tests, and log analysis to bounded workers.
 
-2. Keep subagent prompts self-contained. Assume the worker has none of the
+2. Agent-Native navigation (ANRS-1.0): Guide subagents to inspect `REGISTRY.yaml`
+   and hub `AGENTS.md` to map dependencies and subsystem boundaries before broad sweeps.
+
+3. Keep subagent prompts self-contained. Assume the worker has none of the
    parent conversation. Include exact goal, paths, allowed/prohibited files,
    commands, constraints, skill names, and output format.
 
-3. Fan out only independent work. Exploration, review, test triage, and
+4. Fan out only independent work. Exploration, review, test triage, and
    summarization can run in parallel. Writes to the same files must run
    serially.
 
-4. Cap fan-out at 3 to 4 workers by default. Use more only when the work is
+5. Cap fan-out at 3 to 4 workers by default. Use more only when the work is
    naturally partitioned and the user asked for broad parallelism.
 
-5. Keep context clean. Read only enough to plan and verify. Pass file paths to
+6. Keep context clean. Read only enough to plan and verify. Pass file paths to
    workers. Request summaries, diffs, command names, and findings, not raw
    command output.
 
-6. Verify independently. The worker that implemented a change is not the final
+7. Verify independently. The worker that implemented a change is not the final
    verifier for important work. Use a verifier or reviewer route before final
    synthesis.
 
-7. Do not allow recursive fan-out unless the user asks for it. Workers should
+8. Do not allow recursive fan-out unless the user asks for it. Workers should
    complete their bounded task and return.
 
-8. Escalate ambiguous or wrong results by tightening the worker prompt and
+9. Escalate ambiguous or wrong results by tightening the worker prompt and
    rerunning, or by asking the user when the ambiguity is truly external.
 
-9. Isolated implementation: All task and feature implementation work by coding
-   workers must happen in dedicated worktrees under `.worktrees/<task-slug>` to
-   protect the main checkout from in-place edits.
+10. Isolated implementation: All task and feature implementation work by coding
+    workers must happen in dedicated worktrees under `.worktrees/<task-slug>` to
+    protect the main checkout from in-place edits.
 
 
 ---
@@ -171,16 +159,21 @@ Verification:
 Output format:
 ```
 
-Require this compact result format:
+Require this compact structured result format (TOON / YAML):
 
-```text
-status:
+```yaml
+status: done | blocked | failed
 files_changed:
+  - path/to/file.ts
 commands_run:
-tests:
+  - npm test -- --grep "feature"
+tests: pass | fail | skipped
 decisions:
+  - "Key rationale for architectural choice"
 risks:
+  - "Potential edge case or residual risk"
 next_actions:
+  - "Suggested follow-up step"
 ```
 
 Tell workers not to paste long logs. They should quote only the relevant
