@@ -22,26 +22,29 @@ Apply this gate before diagnostics, profile selection, or running `delegate.py`:
 Examples:
 - "Spawn three Codex subagents" -> native Codex subagents when exposed; otherwise use the Codex CLI profile in this skill.
 - "Parallelize the review with subagents" -> native subagents; do not use `multi-harness`.
-- "Delegate this review to Pi with GLM-5.2" -> use `multi-harness`.
-- "Run this implementation via DHS or OpenCode" -> use `multi-harness`.
+- "Delegate this review to Pi with GLM or DeepSeek" -> use `multi-harness`.
+- "Run this implementation via DeepSeek Harness (DHS/DSH) or OpenCode" -> use `multi-harness`.
 
 ## Universal CLI Harness Execution
 
 The adapter supports running bounded tasks across:
 - **Codex CLI**: `codex exec --ephemeral [-m <model>] [-C <dir>] [--yolo]`
 - **Claude Code CLI**: `claude -p "<prompt>" [--dangerously-skip-permissions]`
-- **DHS Runner**: `dhs exec --dir <dir> [--model <model>] [--yolo]`
-- **Pi**: `pi --print --mode text --model <model> --tools <tools>`
+- **DeepSeek Harness (DHS / DSH)**: `dsh exec --dir <dir> [--model <model>] [--yolo]` *(Headless execution engine; no terminal TUI)*
+- **Pi**: `pi --print --mode text [--model <model>] --tools <tools>`
 - **OpenCode**: `opencode run --dir <dir> [--model <model>]`
+
+For dynamic model resolution:
+Profiles with `model: auto` dynamically discover and select the highest active frontier model in your local runtime configuration (e.g. resolving `GLM-5.3+`, latest `DeepSeek-V4+`, or `GPT-5.x`), or accept explicit user overrides via `--model <name>`.
 
 For permission bypass across any harness:
 Pass `--yolo` or `--dangerously-skip-permissions` to `delegate.py`. It will map the flag to each harness's native permission bypass mechanism.
 
 For delegated implementation with worktree auto-isolation:
 Pass `--worktree <slug>` to `delegate.py`. It will:
-1. Automatically create an isolated git worktree at `.worktrees/<slug>`.
+1. Automatically create an isolated git worktree at `.worktrees/<slug>` (validating slug for path safety).
 2. Execute the delegated task inside the isolated worktree.
-3. Enforce the structured YAML/TOON contract.
+3. Provide a structured YAML output format in the prompt.
 4. Capture output and diffs cleanly without touching the main checkout.
 
 ## Quick Start
@@ -53,7 +56,7 @@ python3 <skill_dir>/scripts/delegate.py --diagnose
 python3 <skill_dir>/scripts/delegate.py --list-profiles
 ```
 
-Delegate a read-only review to Pi with GLM 5.2:
+Delegate a read-only review to Pi with the latest GLM frontier model:
 
 ```bash
 python3 <skill_dir>/scripts/delegate.py \
@@ -79,13 +82,13 @@ Use `--dry-run` before any unfamiliar profile.
 Read `references/profiles.md` when choosing a profile or adding a new one.
 
 Default choices:
-
-- Research, planning, deep review, debugging: `pi-glm-*` profiles, especially `pi-glm-review` or `pi-glm-plan`.
+- Research, planning, deep review, debugging: `pi-glm-*` or `pi-deepseek-*` profiles.
 - Large context sweeps: `pi-minimax-large`.
+- Headless execution: `dhs-*` profiles via DeepSeek Harness.
 - Fast mechanical scan or OpenCode-specific command behavior: `opencode-fast`.
-- Implementation by another harness: only a `*-implement` profile with `--allow-write`.
+- Implementation by another harness: only a `*-implement` profile with `--allow-write` or `--yolo`.
 
-If GLM 5.2 is requested, prefer Pi profile `zai-coding-plan/glm-5.2` unless OpenCode is also configured with that model locally. Do not assume OpenCode can use GLM 5.2 just because Pi can.
+GLM, DeepSeek, and OpenAI profiles automatically resolve to the highest version available in your local runtime configuration (e.g. `glm-5.3` when configured) unless an explicit `--model` is supplied.
 
 ## Delegation Workflow
 

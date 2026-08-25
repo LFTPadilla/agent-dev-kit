@@ -7,6 +7,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -16,24 +17,27 @@ from typing import Any
 
 
 DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
-    # Codex CLI profiles
+    # Codex CLI profiles (dynamic model resolution)
     "codex-complex": {
         "harness": "codex",
-        "model": "gpt-5.6",
+        "model": "auto",
+        "model_family": "gpt",
         "mode": "write",
         "timeout": 2400,
         "description": "Complex worker via Codex CLI. Requires --allow-write or --yolo.",
     },
     "codex-fast": {
         "harness": "codex",
-        "model": "gpt-5.6-luna",
+        "model": "auto",
+        "model_family": "luna",
         "mode": "read",
         "timeout": 1200,
         "description": "Fast exploration worker via Codex CLI.",
     },
     "codex-review": {
         "harness": "codex",
-        "model": "gpt-5.6-sol",
+        "model": "auto",
+        "model_family": "sol",
         "mode": "read",
         "timeout": 1800,
         "description": "Independent verifier/reviewer via Codex CLI.",
@@ -53,68 +57,82 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "timeout": 2400,
         "description": "Scoped implementation via Claude Code CLI. Requires --allow-write or --yolo.",
     },
-    # DHS (Developer Harness Sandbox) profiles
+    # DeepSeek Harness (DHS / DSH) profiles — Headless CLI execution (no TUI)
     "dhs-review": {
         "harness": "dhs",
         "model": "default",
         "mode": "read",
         "timeout": 1800,
-        "description": "Read-only review via DHS runner.",
+        "description": "Headless read-only review via DeepSeek Harness (DHS/DSH).",
     },
     "dhs-implement": {
         "harness": "dhs",
         "model": "default",
         "mode": "write",
         "timeout": 2400,
-        "description": "Scoped implementation via DHS runner. Requires --allow-write or --yolo.",
+        "description": "Headless scoped implementation via DeepSeek Harness (DHS/DSH). Requires --allow-write or --yolo.",
     },
     "dhs-fast": {
         "harness": "dhs",
         "model": "default",
         "mode": "read",
         "timeout": 1200,
-        "description": "Fast inspection via DHS runner.",
+        "description": "Headless fast scan via DeepSeek Harness (DHS/DSH).",
     },
-    # Pi profiles
+    # Pi profiles (dynamic frontier model resolution from local models.json)
     "pi-glm-review": {
         "harness": "pi",
-        "model": "zai-coding-plan/glm-5.2",
+        "model": "auto",
+        "model_family": "glm",
         "thinking": "xhigh",
         "mode": "read",
         "timeout": 1800,
-        "description": "Deep read-only review with GLM 5.2 via Pi.",
+        "description": "Deep read-only review with latest local GLM frontier model via Pi.",
     },
     "pi-glm-plan": {
         "harness": "pi",
-        "model": "zai-coding-plan/glm-5.2",
+        "model": "auto",
+        "model_family": "glm",
         "thinking": "high",
         "mode": "read",
         "timeout": 1800,
-        "description": "Read-only planning and decomposition with GLM 5.2 via Pi.",
+        "description": "Read-only planning and decomposition with latest local GLM model via Pi.",
     },
     "pi-glm-debug": {
         "harness": "pi",
-        "model": "zai-coding-plan/glm-5.2",
+        "model": "auto",
+        "model_family": "glm",
         "thinking": "high",
         "mode": "read",
         "timeout": 1800,
-        "description": "Read-only debugging analysis with GLM 5.2 via Pi.",
+        "description": "Read-only debugging analysis with latest local GLM model via Pi.",
     },
     "pi-glm-implement": {
         "harness": "pi",
-        "model": "zai-coding-plan/glm-5.2",
+        "model": "auto",
+        "model_family": "glm",
         "thinking": "high",
         "mode": "write",
         "timeout": 2400,
-        "description": "Scoped implementation with GLM 5.2 via Pi. Requires --allow-write or --yolo.",
+        "description": "Scoped implementation with latest local GLM model via Pi. Requires --allow-write or --yolo.",
+    },
+    "pi-deepseek-review": {
+        "harness": "pi",
+        "model": "auto",
+        "model_family": "deepseek",
+        "thinking": "high",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "Deep read-only review with latest local DeepSeek model via Pi.",
     },
     "pi-minimax-large": {
         "harness": "pi",
-        "model": "minimax/MiniMax-M3",
+        "model": "auto",
+        "model_family": "minimax",
         "thinking": "medium",
         "mode": "read",
         "timeout": 1800,
-        "description": "Large-context read-only sweep via Pi.",
+        "description": "Large-context read-only sweep with latest local MiniMax model via Pi.",
     },
     # OpenCode profiles
     "opencode-fast": {
@@ -217,15 +235,73 @@ def available_codex_models() -> set[str]:
     return found
 
 
+def find_harness_binary(harness: str) -> str | None:
+    if harness == "dhs":
+        for name in ["dhs", "dsh", "deepseek-harness"]:
+            path = shutil.which(name)
+            if path:
+                return path
+        return None
+    return shutil.which(harness)
+
+
+def resolve_dynamic_model(harness: str, family: str | None, explicit_model: str | None) -> str:
+    """Dynamically resolve to the newest active frontier model in local configurations."""
+    if explicit_model and explicit_model != "auto":
+        return explicit_model
+
+    def sort_by_version(items: list[str]) -> list[str]:
+        def key_func(s: str) -> tuple[float, str]:
+            # Look for version numbers like 5.3, 5.2, 4.5, etc.
+            matches = re.findall(r"(\d+(?:\.\d+)?)", s)
+            version = float(matches[-1]) if matches else 0.0
+            return (version, s)
+        return sorted(items, key=key_func, reverse=True)
+
+    if harness == "pi":
+        available = available_pi_models()
+        if not family:
+            return "default"
+        candidates = [m for m in available if family.lower() in m.lower()]
+        if candidates:
+            return sort_by_version(candidates)[0]
+        return "default"
+
+    if harness == "opencode":
+        available = available_opencode_models()
+        if not family:
+            return "default"
+        candidates = [m for m in available if family.lower() in m.lower()]
+        if candidates:
+            return sort_by_version(candidates)[0]
+        return "default"
+
+    if harness == "codex":
+        available = available_codex_models()
+        if not family:
+            return "default"
+        candidates = [m for m in available if family.lower() in m.lower()]
+        if candidates:
+            return sort_by_version(candidates)[0]
+        return "default"
+
+    return "default"
+
+
 def print_profiles() -> None:
-    header = ["profile", "harness", "model", "mode", "description"]
+    header = ["profile", "harness", "model (dynamic)", "mode", "description"]
     rows = []
     for name, profile in DEFAULT_PROFILES.items():
+        harness = profile["harness"]
+        family = profile.get("model_family")
+        raw_model = profile["model"]
+        resolved = resolve_dynamic_model(harness, family, raw_model)
+        display_model = f"{raw_model} -> {resolved}" if raw_model == "auto" else raw_model
         rows.append(
             [
                 name,
-                profile["harness"],
-                profile["model"],
+                harness,
+                display_model,
                 profile["mode"],
                 profile.get("description", ""),
             ]
@@ -241,11 +317,12 @@ def diagnose() -> int:
     print("Universal Harness Adapter — Diagnostics")
     print("========================================")
     harnesses = ["codex", "claude", "dhs", "pi", "opencode"]
-    for binary in harnesses:
-        path = shutil.which(binary)
-        print(f"{binary:10}: {path or '<missing>'}")
+    for h in harnesses:
+        path = find_harness_binary(h)
+        extra = " (headless runner)" if h == "dhs" else ""
+        print(f"{h:10}: {path or '<missing>'}{extra}")
         if path:
-            print(f"  version : {run_quiet([binary, '--version'])}")
+            print(f"  version : {run_quiet([path, '--version'])}")
     print()
     print("Detected Models per Harness:")
     print("Codex:")
@@ -261,11 +338,14 @@ def diagnose() -> int:
     missing = []
     for name, profile in DEFAULT_PROFILES.items():
         harness = profile["harness"]
-        model = profile["model"]
-        binary = shutil.which(harness)
+        family = profile.get("model_family")
+        raw_model = profile["model"]
+        resolved = resolve_dynamic_model(harness, family, raw_model)
+        binary = find_harness_binary(harness)
         ok = bool(binary)
         marker = "OK" if ok else "MISSING"
-        print(f"{marker:7} {name:20} [{harness}] model={model}")
+        display_model = f"{raw_model} ({resolved})" if raw_model == "auto" else raw_model
+        print(f"{marker:7} {name:20} [{harness}] model={display_model}")
         if not ok:
             missing.append(name)
     return 1 if missing else 0
@@ -292,6 +372,10 @@ def resolve_profile(args: argparse.Namespace) -> tuple[str, dict[str, Any]]:
         profile["harness"] = args.harness
     if args.timeout:
         profile["timeout"] = args.timeout
+
+    # Resolve dynamic model
+    resolved_model = resolve_dynamic_model(profile["harness"], profile.get("model_family"), profile.get("model"))
+    profile["model"] = resolved_model
     return profile_name, profile
 
 
@@ -310,7 +394,6 @@ def read_task(args: argparse.Namespace) -> str:
 
 
 def setup_worktree(repo_root: Path, slug: str) -> Path:
-    import re
     if not re.match(r"^[a-zA-Z0-9_-]+$", slug):
         raise SystemExit(f"Invalid worktree slug {slug!r}. Slugs must contain only alphanumeric characters, dashes, or underscores.")
 
@@ -321,7 +404,6 @@ def setup_worktree(repo_root: Path, slug: str) -> Path:
         raise SystemExit(f"Security error: worktree path {worktree_dir} escapes {worktrees_root}")
 
     if worktree_dir.exists():
-        # Verify it is recognized by git
         list_proc = subprocess.run(
             ["git", "-C", str(repo_root), "worktree", "list", "--porcelain"],
             text=True,
@@ -415,11 +497,11 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
             "--no-session",
             "--mode",
             "text",
-            "--model",
-            model,
             "--tools",
             tools,
         ]
+        if model != "default":
+            cmd.extend(["--model", model])
         if profile.get("thinking"):
             cmd.extend(["--thinking", str(profile["thinking"])])
         cmd.append(prompt)
@@ -452,7 +534,8 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
         return cmd
 
     if harness == "dhs":
-        cmd = ["dhs", "exec", "--dir", str(cwd)]
+        binary = find_harness_binary("dhs") or "dhs"
+        cmd = [binary, "exec", "--dir", str(cwd)]
         if model != "default":
             cmd.extend(["--model", model])
         if skip_permissions:
