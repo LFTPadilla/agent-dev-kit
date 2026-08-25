@@ -66,7 +66,7 @@ for file in \
   "$SOURCE/profiles/personal-dev-tutor.yml" \
   "$SOURCE/templates/personal-dev-tutor-SOUL.md" \
   "$SOURCE/templates/personal-codex-lane-prompt.md" \
-  "$SOURCE/plugins/dev-skills/skills/personal-development-mentor/SKILL.md" \
+  "$SOURCE/plugins/dev-skills/skills/tech-lead/SKILL.md" \
   "$SOURCE/scripts/tutor-home-lib.sh" \
   "$SOURCE/scripts/install-hermes-workhorse.sh"; do
   [ -f "$file" ] || { echo "missing source artifact: $file"; exit 1; }

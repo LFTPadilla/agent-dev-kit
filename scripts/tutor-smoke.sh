@@ -117,7 +117,7 @@ if [ -L "$SKILLS_DIR/worklog" ] || [ -f "$SKILLS_DIR/worklog/SKILL.md" ]; then
 else
   printf '  FAIL worklog not found\n'; fail=$((fail+1)); failures+=("worklog")
 fi
-for required_skill in ai-workflow-orchestrator delegating-to-tmux-claude kanban-orchestrator kanban-worker; do
+for required_skill in tech-lead delegating-to-tmux-claude kanban-orchestrator kanban-worker; do
   check_required_skill "$required_skill"
 done
 

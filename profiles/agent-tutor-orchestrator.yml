@@ -11,7 +11,7 @@ tmux:
   completion_poll_timeout_s: 60
 # Tier B — skills that ship in this public repo (cold-clone ready).
 include_skills:
-  - ai-workflow-orchestrator
+  - tech-lead
   - orchestrate
 # Tier C — skills expected from a private org overlay or Hermes hub install.
 # Cold-clone does NOT include these; tutor-bootstrap will report them missing

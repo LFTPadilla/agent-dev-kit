@@ -125,7 +125,9 @@ PERSONAL_TUTOR_CODEX_SKILLS=(
 
 # The flagship profile intentionally excludes the two alternative orchestrators
 # and dynamic skill discovery. GSD is the only lifecycle authority here.
-PERSONAL_TUTOR_HERMES_SKILLS=(personal-development-mentor "${PERSONAL_TUTOR_CODEX_SKILLS[@]}")
+PERSONAL_TUTOR_HERMES_SKILLS=(tech-lead "${PERSONAL_TUTOR_CODEX_SKILLS[@]}")
 
-export PATH="$PERSONAL_TUTOR_USER_HOME/.nix-profile/bin:$PERSONAL_TUTOR_USER_HOME/.local/bin:$PATH"
+case ":$PATH:" in *":$PERSONAL_TUTOR_USER_HOME/.local/bin:"*) ;; *) PATH="$PATH:$PERSONAL_TUTOR_USER_HOME/.local/bin" ;; esac
+case ":$PATH:" in *":$PERSONAL_TUTOR_USER_HOME/.nix-profile/bin:"*) ;; *) PATH="$PATH:$PERSONAL_TUTOR_USER_HOME/.nix-profile/bin" ;; esac
+export PATH
 personal_tutor_prepare_tmux

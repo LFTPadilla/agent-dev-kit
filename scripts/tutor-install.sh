@@ -57,8 +57,8 @@ fi
   echo "missing $SOURCE/profiles/agent-tutor-orchestrator.yml"
   exit 1
 }
-[ -f "$SOURCE/plugins/dev-skills/skills/ai-workflow-orchestrator/SKILL.md" ] || {
-  echo "missing $SOURCE/plugins/dev-skills/skills/ai-workflow-orchestrator/SKILL.md"
+[ -f "$SOURCE/plugins/dev-skills/skills/tech-lead/SKILL.md" ] || {
+  echo "missing $SOURCE/plugins/dev-skills/skills/tech-lead/SKILL.md"
   exit 1
 }
 [ -x "$SOURCE/scripts/install-hermes-workhorse.sh" ] || {
@@ -109,9 +109,9 @@ PROFILE_SKILLS="$PROFILE_DIR/skills"
 mkdir -p "$PROFILE_SKILLS"
 
 # Orchestrator skill (copy so updates via tutor-update refresh it)
-mkdir -p "$PROFILE_SKILLS/software-development/ai-workflow-orchestrator"
-cp -f "$SOURCE/plugins/dev-skills/skills/ai-workflow-orchestrator/SKILL.md" \
-      "$PROFILE_SKILLS/software-development/ai-workflow-orchestrator/SKILL.md"
+mkdir -p "$PROFILE_SKILLS/software-development/tech-lead"
+cp -f "$SOURCE/plugins/dev-skills/skills/tech-lead/SKILL.md" \
+      "$PROFILE_SKILLS/software-development/tech-lead/SKILL.md"
 if [ -f "$SOURCE/plugins/dev-skills/skills/orchestrate/SKILL.md" ]; then
   mkdir -p "$PROFILE_SKILLS/software-development/orchestrate"
   cp -f "$SOURCE/plugins/dev-skills/skills/orchestrate/SKILL.md" \

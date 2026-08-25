@@ -29,12 +29,10 @@ skills:
   orchestrate:
     path: "plugins/dev-skills/skills/orchestrate"
     scope: "orchestration"
-  personal-development-mentor:
-    path: "plugins/dev-skills/skills/personal-development-mentor"
-    scope: "mentorship"
-  ai-workflow-orchestrator:
-    path: "plugins/dev-skills/skills/ai-workflow-orchestrator"
-    scope: "orchestration"
+  tech-lead:
+    path: "plugins/dev-skills/skills/tech-lead"
+    scope: "orchestration-and-mentorship"
+    requires: [tmux, gsd]
   multi-harness:
     path: "overnight-task-kit/skills/multi-harness"
     scope: "cross-harness"

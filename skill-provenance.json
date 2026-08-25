@@ -12,18 +12,7 @@
         "git"
       ]
     },
-    "ai-workflow-orchestrator": {
-      "source": "local",
-      "license": "MIT",
-      "visibility": "public",
-      "risk": "medium",
-      "dependencies": [
-        "tmux",
-        "hermes",
-        "claude-code",
-        "kanban"
-      ]
-    },
+
     "diagram-render": {
       "source": "local",
       "license": "MIT",
@@ -127,7 +116,7 @@
       "risk": "medium",
       "dependencies": []
     },
-    "personal-development-mentor": {
+    "tech-lead": {
       "source": "local",
       "license": "MIT",
       "visibility": "public",
@@ -135,8 +124,10 @@
       "dependencies": [
         "hermes",
         "codex",
+        "claude-code",
         "tmux",
         "gsd",
+        "kanban",
         "graphifyy@0.9.25",
         "uv when Graphify is not already installed",
         "Context7 MCP over HTTPS",
