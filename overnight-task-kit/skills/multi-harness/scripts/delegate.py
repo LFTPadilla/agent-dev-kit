@@ -134,6 +134,31 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
         "timeout": 1800,
         "description": "Large-context read-only sweep with latest local MiniMax model via Pi.",
     },
+    # Pi-Profile isolated environments
+    "pi-lean": {
+        "harness": "pi",
+        "pi_profile": "lean",
+        "model": "auto",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "Isolated lightweight Pi runner via local pi-profile lean.",
+    },
+    "pi-gsd": {
+        "harness": "pi",
+        "pi_profile": "gsd",
+        "model": "auto",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "GSD-enhanced Pi runner via local pi-profile gsd.",
+    },
+    "pi-search": {
+        "harness": "pi",
+        "pi_profile": "search",
+        "model": "auto",
+        "mode": "read",
+        "timeout": 1800,
+        "description": "Research and web search Pi runner via local pi-profile search.",
+    },
     # OpenCode profiles
     "opencode-fast": {
         "harness": "opencode",
@@ -164,11 +189,12 @@ TASK_TYPE_DEFAULTS = {
     "review": "codex-review",
     "security": "codex-review",
     "plan": "pi-glm-plan",
-    "research": "pi-minimax-large",
+    "research": "pi-search",
     "debug": "pi-glm-debug",
     "quick": "opencode-fast",
     "implement": "codex-complex",
     "verify": "codex-review",
+    "lean": "pi-lean",
 }
 
 READ_ONLY_TOOLS = "read,grep,find,ls"
@@ -211,6 +237,16 @@ def available_pi_models() -> set[str]:
     return found
 
 
+def available_pi_profiles() -> list[str]:
+    for candidate in [
+        Path.home() / "pi-lab/profiles",
+        Path.home() / "programming/pi-lab/profiles",
+    ]:
+        if candidate.exists() and candidate.is_dir():
+            return sorted([d.name for d in candidate.iterdir() if d.is_dir() and not d.name.startswith(".")])
+    return []
+
+
 def available_opencode_models() -> set[str]:
     config_path = Path.home() / ".config/opencode/opencode.json"
     data = load_json(config_path)
@@ -245,6 +281,16 @@ def find_harness_binary(harness: str) -> str | None:
     return shutil.which(harness)
 
 
+def find_pi_profile_binary() -> str | None:
+    for candidate in ["pi-profile", str(Path.home() / "pi-lab/bin/pi-profile")]:
+        path = shutil.which(candidate)
+        if path:
+            return path
+        if Path(candidate).is_file() and os.access(candidate, os.X_OK):
+            return str(Path(candidate).resolve())
+    return None
+
+
 def resolve_dynamic_model(harness: str, family: str | None, explicit_model: str | None) -> str:
     """Dynamically resolve to the newest active frontier model in local configurations."""
     if explicit_model and explicit_model != "auto":
@@ -252,7 +298,6 @@ def resolve_dynamic_model(harness: str, family: str | None, explicit_model: str 
 
     def sort_by_version(items: list[str]) -> list[str]:
         def key_func(s: str) -> tuple[float, str]:
-            # Look for version numbers like 5.3, 5.2, 4.5, etc.
             matches = re.findall(r"(\d+(?:\.\d+)?)", s)
             version = float(matches[-1]) if matches else 0.0
             return (version, s)
@@ -289,19 +334,24 @@ def resolve_dynamic_model(harness: str, family: str | None, explicit_model: str 
 
 
 def print_profiles() -> None:
-    header = ["profile", "harness", "model (dynamic)", "mode", "description"]
+    header = ["profile", "harness", "target / model (dynamic)", "mode", "description"]
     rows = []
     for name, profile in DEFAULT_PROFILES.items():
         harness = profile["harness"]
         family = profile.get("model_family")
         raw_model = profile["model"]
-        resolved = resolve_dynamic_model(harness, family, raw_model)
-        display_model = f"{raw_model} -> {resolved}" if raw_model == "auto" else raw_model
+        pi_profile = profile.get("pi_profile")
+        if pi_profile:
+            display_target = f"pi-profile:{pi_profile}"
+        else:
+            resolved = resolve_dynamic_model(harness, family, raw_model)
+            display_target = f"{raw_model} -> {resolved}" if raw_model == "auto" else raw_model
+
         rows.append(
             [
                 name,
                 harness,
-                display_model,
+                display_target,
                 profile["mode"],
                 profile.get("description", ""),
             ]
@@ -323,6 +373,13 @@ def diagnose() -> int:
         print(f"{h:10}: {path or '<missing>'}{extra}")
         if path:
             print(f"  version : {run_quiet([path, '--version'])}")
+
+    pi_profile_bin = find_pi_profile_binary()
+    print(f"{'pi-profile':10}: {pi_profile_bin or '<missing>'}")
+    if pi_profile_bin:
+        profiles = available_pi_profiles()
+        print(f"  profiles: {', '.join(profiles) or '<none found>'}")
+
     print()
     print("Detected Models per Harness:")
     print("Codex:")
@@ -340,12 +397,18 @@ def diagnose() -> int:
         harness = profile["harness"]
         family = profile.get("model_family")
         raw_model = profile["model"]
+        pi_profile = profile.get("pi_profile")
         resolved = resolve_dynamic_model(harness, family, raw_model)
         binary = find_harness_binary(harness)
         ok = bool(binary)
+        if pi_profile and not find_pi_profile_binary():
+            ok = False
         marker = "OK" if ok else "MISSING"
-        display_model = f"{raw_model} ({resolved})" if raw_model == "auto" else raw_model
-        print(f"{marker:7} {name:20} [{harness}] model={display_model}")
+        if pi_profile:
+            display_model = f"pi-profile:{pi_profile}"
+        else:
+            display_model = f"{raw_model} ({resolved})" if raw_model == "auto" else raw_model
+        print(f"{marker:7} {name:20} [{harness}] target={display_model}")
         if not ok:
             missing.append(name)
     return 1 if missing else 0
@@ -372,6 +435,8 @@ def resolve_profile(args: argparse.Namespace) -> tuple[str, dict[str, Any]]:
         profile["harness"] = args.harness
     if args.timeout:
         profile["timeout"] = args.timeout
+    if args.pi_profile:
+        profile["pi_profile"] = args.pi_profile
 
     # Resolve dynamic model
     resolved_model = resolve_dynamic_model(profile["harness"], profile.get("model_family"), profile.get("model"))
@@ -483,6 +548,7 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
     model = profile["model"]
     mode = profile["mode"]
     effective_write = allow_write or skip_permissions
+    pi_profile_name = profile.get("pi_profile")
 
     if mode == "write" and not effective_write:
         raise SystemExit(
@@ -491,15 +557,29 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
 
     if harness == "pi":
         tools = WRITE_TOOLS if effective_write else READ_ONLY_TOOLS
-        cmd = [
-            "pi",
-            "--print",
-            "--no-session",
-            "--mode",
-            "text",
-            "--tools",
-            tools,
-        ]
+        pi_profile_bin = find_pi_profile_binary()
+        if pi_profile_name and pi_profile_bin:
+            cmd = [
+                pi_profile_bin,
+                pi_profile_name,
+                "--",
+                "--print",
+                "--no-session",
+                "--mode",
+                "text",
+                "--tools",
+                tools,
+            ]
+        else:
+            cmd = [
+                "pi",
+                "--print",
+                "--no-session",
+                "--mode",
+                "text",
+                "--tools",
+                tools,
+            ]
         if model != "default":
             cmd.extend(["--model", model])
         if profile.get("thinking"):
@@ -585,6 +665,7 @@ def main() -> int:
     parser.add_argument("--worktree", help="Isolate task in a dedicated git worktree under .worktrees/<slug>.")
     parser.add_argument("--timeout", type=int, help="Override timeout in seconds.")
     parser.add_argument("--model", help="Override model for the selected profile.")
+    parser.add_argument("--pi-profile", help="Run within an isolated local Pi profile (e.g. lean, gsd, search).")
     parser.add_argument("--harness", choices=["pi", "opencode", "codex", "claude", "dhs"], help="Override harness.")
     parser.add_argument("--allow-write", action="store_true", help="Allow a write-capable profile to run.")
     parser.add_argument("--yolo", action="store_true", help="Bypass confirmation prompts and skip permissions.")

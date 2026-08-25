@@ -83,6 +83,7 @@ Read `references/profiles.md` when choosing a profile or adding a new one.
 
 Default choices:
 - Research, planning, deep review, debugging: `pi-glm-*` or `pi-deepseek-*` profiles.
+- Isolated Pi profiles: `pi-lean` (minimal/clean), `pi-gsd` (GSD prompts), `pi-search` (research), or any local profile via `--pi-profile <name>`.
 - Large context sweeps: `pi-minimax-large`.
 - Headless execution: `dhs-*` profiles via DeepSeek Harness.
 - Fast mechanical scan or OpenCode-specific command behavior: `opencode-fast`.

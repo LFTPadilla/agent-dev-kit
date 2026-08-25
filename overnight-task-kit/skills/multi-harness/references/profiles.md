@@ -32,6 +32,9 @@ Profiles with `model: auto` dynamically discover and select the highest active v
 | `pi-glm-implement` | Pi | `auto` (latest GLM) | write | Scoped implementation with latest active GLM model. |
 | `pi-deepseek-review` | Pi | `auto` (latest DeepSeek) | read-only | Deep review with latest active DeepSeek model. |
 | `pi-minimax-large` | Pi | `auto` (latest MiniMax) | read-only | Broad context sweeps across large repositories. |
+| `pi-lean` | Pi | `pi-profile:lean` | read-only | Isolated lightweight Pi runner via local pi-profile lean. |
+| `pi-gsd` | Pi | `pi-profile:gsd` | read-only | GSD-enhanced Pi runner via local pi-profile gsd. |
+| `pi-search` | Pi | `pi-profile:search` | read-only | Research and web search Pi runner via local pi-profile search. |
 | `opencode-fast` | OpenCode | `default` | read-only | Fast codebase scan via OpenCode. |
 | `opencode-review` | OpenCode | `default` | read-only | GSD-style review via OpenCode reviewer agent. |
 | `opencode-implement` | OpenCode | `default` | write | OpenCode implementation task. |

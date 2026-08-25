@@ -49,9 +49,9 @@ Subagents are routed dynamically based on task risk and harness capabilities:
 - **Fast exploration / summaries**: Fast frontier tier for read-only sweeps and triage.
 
 ### Antigravity / Gemini
-- **Orchestrator**: `gemini-3.7-flash (high)` or `gemini-3.7-pro`.
-- **Implementation & Review**: `gemini-3.7-pro` or `gemini-3.7-flash (high)`.
-- **Fast exploration**: `gemini-3.7-flash` (fast read-only sweeps).
+- **Orchestrator**: `gemini-3.7-flash (high)` / flagship frontier tier with maximum reasoning effort.
+- **Implementation & Review**: `gemini-3.7-flash (high)` / frontier reasoning tier.
+- **Fast exploration**: `gemini-3.7-flash (medium / low)` (fast read-only sweeps).
 
 ### PI / OpenCode
 Models and profiles are dynamic. Always resolve to the latest active frontier models configured locally. Before spawning executors when model choice is ambiguous, ask:
