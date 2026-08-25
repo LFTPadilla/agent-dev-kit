@@ -209,12 +209,12 @@ def available_codex_models() -> set[str]:
     cache_path = Path.home() / ".codex/models_cache.json"
     data = load_json(cache_path)
     if not data:
-        return {"gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.6"}
+        return set()
     found: set[str] = set()
     for item in data.get("models", []):
         if isinstance(item, dict) and "id" in item:
             found.add(item["id"])
-    return found or {"gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.6"}
+    return found
 
 
 def print_profiles() -> None:
@@ -249,7 +249,7 @@ def diagnose() -> int:
     print()
     print("Detected Models per Harness:")
     print("Codex:")
-    for model in sorted(available_codex_models()):
+    for model in sorted(available_codex_models()) or ["<none found>"]:
         print(f"  - {model}")
     print("Pi:")
     for model in sorted(available_pi_models()) or ["<none found>"]:
@@ -310,9 +310,29 @@ def read_task(args: argparse.Namespace) -> str:
 
 
 def setup_worktree(repo_root: Path, slug: str) -> Path:
-    worktree_dir = repo_root / ".worktrees" / slug
+    import re
+    if not re.match(r"^[a-zA-Z0-9_-]+$", slug):
+        raise SystemExit(f"Invalid worktree slug {slug!r}. Slugs must contain only alphanumeric characters, dashes, or underscores.")
+
+    worktrees_root = (repo_root / ".worktrees").resolve()
+    worktree_dir = (worktrees_root / slug).resolve()
+
+    if not str(worktree_dir).startswith(str(worktrees_root)):
+        raise SystemExit(f"Security error: worktree path {worktree_dir} escapes {worktrees_root}")
+
     if worktree_dir.exists():
-        return worktree_dir
+        # Verify it is recognized by git
+        list_proc = subprocess.run(
+            ["git", "-C", str(repo_root), "worktree", "list", "--porcelain"],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if str(worktree_dir) in list_proc.stdout:
+            return worktree_dir
+        raise SystemExit(f"Path {worktree_dir} exists but is not a registered Git worktree. Clean it up before proceeding.")
+
     branch = f"task/{slug}"
     cmd = ["git", "-C", str(repo_root), "worktree", "add", "-b", branch, str(worktree_dir), "HEAD"]
     proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
