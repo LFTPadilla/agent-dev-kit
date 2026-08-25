@@ -15,174 +15,39 @@ import textwrap
 from pathlib import Path
 from typing import Any
 
-
+# Default Profile Declarations (Dynamic model resolution)
 DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
-    # Codex CLI profiles (dynamic model resolution)
-    "codex-complex": {
-        "harness": "codex",
-        "model": "auto",
-        "model_family": "gpt",
-        "mode": "write",
-        "timeout": 2400,
-        "description": "Complex worker via Codex CLI. Requires --allow-write or --yolo.",
-    },
-    "codex-fast": {
-        "harness": "codex",
-        "model": "auto",
-        "model_family": "luna",
-        "mode": "read",
-        "timeout": 1200,
-        "description": "Fast exploration worker via Codex CLI.",
-    },
-    "codex-review": {
-        "harness": "codex",
-        "model": "auto",
-        "model_family": "sol",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Independent verifier/reviewer via Codex CLI.",
-    },
-    # Claude Code CLI profiles
-    "claude-review": {
-        "harness": "claude",
-        "model": "default",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Adversarial code review via Claude Code CLI.",
-    },
-    "claude-implement": {
-        "harness": "claude",
-        "model": "default",
-        "mode": "write",
-        "timeout": 2400,
-        "description": "Scoped implementation via Claude Code CLI. Requires --allow-write or --yolo.",
-    },
-    # DeepSeek Harness (DHS / DSH) profiles — Headless CLI execution (no TUI)
-    "dhs-review": {
-        "harness": "dhs",
-        "model": "default",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Headless read-only review via DeepSeek Harness (DHS/DSH).",
-    },
-    "dhs-implement": {
-        "harness": "dhs",
-        "model": "default",
-        "mode": "write",
-        "timeout": 2400,
-        "description": "Headless scoped implementation via DeepSeek Harness (DHS/DSH). Requires --allow-write or --yolo.",
-    },
-    "dhs-fast": {
-        "harness": "dhs",
-        "model": "default",
-        "mode": "read",
-        "timeout": 1200,
-        "description": "Headless fast scan via DeepSeek Harness (DHS/DSH).",
-    },
-    # Pi profiles (dynamic frontier model resolution from local models.json)
-    "pi-glm-review": {
-        "harness": "pi",
-        "model": "auto",
-        "model_family": "glm",
-        "thinking": "xhigh",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Deep read-only review with latest local GLM frontier model via Pi.",
-    },
-    "pi-glm-plan": {
-        "harness": "pi",
-        "model": "auto",
-        "model_family": "glm",
-        "thinking": "high",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Read-only planning and decomposition with latest local GLM model via Pi.",
-    },
-    "pi-glm-debug": {
-        "harness": "pi",
-        "model": "auto",
-        "model_family": "glm",
-        "thinking": "high",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Read-only debugging analysis with latest local GLM model via Pi.",
-    },
-    "pi-glm-implement": {
-        "harness": "pi",
-        "model": "auto",
-        "model_family": "glm",
-        "thinking": "high",
-        "mode": "write",
-        "timeout": 2400,
-        "description": "Scoped implementation with latest local GLM model via Pi. Requires --allow-write or --yolo.",
-    },
-    "pi-deepseek-review": {
-        "harness": "pi",
-        "model": "auto",
-        "model_family": "deepseek",
-        "thinking": "high",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Deep read-only review with latest local DeepSeek model via Pi.",
-    },
-    "pi-minimax-large": {
-        "harness": "pi",
-        "model": "auto",
-        "model_family": "minimax",
-        "thinking": "medium",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Large-context read-only sweep with latest local MiniMax model via Pi.",
-    },
-    # Pi-Profile isolated environments
-    "pi-lean": {
-        "harness": "pi",
-        "pi_profile": "lean",
-        "model": "auto",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Isolated lightweight Pi runner via local pi-profile lean.",
-    },
-    "pi-gsd": {
-        "harness": "pi",
-        "pi_profile": "gsd",
-        "model": "auto",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "GSD-enhanced Pi runner via local pi-profile gsd.",
-    },
-    "pi-search": {
-        "harness": "pi",
-        "pi_profile": "search",
-        "model": "auto",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "Research and web search Pi runner via local pi-profile search.",
-    },
-    # OpenCode profiles
-    "opencode-fast": {
-        "harness": "opencode",
-        "model": "default",
-        "mode": "read",
-        "timeout": 1200,
-        "description": "Fast OpenCode scan. Read-only by prompt contract.",
-    },
-    "opencode-review": {
-        "harness": "opencode",
-        "model": "default",
-        "agent": "gsd-code-reviewer",
-        "mode": "read",
-        "timeout": 1800,
-        "description": "OpenCode/GSD-flavored review. Read-only by prompt contract.",
-    },
-    "opencode-implement": {
-        "harness": "opencode",
-        "model": "default",
-        "agent": "gsd-executor",
-        "mode": "write",
-        "timeout": 2400,
-        "description": "OpenCode implementation. Requires --allow-write or --yolo.",
-    },
+    # Codex CLI (ephemeral workers)
+    "codex-complex": {"harness": "codex", "model": "auto", "model_family": "gpt", "mode": "write", "timeout": 2400, "description": "Complex worker via Codex CLI. Requires --allow-write or --yolo."},
+    "codex-fast": {"harness": "codex", "model": "auto", "model_family": "luna", "mode": "read", "timeout": 1200, "description": "Fast exploration worker via Codex CLI."},
+    "codex-review": {"harness": "codex", "model": "auto", "model_family": "sol", "mode": "read", "timeout": 1800, "description": "Independent verifier/reviewer via Codex CLI."},
+
+    # Claude Code CLI
+    "claude-review": {"harness": "claude", "model": "default", "mode": "read", "timeout": 1800, "description": "Adversarial code review via Claude Code CLI."},
+    "claude-implement": {"harness": "claude", "model": "default", "mode": "write", "timeout": 2400, "description": "Scoped implementation via Claude Code CLI. Requires --allow-write or --yolo."},
+
+    # DeepSeek Harness (DHS/DSH) — Headless runner (no interactive terminal TUI)
+    "dhs-review": {"harness": "dhs", "model": "default", "mode": "read", "timeout": 1800, "description": "Headless read-only review via DeepSeek Harness (DHS/DSH)."},
+    "dhs-implement": {"harness": "dhs", "model": "default", "mode": "write", "timeout": 2400, "description": "Headless scoped implementation via DeepSeek Harness (DHS/DSH). Requires --allow-write or --yolo."},
+    "dhs-fast": {"harness": "dhs", "model": "default", "mode": "read", "timeout": 1200, "description": "Headless fast scan via DeepSeek Harness (DHS/DSH)."},
+
+    # Pi CLI (dynamic frontier model resolution from local models.json)
+    "pi-glm-review": {"harness": "pi", "model": "auto", "model_family": "glm", "thinking": "xhigh", "mode": "read", "timeout": 1800, "description": "Deep read-only review with latest local GLM frontier model via Pi."},
+    "pi-glm-plan": {"harness": "pi", "model": "auto", "model_family": "glm", "thinking": "high", "mode": "read", "timeout": 1800, "description": "Read-only planning with latest local GLM model via Pi."},
+    "pi-glm-debug": {"harness": "pi", "model": "auto", "model_family": "glm", "thinking": "high", "mode": "read", "timeout": 1800, "description": "Read-only debugging with latest local GLM model via Pi."},
+    "pi-glm-implement": {"harness": "pi", "model": "auto", "model_family": "glm", "thinking": "high", "mode": "write", "timeout": 2400, "description": "Scoped implementation with latest local GLM model via Pi. Requires --allow-write or --yolo."},
+    "pi-deepseek-review": {"harness": "pi", "model": "auto", "model_family": "deepseek", "thinking": "high", "mode": "read", "timeout": 1800, "description": "Deep review with latest local DeepSeek model via Pi."},
+    "pi-minimax-large": {"harness": "pi", "model": "auto", "model_family": "minimax", "thinking": "medium", "mode": "read", "timeout": 1800, "description": "Large-context read-only sweep with latest local MiniMax model via Pi."},
+
+    # Pi-Profile Isolated Environments
+    "pi-lean": {"harness": "pi", "pi_profile": "lean", "model": "auto", "mode": "read", "timeout": 1800, "description": "Isolated lightweight Pi runner via local pi-profile lean."},
+    "pi-gsd": {"harness": "pi", "pi_profile": "gsd", "model": "auto", "mode": "read", "timeout": 1800, "description": "GSD-enhanced Pi runner via local pi-profile gsd."},
+    "pi-search": {"harness": "pi", "pi_profile": "search", "model": "auto", "mode": "read", "timeout": 1800, "description": "Research and web search Pi runner via local pi-profile search."},
+
+    # OpenCode
+    "opencode-fast": {"harness": "opencode", "model": "default", "mode": "read", "timeout": 1200, "description": "Fast OpenCode scan. Read-only by prompt contract."},
+    "opencode-review": {"harness": "opencode", "model": "default", "agent": "gsd-code-reviewer", "mode": "read", "timeout": 1800, "description": "OpenCode/GSD-flavored review. Read-only by prompt contract."},
+    "opencode-implement": {"harness": "opencode", "model": "default", "agent": "gsd-executor", "mode": "write", "timeout": 2400, "description": "OpenCode implementation. Requires --allow-write or --yolo."},
 }
 
 TASK_TYPE_DEFAULTS = {
@@ -201,312 +66,105 @@ READ_ONLY_TOOLS = "read,grep,find,ls"
 WRITE_TOOLS = "read,grep,find,ls,bash,edit,write"
 
 
-def run_quiet(argv: list[str], timeout: int = 20) -> str:
-    try:
-        proc = subprocess.run(
-            argv,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            timeout=timeout,
-            check=False,
-        )
-    except Exception as exc:  # noqa: BLE001 - diagnostics should never crash hard
-        return f"<error: {exc}>"
-    return proc.stdout.strip()
-
-
-def load_json(path: Path) -> dict[str, Any] | None:
+def load_json(path: Path) -> dict[str, Any]:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
-        return None
+        return {}
 
 
-def available_pi_models() -> set[str]:
-    models_path = Path.home() / ".pi/agent/models.json"
-    data = load_json(models_path)
-    if not data:
-        return set()
-    found: set[str] = set()
-    for provider, config in data.get("providers", {}).items():
-        for model in config.get("models", []):
-            model_id = model.get("id")
-            if model_id:
-                found.add(f"{provider}/{model_id}")
-    return found
+def find_binary(names: list[str]) -> str | None:
+    for name in names:
+        path = shutil.which(name)
+        if path:
+            return path
+        p = Path(name).expanduser()
+        if p.is_file() and os.access(p, os.X_OK):
+            return str(p.resolve())
+    return None
+
+
+def available_models(harness: str) -> set[str]:
+    """Extract registered model IDs from local harness config files."""
+    home = Path.home()
+    if harness == "pi":
+        data = load_json(home / ".pi/agent/models.json")
+        return {
+            f"{p}/{m['id']}"
+            for p, cfg in data.get("providers", {}).items()
+            for m in cfg.get("models", [])
+            if isinstance(m, dict) and "id" in m
+        }
+    if harness == "opencode":
+        data = load_json(home / ".config/opencode/opencode.json")
+        return {
+            f"{p}/{m}"
+            for p, cfg in data.get("provider", {}).items()
+            for m in cfg.get("models", {}).keys()
+        }
+    if harness == "codex":
+        data = load_json(home / ".codex/models_cache.json")
+        return {m["id"] for m in data.get("models", []) if isinstance(m, dict) and "id" in m}
+    return set()
 
 
 def available_pi_profiles() -> list[str]:
-    for candidate in [
-        Path.home() / "pi-lab/profiles",
-        Path.home() / "programming/pi-lab/profiles",
-    ]:
-        if candidate.exists() and candidate.is_dir():
-            return sorted([d.name for d in candidate.iterdir() if d.is_dir() and not d.name.startswith(".")])
+    """Detect isolated profiles configured in ~/pi-lab/profiles or ~/programming/pi-lab/profiles."""
+    for base in [Path.home() / "pi-lab/profiles", Path.home() / "programming/pi-lab/profiles"]:
+        if base.is_dir():
+            return sorted(d.name for d in base.iterdir() if d.is_dir() and not d.name.startswith("."))
     return []
-
-
-def available_opencode_models() -> set[str]:
-    config_path = Path.home() / ".config/opencode/opencode.json"
-    data = load_json(config_path)
-    if not data:
-        return set()
-    found: set[str] = set()
-    for provider, config in data.get("provider", {}).items():
-        for model_id in config.get("models", {}).keys():
-            found.add(f"{provider}/{model_id}")
-    return found
-
-
-def available_codex_models() -> set[str]:
-    cache_path = Path.home() / ".codex/models_cache.json"
-    data = load_json(cache_path)
-    if not data:
-        return set()
-    found: set[str] = set()
-    for item in data.get("models", []):
-        if isinstance(item, dict) and "id" in item:
-            found.add(item["id"])
-    return found
-
-
-def find_harness_binary(harness: str) -> str | None:
-    if harness == "dhs":
-        for name in ["dhs", "dsh", "deepseek-harness"]:
-            path = shutil.which(name)
-            if path:
-                return path
-        return None
-    return shutil.which(harness)
-
-
-def find_pi_profile_binary() -> str | None:
-    for candidate in ["pi-profile", str(Path.home() / "pi-lab/bin/pi-profile")]:
-        path = shutil.which(candidate)
-        if path:
-            return path
-        if Path(candidate).is_file() and os.access(candidate, os.X_OK):
-            return str(Path(candidate).resolve())
-    return None
 
 
 def resolve_dynamic_model(harness: str, family: str | None, explicit_model: str | None) -> str:
     """Dynamically resolve to the newest active frontier model in local configurations."""
     if explicit_model and explicit_model != "auto":
         return explicit_model
-
-    def sort_by_version(items: list[str]) -> list[str]:
-        def key_func(s: str) -> tuple[float, str]:
-            matches = re.findall(r"(\d+(?:\.\d+)?)", s)
-            version = float(matches[-1]) if matches else 0.0
-            return (version, s)
-        return sorted(items, key=key_func, reverse=True)
-
-    if harness == "pi":
-        available = available_pi_models()
-        if not family:
-            return "default"
-        candidates = [m for m in available if family.lower() in m.lower()]
-        if candidates:
-            return sort_by_version(candidates)[0]
+    if not family:
         return "default"
 
-    if harness == "opencode":
-        available = available_opencode_models()
-        if not family:
-            return "default"
-        candidates = [m for m in available if family.lower() in m.lower()]
-        if candidates:
-            return sort_by_version(candidates)[0]
+    models = [m for m in available_models(harness) if family.lower() in m.lower()]
+    if not models:
         return "default"
 
-    if harness == "codex":
-        available = available_codex_models()
-        if not family:
-            return "default"
-        candidates = [m for m in available if family.lower() in m.lower()]
-        if candidates:
-            return sort_by_version(candidates)[0]
-        return "default"
+    # ponytail: sort by extracted floating-point version descending to pick newest frontier
+    def version_key(s: str) -> tuple[float, str]:
+        matches = re.findall(r"(\d+(?:\.\d+)?)", s)
+        return (float(matches[-1]) if matches else 0.0, s)
 
-    return "default"
-
-
-def print_profiles() -> None:
-    header = ["profile", "harness", "target / model (dynamic)", "mode", "description"]
-    rows = []
-    for name, profile in DEFAULT_PROFILES.items():
-        harness = profile["harness"]
-        family = profile.get("model_family")
-        raw_model = profile["model"]
-        pi_profile = profile.get("pi_profile")
-        if pi_profile:
-            display_target = f"pi-profile:{pi_profile}"
-        else:
-            resolved = resolve_dynamic_model(harness, family, raw_model)
-            display_target = f"{raw_model} -> {resolved}" if raw_model == "auto" else raw_model
-
-        rows.append(
-            [
-                name,
-                harness,
-                display_target,
-                profile["mode"],
-                profile.get("description", ""),
-            ]
-        )
-    widths = [max(len(str(row[i])) for row in rows + [header]) for i in range(len(header))]
-    print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(header)))
-    print("  ".join("-" * width for width in widths))
-    for row in rows:
-        print("  ".join(str(cell).ljust(widths[i]) for i, cell in enumerate(row)))
-
-
-def diagnose() -> int:
-    print("Universal Harness Adapter — Diagnostics")
-    print("========================================")
-    harnesses = ["codex", "claude", "dhs", "pi", "opencode"]
-    for h in harnesses:
-        path = find_harness_binary(h)
-        extra = " (headless runner)" if h == "dhs" else ""
-        print(f"{h:10}: {path or '<missing>'}{extra}")
-        if path:
-            print(f"  version : {run_quiet([path, '--version'])}")
-
-    pi_profile_bin = find_pi_profile_binary()
-    print(f"{'pi-profile':10}: {pi_profile_bin or '<missing>'}")
-    if pi_profile_bin:
-        profiles = available_pi_profiles()
-        print(f"  profiles: {', '.join(profiles) or '<none found>'}")
-
-    print()
-    print("Detected Models per Harness:")
-    print("Codex:")
-    for model in sorted(available_codex_models()) or ["<none found>"]:
-        print(f"  - {model}")
-    print("Pi:")
-    for model in sorted(available_pi_models()) or ["<none found>"]:
-        print(f"  - {model}")
-    print("OpenCode:")
-    for model in sorted(available_opencode_models()) or ["<none found>"]:
-        print(f"  - {model}")
-    print()
-    missing = []
-    for name, profile in DEFAULT_PROFILES.items():
-        harness = profile["harness"]
-        family = profile.get("model_family")
-        raw_model = profile["model"]
-        pi_profile = profile.get("pi_profile")
-        resolved = resolve_dynamic_model(harness, family, raw_model)
-        binary = find_harness_binary(harness)
-        ok = bool(binary)
-        if pi_profile and not find_pi_profile_binary():
-            ok = False
-        marker = "OK" if ok else "MISSING"
-        if pi_profile:
-            display_model = f"pi-profile:{pi_profile}"
-        else:
-            display_model = f"{raw_model} ({resolved})" if raw_model == "auto" else raw_model
-        print(f"{marker:7} {name:20} [{harness}] target={display_model}")
-        if not ok:
-            missing.append(name)
-    return 1 if missing else 0
-
-
-def resolve_profile(args: argparse.Namespace) -> tuple[str, dict[str, Any]]:
-    if args.profile == "auto":
-        if not args.task_type:
-            raise SystemExit("--profile auto requires --task-type")
-        try:
-            profile_name = TASK_TYPE_DEFAULTS[args.task_type]
-        except KeyError as exc:
-            choices = ", ".join(sorted(TASK_TYPE_DEFAULTS))
-            raise SystemExit(f"Unknown task type {args.task_type!r}. Choose one of: {choices}") from exc
-    else:
-        profile_name = args.profile
-    if profile_name not in DEFAULT_PROFILES:
-        choices = ", ".join(sorted(DEFAULT_PROFILES))
-        raise SystemExit(f"Unknown profile {profile_name!r}. Choose one of: {choices}")
-    profile = dict(DEFAULT_PROFILES[profile_name])
-    if args.model:
-        profile["model"] = args.model
-    if args.harness:
-        profile["harness"] = args.harness
-    if args.timeout:
-        profile["timeout"] = args.timeout
-    if args.pi_profile:
-        profile["pi_profile"] = args.pi_profile
-
-    # Resolve dynamic model
-    resolved_model = resolve_dynamic_model(profile["harness"], profile.get("model_family"), profile.get("model"))
-    profile["model"] = resolved_model
-    return profile_name, profile
-
-
-def read_task(args: argparse.Namespace) -> str:
-    chunks = []
-    if args.task_file:
-        chunks.append(Path(args.task_file).read_text(encoding="utf-8"))
-    if args.task:
-        chunks.append(args.task)
-    if not chunks and not sys.stdin.isatty():
-        chunks.append(sys.stdin.read())
-    task = "\n\n".join(chunk.strip() for chunk in chunks if chunk.strip())
-    if not task:
-        raise SystemExit("Provide --task, --task-file, or stdin.")
-    return task
+    return sorted(models, key=version_key, reverse=True)[0]
 
 
 def setup_worktree(repo_root: Path, slug: str) -> Path:
+    """Safely create or attach to an isolated git worktree under .worktrees/<slug>."""
     if not re.match(r"^[a-zA-Z0-9_-]+$", slug):
-        raise SystemExit(f"Invalid worktree slug {slug!r}. Slugs must contain only alphanumeric characters, dashes, or underscores.")
+        raise SystemExit(f"Invalid worktree slug {slug!r}. Alphanumeric, dashes, and underscores only.")
 
     worktrees_root = (repo_root / ".worktrees").resolve()
     worktree_dir = (worktrees_root / slug).resolve()
-
     if not str(worktree_dir).startswith(str(worktrees_root)):
         raise SystemExit(f"Security error: worktree path {worktree_dir} escapes {worktrees_root}")
 
     if worktree_dir.exists():
-        list_proc = subprocess.run(
-            ["git", "-C", str(repo_root), "worktree", "list", "--porcelain"],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
-        if str(worktree_dir) in list_proc.stdout:
+        proc = subprocess.run(["git", "-C", str(repo_root), "worktree", "list", "--porcelain"], capture_output=True, text=True, check=False)
+        if str(worktree_dir) in proc.stdout:
             return worktree_dir
-        raise SystemExit(f"Path {worktree_dir} exists but is not a registered Git worktree. Clean it up before proceeding.")
+        raise SystemExit(f"Path {worktree_dir} exists but is not a registered Git worktree. Clean it up first.")
 
     branch = f"task/{slug}"
     cmd = ["git", "-C", str(repo_root), "worktree", "add", "-b", branch, str(worktree_dir), "HEAD"]
-    proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-    if proc.returncode != 0:
-        cmd_existing = ["git", "-C", str(repo_root), "worktree", "add", str(worktree_dir), branch]
-        proc2 = subprocess.run(cmd_existing, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-        if proc2.returncode != 0:
-            raise SystemExit(f"Failed to create worktree at {worktree_dir}: {proc.stderr}\n{proc2.stderr}")
+    if subprocess.run(cmd, capture_output=True, text=True, check=False).returncode != 0:
+        # Retry attaching to existing branch
+        if subprocess.run(["git", "-C", str(repo_root), "worktree", "add", str(worktree_dir), branch], capture_output=True, text=True, check=False).returncode != 0:
+            raise SystemExit(f"Failed to create worktree at {worktree_dir}")
     return worktree_dir
 
 
 def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: str, allow_write: bool) -> str:
     mode = "WRITE_ALLOWED" if profile["mode"] == "write" and allow_write else "READ_ONLY"
-    forbidden = [
-        "Do not reveal, copy, or print secrets or credential values.",
-        "Do not push, commit, deploy, publish, send email, charge money, or modify production systems.",
-        "Do not perform cloud, Kubernetes, DNS, database, billing, or account writes.",
-        "If blocked, explain the blocker and stop instead of broadening scope.",
-    ]
-    if mode == "READ_ONLY":
-        forbidden.insert(0, "Do not modify files. Do not run commands that mutate the workspace.")
-    else:
-        forbidden.insert(0, "Keep edits tightly scoped to the requested task and report every changed file.")
+    mode_rule = "- Do not modify files or mutate the workspace." if mode == "READ_ONLY" else "- Keep edits tightly scoped to the task and report every changed file."
 
-    forbidden_text = "\n".join(f"- {line}" for line in forbidden)
-    return textwrap.dedent(
-        f"""
+    return textwrap.dedent(f"""
         You are a bounded worker delegated by the primary orchestrator.
 
         Working directory: {cwd}
@@ -519,10 +177,10 @@ def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: st
         {task.strip()}
 
         Rules:
-        - Read project instructions such as REGISTRY.yaml or AGENTS.md before acting.
-        {forbidden_text}
-        - The primary orchestrator will verify your output on disk before accepting it.
-        - You do not have the full conversation context unless it is written above.
+        - Read project instructions (REGISTRY.yaml / AGENTS.md) before acting.
+        {mode_rule}
+        - Do not reveal secrets, push commits, deploy, or modify cloud/production systems.
+        - If blocked, explain the blocker and stop instead of broadening scope.
 
         Return structured output formatted in compact YAML:
         ```yaml
@@ -539,53 +197,25 @@ def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: st
         next_actions:
           - "Next suggested step"
         ```
-        """
-    ).strip()
+    """).strip()
 
 
 def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bool, skip_permissions: bool) -> list[str]:
-    harness = profile["harness"]
-    model = profile["model"]
-    mode = profile["mode"]
+    harness, model, mode = profile["harness"], profile["model"], profile["mode"]
     effective_write = allow_write or skip_permissions
-    pi_profile_name = profile.get("pi_profile")
-
     if mode == "write" and not effective_write:
-        raise SystemExit(
-            f"Profile mode is write for {model}. Re-run with --allow-write, --yolo, or --dangerously-skip-permissions."
-        )
+        raise SystemExit(f"Profile requires write access. Run with --allow-write or --yolo.")
 
     if harness == "pi":
         tools = WRITE_TOOLS if effective_write else READ_ONLY_TOOLS
-        pi_profile_bin = find_pi_profile_binary()
-        if pi_profile_name and pi_profile_bin:
-            cmd = [
-                pi_profile_bin,
-                pi_profile_name,
-                "--",
-                "--print",
-                "--no-session",
-                "--mode",
-                "text",
-                "--tools",
-                tools,
-            ]
-        else:
-            cmd = [
-                "pi",
-                "--print",
-                "--no-session",
-                "--mode",
-                "text",
-                "--tools",
-                tools,
-            ]
+        pi_bin = find_binary(["pi-profile", str(Path.home() / "pi-lab/bin/pi-profile")]) if profile.get("pi_profile") else None
+        cmd = [pi_bin, profile["pi_profile"], "--"] if pi_bin else ["pi"]
+        cmd.extend(["--print", "--no-session", "--mode", "text", "--tools", tools])
         if model != "default":
             cmd.extend(["--model", model])
         if profile.get("thinking"):
             cmd.extend(["--thinking", str(profile["thinking"])])
-        cmd.append(prompt)
-        return cmd
+        return [*cmd, prompt]
 
     if harness == "opencode":
         cmd = ["opencode", "run", "--dir", str(cwd)]
@@ -595,8 +225,7 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
             cmd.extend(["--agent", str(profile["agent"])])
         if profile.get("variant"):
             cmd.extend(["--variant", str(profile["variant"])])
-        cmd.append(prompt)
-        return cmd
+        return [*cmd, prompt]
 
     if harness == "codex":
         cmd = ["codex", "exec", "--ephemeral", "-C", str(cwd)]
@@ -604,8 +233,7 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
             cmd.extend(["-m", model])
         if skip_permissions:
             cmd.append("--yolo")
-        cmd.append(prompt)
-        return cmd
+        return [*cmd, prompt]
 
     if harness == "claude":
         cmd = ["claude", "-p", prompt]
@@ -614,45 +242,94 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
         return cmd
 
     if harness == "dhs":
-        binary = find_harness_binary("dhs") or "dhs"
-        cmd = [binary, "exec", "--dir", str(cwd)]
+        dhs_bin = find_binary(["dhs", "dsh", "deepseek-harness"]) or "dhs"
+        cmd = [dhs_bin, "exec", "--dir", str(cwd)]
         if model != "default":
             cmd.extend(["--model", model])
         if skip_permissions:
             cmd.append("--yolo")
-        cmd.append(prompt)
-        return cmd
+        return [*cmd, prompt]
 
     raise SystemExit(f"Unsupported harness: {harness}")
 
 
-def write_run_artifacts(
-    save_dir: Path,
-    profile_name: str,
-    prompt: str,
-    cmd: list[str],
-    cwd: Path,
-    proc: subprocess.CompletedProcess[str] | None,
-    dry_run: bool,
-) -> Path:
-    timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    run_dir = save_dir / f"{timestamp}-{profile_name}"
-    run_dir.mkdir(parents=True, exist_ok=True)
-    (run_dir / "prompt.md").write_text(prompt + "\n", encoding="utf-8")
-    display_cmd = [arg if arg != prompt else "<prompt>" for arg in cmd]
-    meta = {
-        "profile": profile_name,
-        "cwd": str(cwd),
-        "dry_run": dry_run,
-        "command": display_cmd,
-        "returncode": None if proc is None else proc.returncode,
-        "created_at": timestamp,
-    }
-    (run_dir / "meta.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
-    if proc is not None:
-        (run_dir / "stdout.md").write_text(proc.stdout or "", encoding="utf-8")
-        (run_dir / "stderr.txt").write_text(proc.stderr or "", encoding="utf-8")
-    return run_dir
+def print_profiles() -> None:
+    rows = []
+    header = ["profile", "harness", "target / model (dynamic)", "mode", "description"]
+    for name, p in DEFAULT_PROFILES.items():
+        if p.get("pi_profile"):
+            target = f"pi-profile:{p['pi_profile']}"
+        else:
+            resolved = resolve_dynamic_model(p["harness"], p.get("model_family"), p["model"])
+            target = f"{p['model']} -> {resolved}" if p["model"] == "auto" else p["model"]
+        rows.append([name, p["harness"], target, p["mode"], p.get("description", "")])
+
+    widths = [max(len(str(r[i])) for r in [header, *rows]) for i in range(len(header))]
+    print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(header)))
+    print("  ".join("-" * w for w in widths))
+    for row in rows:
+        print("  ".join(str(cell).ljust(widths[i]) for i, cell in enumerate(row)))
+
+
+def diagnose() -> int:
+    print("Universal Harness Adapter — Diagnostics\n========================================")
+    for h, binaries in [("codex", ["codex"]), ("claude", ["claude"]), ("dhs", ["dhs", "dsh", "deepseek-harness"]), ("pi", ["pi"]), ("opencode", ["opencode"])]:
+        path = find_binary(binaries)
+        extra = " (headless runner)" if h == "dhs" else ""
+        ver = subprocess.run([path, "--version"], capture_output=True, text=True, check=False).stdout.strip() if path else ""
+        print(f"{h:10}: {path or '<missing>'}{extra}" + (f"\n  version : {ver}" if ver else ""))
+
+    pi_prof_bin = find_binary(["pi-profile", str(Path.home() / "pi-lab/bin/pi-profile")])
+    print(f"{'pi-profile':10}: {pi_prof_bin or '<missing>'}")
+    if pi_prof_bin:
+        print(f"  profiles: {', '.join(available_pi_profiles()) or '<none found>'}")
+
+    print("\nDetected Models per Harness:")
+    for h in ["codex", "pi", "opencode"]:
+        print(f"{h.capitalize()}:")
+        mods = sorted(available_models(h))
+        for m in (mods or ["<none found>"]):
+            print(f"  - {m}")
+    print()
+
+    missing = []
+    for name, p in DEFAULT_PROFILES.items():
+        h = p["harness"]
+        bins = ["dhs", "dsh", "deepseek-harness"] if h == "dhs" else [h]
+        ok = bool(find_binary(bins)) and (not p.get("pi_profile") or bool(pi_prof_bin))
+        resolved = resolve_dynamic_model(h, p.get("model_family"), p["model"])
+        target = f"pi-profile:{p['pi_profile']}" if p.get("pi_profile") else (f"{p['model']} ({resolved})" if p["model"] == "auto" else p["model"])
+        print(f"{('OK' if ok else 'MISSING'):7} {name:20} [{h}] target={target}")
+        if not ok:
+            missing.append(name)
+    return 1 if missing else 0
+
+
+def resolve_profile(args: argparse.Namespace) -> tuple[str, dict[str, Any]]:
+    if args.profile == "auto":
+        if not args.task_type:
+            raise SystemExit("--profile auto requires --task-type")
+        profile_name = TASK_TYPE_DEFAULTS.get(args.task_type)
+        if not profile_name:
+            raise SystemExit(f"Unknown task type {args.task_type!r}.")
+    else:
+        profile_name = args.profile
+
+    if profile_name not in DEFAULT_PROFILES:
+        raise SystemExit(f"Unknown profile {profile_name!r}.")
+
+    profile = dict(DEFAULT_PROFILES[profile_name])
+    if args.model:
+        profile["model"] = args.model
+    if args.harness:
+        profile["harness"] = args.harness
+    if args.timeout:
+        profile["timeout"] = args.timeout
+    if args.pi_profile:
+        profile["pi_profile"] = args.pi_profile
+
+    profile["model"] = resolve_dynamic_model(profile["harness"], profile.get("model_family"), profile.get("model"))
+    return profile_name, profile
 
 
 def main() -> int:
@@ -683,51 +360,50 @@ def main() -> int:
     if args.diagnose:
         return diagnose()
 
-    skip_permissions = args.yolo or args.dangerously_skip_permissions
-    allow_write = args.allow_write or skip_permissions
-
+    skip_perms = args.yolo or args.dangerously_skip_permissions
+    allow_write = args.allow_write or skip_perms
     profile_name, profile = resolve_profile(args)
+
     cwd = Path(args.cwd).expanduser().resolve()
     if not cwd.exists():
         raise SystemExit(f"Working directory does not exist: {cwd}")
-
     if args.worktree:
         cwd = setup_worktree(cwd, args.worktree)
 
-    task = read_task(args)
+    # Read task
+    task = args.task or (Path(args.task_file).read_text(encoding="utf-8") if args.task_file else None) or (sys.stdin.read() if not sys.stdin.isatty() else None)
+    if not task or not task.strip():
+        raise SystemExit("Provide --task, --task-file, or stdin.")
+
     prompt = build_prompt(profile_name, profile, cwd, task, allow_write)
-    cmd = command_for(profile, cwd, prompt, allow_write, skip_permissions)
+    cmd = command_for(profile, cwd, prompt, allow_write, skip_perms)
 
     display_cmd = [arg if arg != prompt else "<prompt>" for arg in cmd]
-    run_dir = None
+    save_path = Path(args.save_dir).expanduser() / f"{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{profile_name}" if not args.no_save else None
+
     if args.dry_run:
-        if not args.no_save:
-            run_dir = write_run_artifacts(Path(args.save_dir).expanduser(), profile_name, prompt, cmd, cwd, None, True)
-        print("DRY RUN")
-        print("Command:", " ".join(display_cmd))
-        if run_dir:
-            print("Run dir:", run_dir)
+        print("DRY RUN\nCommand:", " ".join(display_cmd))
+        if save_path:
+            save_path.mkdir(parents=True, exist_ok=True)
+            (save_path / "prompt.md").write_text(prompt + "\n", encoding="utf-8")
+            (save_path / "meta.json").write_text(json.dumps({"profile": profile_name, "cwd": str(cwd), "command": display_cmd, "dry_run": True}, indent=2) + "\n", encoding="utf-8")
+            print("Run dir:", save_path)
         return 0
 
     try:
-        proc = subprocess.run(
-            cmd,
-            cwd=str(cwd),
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=int(profile["timeout"]),
-            check=False,
-        )
+        proc = subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True, timeout=int(profile["timeout"]), check=False)
     except subprocess.TimeoutExpired as exc:
-        print(f"Timed out after {profile['timeout']} seconds: {exc}", file=sys.stderr)
+        print(f"Timed out after {profile['timeout']}s: {exc}", file=sys.stderr)
         return 124
 
-    if not args.no_save:
-        run_dir = write_run_artifacts(Path(args.save_dir).expanduser(), profile_name, prompt, cmd, cwd, proc, False)
+    if save_path:
+        save_path.mkdir(parents=True, exist_ok=True)
+        (save_path / "prompt.md").write_text(prompt + "\n", encoding="utf-8")
+        (save_path / "stdout.md").write_text(proc.stdout or "", encoding="utf-8")
+        (save_path / "stderr.txt").write_text(proc.stderr or "", encoding="utf-8")
+        (save_path / "meta.json").write_text(json.dumps({"profile": profile_name, "cwd": str(cwd), "command": display_cmd, "returncode": proc.returncode}, indent=2) + "\n", encoding="utf-8")
+        print(f"[multi-harness] run dir: {save_path}", file=sys.stderr)
 
-    if run_dir:
-        print(f"[multi-harness] run dir: {run_dir}", file=sys.stderr)
     if proc.stderr:
         print(proc.stderr, file=sys.stderr, end="")
     print(proc.stdout, end="")
