@@ -207,6 +207,15 @@
         "tex tooling when used"
       ]
     },
+    "tmux-delegation": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "medium",
+      "dependencies": [
+        "tmux"
+      ]
+    },
     "web-browse": {
       "source": "local",
       "license": "MIT",

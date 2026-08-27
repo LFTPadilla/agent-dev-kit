@@ -42,6 +42,10 @@ skills:
     path: "plugins/dev-skills/skills/herdr"
     scope: "orchestration"
     requires: [herdr]
+  tmux-delegation:
+    path: "plugins/dev-skills/skills/tmux-delegation"
+    scope: "orchestration"
+    requires: [tmux]
 
 tools:
   agent-dev-kit:
