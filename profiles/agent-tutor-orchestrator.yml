@@ -52,7 +52,7 @@ notes:
   - "All delegation uses the tmux-safe three-step (load-buffer + paste-buffer + sleep + Enter),
     spinner detection, completion polling, and disk-level audit. Never send-keys -l with
     multi-line prompts."
-  - "ai-workflow-orchestrator covers out-of-process workers (tmux + kanban). The companion
+  - "tech-lead covers out-of-process workers (tmux + kanban). The companion
     skill orchestrate covers in-process subagents (Codex/Claude Code/PI/OpenCode) and GSD
     routing — load $orchestrate when workers share the harness or the user invoked GSD
     explicitly, this skill when workers live in tmux or other profiles."

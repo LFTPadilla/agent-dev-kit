@@ -46,7 +46,7 @@ different names, pass them explicitly instead of editing the public scripts:
 
 Public skills only (cold-clone ready):
 
-1. `ai-workflow-orchestrator`
+1. `tech-lead`
 2. `orchestrate`
 
 Defaults:
@@ -70,7 +70,7 @@ repo. Missing them on a cold clone is expected. Compose later:
 | Piece | Location | Tier |
 | --- | --- | --- |
 | Profile manifest | `profiles/agent-tutor-orchestrator.yml` | B |
-| Public orchestrator skills | `ai-workflow-orchestrator`, `orchestrate` | B |
+| Public orchestrator skills | `tech-lead`, `orchestrate` | B |
 | Install / doctor (front door) | `scripts/tutor-install.sh`, `scripts/tutor-doctor.sh` | B |
 | Internal helpers | `scripts/tutor-{smoke,status,bootstrap,delegate,audit,…}.sh` | B |
 | Default tmux session | `tutor` (override with `AGENT_TUTOR_SESSION`) | B |
@@ -281,7 +281,7 @@ agent-dev-kit/
 ├── profiles/
 │   └── agent-tutor-orchestrator.yml
 ├── plugins/dev-skills/skills/
-│   ├── ai-workflow-orchestrator/
+│   ├── tech-lead/
 │   │   └── SKILL.md
 │   └── orchestrate/
 │       └── SKILL.md
@@ -328,7 +328,7 @@ tmux:
   delegate_session: tutor
 # Tier B — public skills only (cold-clone ready)
 include_skills:
-  - ai-workflow-orchestrator
+  - tech-lead
   - orchestrate
 # Tier C — not in this repo; missing on cold clone is expected
 requires_private_overlay:
@@ -366,12 +366,12 @@ Canonical source of truth: `profiles/agent-tutor-orchestrator.yml`.
 
 ## 5. Skill design
 
-### 5.1 Main skill: `ai-workflow-orchestrator`
+### 5.1 Main skill: `tech-lead`
 
 Trigger description:
 
 ```yaml
-name: ai-workflow-orchestrator
+name: tech-lead
 description: Use when guiding a developer through an AI-assisted software development workflow as a pure orchestrator. Holds the picture, decomposes work into lanes, and delegates every concrete task to a Claude Code subagent attached to a tmux window in a named session (default `tutor`) or to a Hermes Kanban card. Does not edit, test, build, commit, or push itself. Trusts but verifies via disk-level audit.
 ```
 
@@ -485,7 +485,7 @@ Options:
 For public distribution, prefer direct URL or skill hub:
 
 ```bash
-hermes --profile agent-tutor-orchestrator skills install https://raw.githubusercontent.com/<org>/<repo>/main/plugins/dev-skills/skills/ai-workflow-orchestrator/SKILL.md
+hermes --profile agent-tutor-orchestrator skills install https://raw.githubusercontent.com/<org>/<repo>/main/plugins/dev-skills/skills/tech-lead/SKILL.md
 ```
 
 ### 6.4 Install templates
@@ -574,7 +574,7 @@ The tutor should interrupt or warn when it detects:
 
 **Shipped (core):**
 
-1. Main `ai-workflow-orchestrator` skill (+ companion `orchestrate` in public include list).
+1. Main `tech-lead` skill (+ companion `orchestrate` in public include list).
 2. `profiles/agent-tutor-orchestrator.yml` manifest (pure orchestrator limits;
    overlay skills listed under `requires_private_overlay`).
 3. Front-door installer + doctor; internal bootstrap / preflight / status /
@@ -662,7 +662,7 @@ Core is already in-tree. Smoke the profile:
 ```bash
 ./scripts/tutor-preflight.sh
 ./scripts/tutor-smoke.sh
-hermes --profile agent-tutor-orchestrator -s ai-workflow-orchestrator
+hermes --profile agent-tutor-orchestrator -s tech-lead
 ```
 
 Optional next polish: richer templates under the profile, opt-in safe updater,

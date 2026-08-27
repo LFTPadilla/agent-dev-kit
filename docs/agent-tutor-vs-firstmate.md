@@ -21,7 +21,7 @@ Blurring liaison into implementer loses the fleet picture. Contract:
 1. **Tutor** — plan, route, monitor, audit, coach.
 2. **Workers** — edit, test, commit, push, open PRs (only when delegated).
 
-Enforced in `profiles/agent-tutor-orchestrator.yml` and `ai-workflow-orchestrator`.
+Enforced in `profiles/agent-tutor-orchestrator.yml` and `tech-lead`.
 
 ## Composition, not fork
 

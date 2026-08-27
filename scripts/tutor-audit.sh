@@ -8,8 +8,8 @@
 # /tmp/lane-<id>-prompt.md to extract acceptance criteria. Prints a verdict.
 #
 # Exit codes:
-#   0 = APTO PARA REVIEW
-#   1 = NECESITA CORRECCIONES (verdict failure, details printed)
+#   0 = READY FOR REVIEW
+#   1 = NEEDS CORRECTIONS (verdict failure, details printed)
 #   2 = setup error (missing args, bad lane id)
 set -uo pipefail
 

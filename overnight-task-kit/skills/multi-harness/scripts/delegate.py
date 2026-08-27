@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import functools
 import json
 import os
 import re
@@ -84,6 +85,7 @@ def find_binary(names: list[str]) -> str | None:
     return None
 
 
+@functools.lru_cache(maxsize=16)
 def available_models(harness: str) -> set[str]:
     """Extract registered model IDs from local harness config files."""
     home = Path.home()
@@ -139,6 +141,10 @@ def setup_worktree(repo_root: Path, slug: str) -> Path:
     """Safely create or attach to an isolated git worktree under .worktrees/<slug>."""
     if not re.match(r"^[a-zA-Z0-9_-]+$", slug):
         raise SystemExit(f"Invalid worktree slug {slug!r}. Alphanumeric, dashes, and underscores only.")
+
+    git_root_proc = subprocess.run(["git", "-C", str(repo_root), "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False)
+    if git_root_proc.returncode == 0 and git_root_proc.stdout.strip():
+        repo_root = Path(git_root_proc.stdout.strip()).resolve()
 
     worktrees_root = (repo_root / ".worktrees").resolve()
     worktree_dir = (worktrees_root / slug).resolve()
@@ -416,6 +422,9 @@ def main() -> int:
 
     try:
         proc = subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True, timeout=int(profile["timeout"]), check=False)
+    except FileNotFoundError:
+        print(f"Error: Harness executable '{cmd[0]}' not found. Run --diagnose to check installed harnesses.", file=sys.stderr)
+        return 127
     except subprocess.TimeoutExpired as exc:
         print(f"Timed out after {profile['timeout']}s: {exc}", file=sys.stderr)
         return 124

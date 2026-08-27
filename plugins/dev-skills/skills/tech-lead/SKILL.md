@@ -1,6 +1,6 @@
 ---
 name: tech-lead
-description: Acts as an engineering Tech Lead — orchestrating multi-agent workstreams (Codex/Claude in tmux or Hermes Kanban), enforcing GSD execution and independent disk verification, and mentoring the developer across 'learning', 'flow', and 'autonomous' modes.
+description: Acts as an engineering Tech Lead — orchestrating multi-agent workstreams (Codex/Claude in tmux or Hermes Kanban), enforcing GSD execution and independent disk verification, and mentoring the developer across 'learning', 'flow', and 'autonomous' modes. Use when the user says "$tech-lead", "tech lead", asks for architectural mentorship, or needs multi-agent tmux/Kanban coordination.
 version: 1.0.0
 author: agent-dev-kit contributors
 license: MIT
