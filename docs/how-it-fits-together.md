@@ -18,10 +18,11 @@ direct          ship                 run
 caveman         /pr-review           personal-dev-tutor
 ponytail        no-mistakes          gnhf (+ overnight-task-kit)
 GSD             evals                treehouse
+superpowers*
 (+ dev-skills)
 ```
 
-1. **direct** — how the agent talks (caveman), what it builds (ponytail), how multi-step work flows (GSD), plus discrete capabilities in this repo (`dev-skills`).
+1. **direct** — how the agent talks (caveman), what it builds (ponytail), how multi-step work flows (GSD), execution-phase engineering guardrails (Superpowers: TDD, systematic debugging, verification before claims, receiving code review), plus discrete capabilities in this repo (`dev-skills`).
 2. **ship** — adversarial `/pr-review`, the no-mistakes gate, and measured evals. Prefer both LLM review and deterministic SAST.
 3. **run** — flagship tutor-orchestrator profile (Personal Dev Tutor), overnight runner (gnhf), and worktree isolation (treehouse).
 
@@ -31,11 +32,11 @@ GSD             evals                treehouse
 GSD (plan / execute / verify)
   → learning gate (prediction when useful)
   → Graphify for meaningful cross-file context; Context7 for current library docs
-  → bounded Codex implementation in tmux personal
-  → independent diff / test audit
+  → bounded Codex implementation in tmux personal (TDD + systematic debugging guardrails)
+  → independent diff / test audit (verification before completion)
   → one teach-back question + durable learning evidence
   → treehouse when parallel agents would collide
-  → /pr-review + no-mistakes before merge
+  → /pr-review + no-mistakes before merge (receiving code review rigor)
   → gnhf for unsupervised multi-hour work
 ```
 

@@ -127,5 +127,8 @@ PERSONAL_TUTOR_CODEX_SKILLS=(
 # and dynamic skill discovery. GSD is the only lifecycle authority here.
 PERSONAL_TUTOR_HERMES_SKILLS=(personal-development-mentor "${PERSONAL_TUTOR_CODEX_SKILLS[@]}")
 
-export PATH="$PERSONAL_TUTOR_USER_HOME/.nix-profile/bin:$PERSONAL_TUTOR_USER_HOME/.local/bin:$PATH"
+case ":$PATH:" in
+  *":$PERSONAL_TUTOR_USER_HOME/.local/bin:"*) ;;
+  *) export PATH="$PERSONAL_TUTOR_USER_HOME/.nix-profile/bin:$PERSONAL_TUTOR_USER_HOME/.local/bin:$PATH" ;;
+esac
 personal_tutor_prepare_tmux

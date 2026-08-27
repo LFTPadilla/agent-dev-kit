@@ -18,6 +18,7 @@ remains available as an alternative. The kit composes with optional
 | caveman | how the agent talks | external plugin |
 | ponytail | what the agent builds | external plugin |
 | GSD | how work flows (plan → execute → verify) | external (`get-shit-done-cc` for Hermes; optional `pi-gsd` helper) |
+| superpowers (guardrails) | how code tasks are executed (TDD, root-cause debug, verification evidence) | external (`obra/superpowers`) |
 | dev-skills | discrete capabilities | [`plugins/dev-skills/AGENTS.md`](plugins/dev-skills/AGENTS.md) |
 | ship / overnight / orchestration | gates, isolation, long runs, tutoring and pure orchestration | [`overnight-task-kit/AGENTS.md`](overnight-task-kit/AGENTS.md) + Personal Dev Tutor + Agent Tutor Orchestrator |
 
@@ -46,6 +47,10 @@ External installs: [`docs/external-deps.md`](docs/external-deps.md).
    Hub-and-Spoke `AGENTS.md`, declarative `REGISTRY.yaml`, and progressive
    disclosure. See [`docs/agent-native-architecture.md`](docs/agent-native-architecture.md)
    and [`REGISTRY.yaml`](REGISTRY.yaml).
+9. Prefer **Superpowers execution guardrails** (`test-driven-development`,
+   `systematic-debugging`, `verification-before-completion`,
+   `receiving-code-review`) during task implementation while keeping GSD
+   authoritative for project lifecycle and state.
 
 ## Hard rules
 
