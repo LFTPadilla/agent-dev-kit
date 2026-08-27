@@ -138,6 +138,12 @@ instead of approximating a GSD workflow.
    workers must happen in dedicated worktrees under `.worktrees/<task-slug>` to
    protect the main checkout from in-place edits.
 
+10. Clean delegate context: When dispatching a new task to an external worker
+    (Claude Code, Cursor, Herdr pane, or tmux session):
+    - Do NOT dump unrelated tasks into a dirty session where previous context acts as noise.
+    - **Preferred:** Spawn or target a new window/tab/session so past transcripts remain readable for reference.
+    - **Fallback:** If reusing an existing session/pane for an unrelated task, issue `/clear` before dispatching.
+    - Only reuse a dirty session without `/clear` when directly continuing the exact same task from the previous turn.
 
 ---
 
