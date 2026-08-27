@@ -146,6 +146,11 @@ instead of approximating a GSD workflow.
     - **Fallback:** If reusing an existing session/pane for an unrelated task, issue `/clear` before dispatching.
     - Only reuse a dirty session without `/clear` when directly continuing the exact same task from the previous turn.
 
+11. Background notification hygiene: When background tasks finish after their results
+    were already collected or audited, do not treat the delayed exit notification as an
+    actionable new turn or persist meta-logs to long-term memory. Acknowledge minimally
+    without conversational churn or memory pollution.
+
 ---
 
 ## Concurrency rules
