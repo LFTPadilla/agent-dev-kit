@@ -12,7 +12,7 @@
    [external-deps.md](external-deps.md) and
    [how-it-fits-together.md](how-it-fits-together.md).
 
-## Skills (22)
+## Skills (24)
 
 ### Orchestration (agentic core)
 
@@ -21,6 +21,7 @@
 | `orchestrate` | Explicit planner/orchestrator mode: decompose, route to workers, verify independently. Keeps the expensive model on judgment. | "$orchestrate", "orchestrate", "delegate to subagents", "use cheaper models", "route through GSD with subagents" |
 | `personal-development-mentor` | Flagship GSD + Codex tutor-orchestrator: bounded implementation, independent verification, cognitive-debt checkpoints, proactive tool routing, Mermaid/D2 policy. | personal, portfolio, interview, or learning projects where the developer must understand what is built |
 | `ai-workflow-orchestrator` | Agent Tutor Orchestrator playbook: pure orchestrator that holds the picture, routes to tmux Claude windows or Hermes Kanban, audits on disk. Does not edit/test/commit itself. | guiding an AI-assisted workflow as orchestrator; Agent Tutor Orchestrator profile sessions |
+| `herdr` | Agent-native terminal multiplexer: workspaces, tabs, panes, and agent lifecycle management (idle, working, blocked, done). | "herdr", running inside Herdr (HERDR_ENV=1), inspecting/controlling Herdr agents or panes |
 
 ### Documents & media
 

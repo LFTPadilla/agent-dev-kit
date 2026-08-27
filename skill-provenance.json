@@ -68,6 +68,15 @@
         "git"
       ]
     },
+    "herdr": {
+      "source": "third-party-adapted",
+      "license": "Apache-2.0",
+      "visibility": "public",
+      "risk": "medium",
+      "dependencies": [
+        "herdr"
+      ]
+    },
     "human-writing-style": {
       "source": "local",
       "license": "MIT",
