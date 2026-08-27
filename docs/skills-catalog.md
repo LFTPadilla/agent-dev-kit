@@ -12,7 +12,7 @@
    [external-deps.md](external-deps.md) and
    [how-it-fits-together.md](how-it-fits-together.md).
 
-## Skills (22)
+## Skills (29)
 
 ### Orchestration (agentic core)
 
@@ -20,7 +20,7 @@
 |---|---|---|---|
 | `orchestrate` | In-Session Subagents | Explicit planner/orchestrator mode: decompose, route to workers, verify independently. Keeps the expensive model on judgment. | "$orchestrate", "orchestrate", "delegate to subagents", "use cheaper models", "route through GSD with subagents" |
 | `tech-lead` | Tech Lead & Mentorship | Unified orchestrator & mentor: multi-agent tmux/Kanban coordination, cognitive-debt tracking (`learning` mode), and pure autonomous lane management (`autonomous` mode). | "$tech-lead", "tech lead", personal/learning projects, multi-agent tmux workflows |
-| `multi-harness` | Cross-Harness Delegation | Delegate bounded subtasks to other local harnesses (Pi, OpenCode, Codex CLI, Claude CLI, DHS) with prompt isolation and output contracts. | cross-harness requests, comparing harnesses, external-only runtimes |
+| `multi-harness` | Cross-Harness Delegation | Delegate bounded subtasks to other local harnesses (Pi, OpenCode, Codex CLI, Claude Code CLI, DHS) with prompt isolation and output contracts. | cross-harness requests, comparing harnesses, external-only runtimes |
 | `overnight-task` | Long Runs / Autonomous | Autonomous execution protocol, state machines, and templates for unsupervised multi-hour workflows (gnhf). | overnight tasks, long-running batch jobs, autonomous milestone completion |
 
 ### Documents & media

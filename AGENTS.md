@@ -73,7 +73,7 @@ External installs: [`docs/external-deps.md`](docs/external-deps.md).
 | Declarative catalog (ANRS-1.0) | [`REGISTRY.yaml`](REGISTRY.yaml) |
 | Dev-Skills Subsystem | [`plugins/dev-skills/AGENTS.md`](plugins/dev-skills/AGENTS.md) |
 | Overnight Task Kit Subsystem | [`overnight-task-kit/AGENTS.md`](overnight-task-kit/AGENTS.md) |
-| Skill catalog (all 23) | [`docs/skills-catalog.md`](docs/skills-catalog.md) |
+| Skill catalog (all 29) | [`docs/skills-catalog.md`](docs/skills-catalog.md) |
 | Provenance / license / risk | [`skill-provenance.json`](skill-provenance.json) |
 | Curation decisions | [`CURATION.md`](CURATION.md) |
 | Design thesis | [`WRITEUP.md`](WRITEUP.md) |

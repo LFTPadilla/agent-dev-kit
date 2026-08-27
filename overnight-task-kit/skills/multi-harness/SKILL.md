@@ -14,13 +14,13 @@ Use this skill as the primary agent. You remain the orchestrator: decide what to
 Apply this gate before diagnostics, profile selection, or running `delegate.py`:
 
 1. Default to the current harness's native subagents when they expose the requested model. Requests for generic subagents, workers, parallelism, or orchestration are not external-harness requests.
-2. Use this skill only with an explicit external signal: Pi, OpenCode, Codex CLI, Claude CLI, DHS, another/external/cross harness, multiple distinct harnesses, harness comparison, or an external-only runtime the user has asked to use.
+2. Use this skill only with an explicit external signal: Pi, OpenCode, Codex CLI, Claude Code CLI, DHS, another/external/cross harness, multiple distinct harnesses, harness comparison, or an external-only runtime the user has asked to use.
 3. When the user explicitly requests an external runtime or specific CLI model, use the Universal Harness Adapter (`delegate.py`).
-4. If this skill was auto-triggered without an external signal or an unavailable explicitly named model, do not run diagnostics or delegation scripts. Continue using the current harness's native subagent tools.
-5. If the requested harness or model is not available locally, report the limitation. Do not silently switch models or harnesses without user confirmation.
+4. If this skill was auto-triggered without an explicit external signal, do not run diagnostics or delegation scripts. Continue using the current harness's native subagent tools.
+5. If the requested harness or model is not available locally, report the limitation and ask for confirmation before switching to an alternative model, harness, or native subagents. Never silently substitute.
 
 Examples:
-- "Spawn three Codex subagents" -> native Codex subagents when exposed; otherwise use the Codex CLI profile in this skill.
+- "Spawn three Codex subagents" -> use native Codex subagents when exposed; if unavailable, report the limitation and confirm before using the Codex CLI profile.
 - "Parallelize the review with subagents" -> native subagents; do not use `multi-harness`.
 - "Delegate this review to Pi with GLM or DeepSeek" -> use `multi-harness`.
 - "Run this implementation via DeepSeek Harness (DHS/DSH) or OpenCode" -> use `multi-harness`.
@@ -32,20 +32,20 @@ The adapter supports running bounded tasks across:
 - **Claude Code CLI**: `claude -p "<prompt>" [--dangerously-skip-permissions]`
 - **DeepSeek Harness (DHS / DSH)**: `dsh exec --dir <dir> [--model <model>] [--yolo]` *(Headless execution engine; no terminal TUI)*
 - **Pi**: `pi --print --mode text [--model <model>] --tools <tools>`
-- **OpenCode**: `opencode run --dir <dir> [--model <model>]`
+- **OpenCode**: `opencode run --dir <dir> [--model <model>] [--auto]`
 
 For dynamic model resolution:
 Profiles with `model: auto` dynamically discover and select the highest active frontier model in your local runtime configuration (e.g. resolving `GLM-5.3+`, latest `DeepSeek-V4+`, or `GPT-5.x`), or accept explicit user overrides via `--model <name>`.
 
 For permission bypass across any harness:
-Pass `--yolo` or `--dangerously-skip-permissions` to `delegate.py`. It will map the flag to each harness's native permission bypass mechanism.
+Pass `--yolo` or `--dangerously-skip-permissions` to `delegate.py`. It will map the flag to each harness's native permission bypass mechanism (`--yolo` for Codex/DHS, `--dangerously-skip-permissions` for Claude Code, `--auto` for OpenCode, full tool allowlist for Pi).
 
 For delegated implementation with worktree auto-isolation:
 Pass `--worktree <slug>` to `delegate.py`. It will:
-1. Automatically create an isolated git worktree at `.worktrees/<slug>` (validating slug for path safety).
-2. Execute the delegated task inside the isolated worktree.
-3. Provide a structured YAML output format in the prompt.
-4. Capture output and diffs cleanly without touching the main checkout.
+1. Validate `<slug>` (alphanumeric characters, dashes, and underscores only; rejecting `.`, `..`, traversal segments, and absolute paths) and resolve inside `.worktrees/<slug>` on branch `task/<slug>`.
+2. Verify the worktree path is registered with Git if it already exists, preventing escapes or hijacking of existing directories.
+3. Execute the delegated task inside the isolated worktree, requesting structured YAML output via prompt conventions.
+4. Capture raw output, exit code, and run metadata cleanly without touching the main checkout.
 
 ## Quick Start
 
@@ -125,6 +125,8 @@ Every delegated prompt must include:
 - Stop and ask the user before delegating to a paid/quota-sensitive model for a large or open-ended job unless the user already requested it.
 
 ## Output Contract
+
+Structured output requested from delegated workers (e.g. YAML status/findings blocks) is a prompt-level convention rather than a machine-enforced schema in `delegate.py`. The runner captures raw stdout and stderr; as the orchestrator, you must inspect and validate returned content yourself.
 
 When reporting back to the user, include:
 

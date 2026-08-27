@@ -43,8 +43,8 @@ Profiles with `model: auto` dynamically discover and select the highest active v
 
 For write-capable profiles, use any of:
 - `--allow-write`: Grants write permissions.
-- `--yolo` / `--dangerously-skip-permissions`: Automatically bypasses interactive confirmations across all harnesses (`--yolo` for Codex/DHS, `--dangerously-skip-permissions` for Claude Code, full tool allowlist for Pi).
+- `--yolo` / `--dangerously-skip-permissions`: Automatically bypasses interactive confirmations across all harnesses (`--yolo` for Codex/DHS, `--dangerously-skip-permissions` for Claude Code, `--auto` for OpenCode, full tool allowlist for Pi).
 
 ## Worktree Auto-Isolation
 
-Pass `--worktree <slug>` to automatically isolate the delegated run inside `.worktrees/<slug>` on branch `task/<slug>`, keeping the main checkout clean. Slugs are validated for safe directory names.
+Pass `--worktree <slug>` to automatically isolate the delegated run inside `.worktrees/<slug>` on branch `task/<slug>`, keeping the main checkout clean. Slugs are strictly validated (alphanumeric, dashes, and underscores only; rejecting `.`, `..`, traversal segments, and absolute paths) and resolved under `.worktrees`, verifying git worktree registration.

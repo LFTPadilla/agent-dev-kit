@@ -202,7 +202,7 @@ def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: st
 
 def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bool, skip_permissions: bool) -> list[str]:
     harness, model, mode = profile["harness"], profile["model"], profile["mode"]
-    effective_write = allow_write or skip_permissions
+    effective_write = mode == "write" and (allow_write or skip_permissions)
     if mode == "write" and not effective_write:
         raise SystemExit(f"Profile requires write access. Run with --allow-write or --yolo.")
 
@@ -225,6 +225,8 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
             cmd.extend(["--agent", str(profile["agent"])])
         if profile.get("variant"):
             cmd.extend(["--variant", str(profile["variant"])])
+        if skip_permissions:
+            cmd.append("--auto")
         return [*cmd, prompt]
 
     if harness == "codex":
@@ -237,7 +239,9 @@ def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bo
 
     if harness == "claude":
         cmd = ["claude", "-p", prompt]
-        if skip_permissions:
+        if mode == "read":
+            cmd.extend(["--permission-mode", "plan"])
+        elif skip_permissions:
             cmd.append("--dangerously-skip-permissions")
         return cmd
 
@@ -261,7 +265,10 @@ def print_profiles() -> None:
             target = f"pi-profile:{p['pi_profile']}"
         else:
             resolved = resolve_dynamic_model(p["harness"], p.get("model_family"), p["model"])
-            target = f"{p['model']} -> {resolved}" if p["model"] == "auto" else p["model"]
+            if p["model"] == "auto":
+                target = f"auto -> {resolved}" if resolved != "default" else "auto (none discovered)"
+            else:
+                target = p["model"]
         rows.append([name, p["harness"], target, p["mode"], p.get("description", "")])
 
     widths = [max(len(str(r[i])) for r in [header, *rows]) for i in range(len(header))]
@@ -280,9 +287,10 @@ def diagnose() -> int:
         print(f"{h:10}: {path or '<missing>'}{extra}" + (f"\n  version : {ver}" if ver else ""))
 
     pi_prof_bin = find_binary(["pi-profile", str(Path.home() / "pi-lab/bin/pi-profile")])
+    pi_profs = available_pi_profiles() if pi_prof_bin else []
     print(f"{'pi-profile':10}: {pi_prof_bin or '<missing>'}")
     if pi_prof_bin:
-        print(f"  profiles: {', '.join(available_pi_profiles()) or '<none found>'}")
+        print(f"  profiles: {', '.join(pi_profs) or '<none found>'}")
 
     print("\nDetected Models per Harness:")
     for h in ["codex", "pi", "opencode"]:
@@ -296,12 +304,28 @@ def diagnose() -> int:
     for name, p in DEFAULT_PROFILES.items():
         h = p["harness"]
         bins = ["dhs", "dsh", "deepseek-harness"] if h == "dhs" else [h]
-        ok = bool(find_binary(bins)) and (not p.get("pi_profile") or bool(pi_prof_bin))
+        prof_ok = (p["pi_profile"] in pi_profs) if p.get("pi_profile") else True
+        bin_ok = bool(find_binary(bins)) and prof_ok
         resolved = resolve_dynamic_model(h, p.get("model_family"), p["model"])
-        target = f"pi-profile:{p['pi_profile']}" if p.get("pi_profile") else (f"{p['model']} ({resolved})" if p["model"] == "auto" else p["model"])
-        print(f"{('OK' if ok else 'MISSING'):7} {name:20} [{h}] target={target}")
-        if not ok:
+        model_found = (resolved != "default") if (p["model"] == "auto" and not p.get("pi_profile")) else True
+
+        if not bin_ok:
+            status = "MISSING"
             missing.append(name)
+        elif not model_found:
+            status = "UNREADY"
+            missing.append(name)
+        else:
+            status = "OK"
+
+        if p.get("pi_profile"):
+            target = f"pi-profile:{p['pi_profile']}"
+        elif p["model"] == "auto":
+            target = f"auto ({resolved if model_found else 'none discovered'})"
+        else:
+            target = p["model"]
+
+        print(f"{status:7} {name:20} [{h}] target={target}")
     return 1 if missing else 0
 
 
