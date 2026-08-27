@@ -13,6 +13,7 @@ tmux:
 include_skills:
   - ai-workflow-orchestrator
   - orchestrate
+  - herdr
 # Tier C — skills expected from a private org overlay or Hermes hub install.
 # Cold-clone does NOT include these; tutor-bootstrap will report them missing
 # until an overlay is linked. Do not treat them as public kit contents.
