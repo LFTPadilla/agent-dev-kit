@@ -218,6 +218,28 @@ it.
 
 ---
 
+## Terminal Multiplexer & External Agent Delegation
+
+When dispatching work to external CLI agents (Claude Code, Cursor, Codex, OpenCode, Hermes), orchestrators select the active multiplexer using this preference order:
+
+1. **Herdr (Preferred when active):**
+   Check if Herdr environment is set or daemon is running:
+   ```bash
+   if [ "${HERDR_ENV:-}" = 1 ] || (command -v herdr >/dev/null 2>&1 && herdr status server 2>/dev/null | grep -q "status: running"); then
+     # Use Herdr Dispatcher
+     ./plugins/dev-skills/skills/herdr/scripts/herdr-dispatch.sh agent-start \
+       --space "$WORKSPACE" --tab "$TAB" --name "$AGENT_NAME" --kind "$AGENT_KIND" --prompt "$PROMPT" --wait
+   fi
+   ```
+   Supports auto-indexed spaces, structured TOON/JSON output, and instant lifecycle state queries (`idle`, `working`, `blocked`, `done`).
+
+2. **Tmux Delegation (Fallback):**
+   If Herdr is unavailable or not running, route to `tmux-delegation`:
+   ```bash
+   tmux new-window -t "$SESSION" -n "$WINDOW" -c "$CWD" "$AGENT_CMD"
+   ```
+   Poll the target pane using the spinner character detection regex (`✢|✶|✻` or idle prompts).
+
 ## Fallback
 
 If the current harness cannot spawn subagents, state that limitation and ask
@@ -230,3 +252,4 @@ To install the optional Codex custom agents, copy the TOML files from
 `assets/codex-agents/` into `~/.codex/agents/` or the repo's `.codex/agents/`
 directory, then restart Codex. The skill still works without them by requesting
 equivalent model/effort settings directly when spawning workers.
+
