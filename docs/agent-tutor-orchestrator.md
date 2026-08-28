@@ -46,8 +46,7 @@ different names, pass them explicitly instead of editing the public scripts:
 
 Public skills only (cold-clone ready):
 
-1. `tech-lead`
-2. `orchestrate`
+1. `orchestrate` (canonical orchestrator: in-process workers, Herdr, tmux, and Kanban)
 
 Defaults:
 
@@ -70,7 +69,7 @@ repo. Missing them on a cold clone is expected. Compose later:
 | Piece | Location | Tier |
 | --- | --- | --- |
 | Profile manifest | `profiles/agent-tutor-orchestrator.yml` | B |
-| Public orchestrator skills | `tech-lead`, `orchestrate` | B |
+| Public orchestrator skills | `orchestrate` | B |
 | Install / doctor (front door) | `scripts/tutor-install.sh`, `scripts/tutor-doctor.sh` | B |
 | Internal helpers | `scripts/tutor-{smoke,status,bootstrap,delegate,audit,…}.sh` | B |
 | Default tmux session | `tutor` (override with `AGENT_TUTOR_SESSION`) | B |
@@ -366,25 +365,23 @@ Canonical source of truth: `profiles/agent-tutor-orchestrator.yml`.
 
 ## 5. Skill design
 
-### 5.1 Main skill: `tech-lead`
+### 5.1 Main skill: `orchestrate`
+
+Canonical orchestrator across harnesses (Codex, Claude Code, Pi, and Hermes).
 
 Trigger description:
 
 ```yaml
-name: tech-lead
-description: Use when guiding a developer through an AI-assisted software development workflow as a pure orchestrator. Holds the picture, decomposes work into lanes, and delegates every concrete task to a Claude Code subagent attached to a tmux window in a named session (default `tutor`) or to a Hermes Kanban card. Does not edit, test, build, commit, or push itself. Trusts but verifies via disk-level audit.
+name: orchestrate
+description: Explicit orchestrator mode for Codex, Claude Code, PI, or Hermes. Decomposes large tasks, chooses model tiers, delegates execution to bounded subagents or tmux/Herdr worker panes, and verifies independently on disk.
 ```
 
-Behavioral contract:
+Operational rules:
 
-- Always identify the current phase.
-- Ask for or locate the issue/ACs before implementation.
-- Produce a phase checklist.
-- Recommend the next safe action.
-- Detect missing prerequisites.
-- Flag risk escalation.
-- Coach without taking irreversible actions by default.
-- Keep a running phase summary when the task spans many turns.
+- **Rule 1 (Complexity-based delegation):** Simple tasks (single-file targeted reads, 1-command runs, quick queries, trivial 1-line edits) are handled directly in-session to avoid delegation overhead. Medium to complex tasks (multi-file implementations, architecture refactors, deep debugging, multi-lens reviews) are delegated to bounded workers.
+- **Rule 10 (Clean delegate context):** When dispatching a new task to external workers (Claude, Cursor, Herdr panes), prefer opening a fresh tab/session (`herdr tab create`) to preserve history and keep context pure. If reusing a pane for an unrelated task, issue `/clear` before dispatching.
+- **Rule 11 (Background notification hygiene):** Suppress memory writes and conversational churn on delayed background exit notifications. If the work was already audited or is obsolete, acknowledge with a 1-line note; never persist delayed exit receipts to Hindsight memory.
+- **Independent verification:** Never trust self-reports. Audit `git status --short`, `git diff --stat`, and run automated tests directly.
 
 ### 5.2 Supporting skill: `ai-review-contract`
 
@@ -574,7 +571,7 @@ The tutor should interrupt or warn when it detects:
 
 **Shipped (core):**
 
-1. Main `tech-lead` skill (+ companion `orchestrate` in public include list).
+1. Main `orchestrate` skill in public include list.
 2. `profiles/agent-tutor-orchestrator.yml` manifest (pure orchestrator limits;
    overlay skills listed under `requires_private_overlay`).
 3. Front-door installer + doctor; internal bootstrap / preflight / status /

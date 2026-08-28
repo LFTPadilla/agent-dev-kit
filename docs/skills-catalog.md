@@ -12,7 +12,7 @@
    [external-deps.md](external-deps.md) and
    [how-it-fits-together.md](how-it-fits-together.md).
 
-## Skills (29)
+## Skills (26)
 
 ### Orchestration (agentic core)
 
@@ -20,6 +20,8 @@
 |---|---|---|---|
 | `orchestrate` | In-Session Subagents | Explicit planner/orchestrator mode: decompose, route to workers, verify independently. Keeps the expensive model on judgment. | "$orchestrate", "orchestrate", "delegate to subagents", "use cheaper models", "route through GSD with subagents" |
 | `tech-lead` | Tech Lead & Mentorship | Unified orchestrator & mentor: multi-agent tmux/Kanban coordination, cognitive-debt tracking (`learning` mode), and pure autonomous lane management (`autonomous` mode). | "$tech-lead", "tech lead", personal/learning projects, multi-agent tmux workflows |
+| `herdr` | Multi-Pane Workspaces | Agent-native terminal multiplexer: workspaces, tabs, panes, and agent lifecycle management (idle, working, blocked, done). | "herdr", running inside Herdr (HERDR_ENV=1), inspecting/controlling Herdr agents or panes |
+| `tmux-delegation` | Out-of-Process Panes | Multi-harness tmux delegation (Codex, Claude Code, Pi, OpenCode, cursor-agent): pane allocation, reliable multiline buffer injection, completion detection, disk audit. | "tmux delegation", delegating tasks to agents running in tmux panes across multiple harnesses |
 | `multi-harness` | Cross-Harness Delegation | Delegate bounded subtasks to other local harnesses (Pi, OpenCode, Codex CLI, Claude Code CLI, DHS) with prompt isolation and output contracts. | cross-harness requests, comparing harnesses, external-only runtimes |
 | `overnight-task` | Long Runs / Autonomous | Autonomous execution protocol, state machines, and templates for unsupervised multi-hour workflows (gnhf). | overnight tasks, long-running batch jobs, autonomous milestone completion |
 

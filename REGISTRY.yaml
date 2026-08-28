@@ -43,6 +43,14 @@ skills:
   diagram-render:
     path: "plugins/dev-skills/skills/diagram-render"
     scope: "visualization"
+  herdr:
+    path: "plugins/dev-skills/skills/herdr"
+    scope: "orchestration"
+    requires: [herdr]
+  tmux-delegation:
+    path: "plugins/dev-skills/skills/tmux-delegation"
+    scope: "orchestration"
+    requires: [tmux]
 
 tools:
   agent-dev-kit:

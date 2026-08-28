@@ -57,7 +57,6 @@ done
 # Overlay / hub skills live in requires_private_overlay in the manifest and
 # are reported separately (missing is expected on a cold clone).
 CRITICAL_SKILLS=(
-  tech-lead
   orchestrate
 )
 

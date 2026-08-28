@@ -37,7 +37,7 @@ Subagents are routed dynamically based on task risk and harness capabilities:
 ### Codex / OpenAI
 | Route | Dynamic Model Tier | Effort | Purpose |
 | --- | --- | --- | --- |
-| Orchestrator | `gpt-5.6-sol` / session flagship | `high` or `xhigh` | Planning, routing, decomposition, final judgment |
+| Orchestrator | `gpt-5.6-sol` / session flagship | `high` or `xhigh` | Planning, routing, decomposition, final judgment, direct execution of simple/trivial tasks |
 | Complex worker | `gpt-5.6` / flagship | `high` | Multi-file edits, architecture, migrations, auth, security |
 | Fast worker | `gpt-5.6-luna` / fast tier | `medium` | Read-heavy exploration, summaries, single-file edits, log triage |
 | Verifier / Reviewer | `gpt-5.6-sol` / flagship | `high` | Independent post-implementation verification |
@@ -100,8 +100,9 @@ instead of approximating a GSD workflow.
 
 ## Orchestrator rules
 
-1. Never implement directly while subagents are available. Delegate searches,
-   edits, tests, and log analysis to bounded workers.
+1. Complexity-based delegation: Only delegate medium to complex tasks.
+   - **Simple tasks:** Handle directly in the orchestrator session. Do NOT spawn delegates for routine single-command executions, basic file inspections, quick searches, or trivial 1-line edits. Spawning workers for trivial work wastes tokens and creates process latency.
+   - **Medium to complex tasks:** Delegate to bounded workers (Claude, Cursor, Codex, worktree panes). This includes multi-file implementations, non-trivial refactors, deep architectural investigations, complex bug triage, and multi-lens reviews.
 
 2. Agent-Native navigation (ANRS-1.0): Guide subagents to inspect `REGISTRY.yaml`
    and hub `AGENTS.md` to map dependencies and subsystem boundaries before broad sweeps.
@@ -135,6 +136,17 @@ instead of approximating a GSD workflow.
     workers must happen in dedicated worktrees under `.worktrees/<task-slug>` to
     protect the main checkout from in-place edits.
 
+11. Clean delegate context: When dispatching a new task to an external worker
+    (Claude Code, Cursor, Herdr pane, or tmux session):
+    - Do NOT dump unrelated tasks into a dirty session where previous context acts as noise.
+    - **Preferred:** Spawn or target a new window/tab/session so past transcripts remain readable for reference.
+    - **Fallback:** If reusing an existing session/pane for an unrelated task, issue `/clear` before dispatching.
+    - Only reuse a dirty session without `/clear` when directly continuing the exact same task from the previous turn.
+
+12. Background notification hygiene: When background tasks finish after their results
+    were already collected or audited, do not treat the delayed exit notification as an
+    actionable new turn or persist meta-logs to long-term memory. Acknowledge minimally
+    without conversational churn or memory pollution.
 
 ---
 

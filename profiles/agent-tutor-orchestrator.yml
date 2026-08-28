@@ -11,8 +11,9 @@ tmux:
   completion_poll_timeout_s: 60
 # Tier B — skills that ship in this public repo (cold-clone ready).
 include_skills:
-  - tech-lead
   - orchestrate
+  - herdr
+  - tmux-delegation
 # Tier C — skills expected from a private org overlay or Hermes hub install.
 # Cold-clone does NOT include these; tutor-bootstrap will report them missing
 # until an overlay is linked. Do not treat them as public kit contents.
@@ -20,10 +21,6 @@ requires_private_overlay:
   - delegating-to-tmux-claude
   - kanban-orchestrator
   - kanban-worker
-  - plan
-  - writing-plans
-  - subagent-driven-development
-  - requesting-code-review
   - developer-audit
   - dogfood
   - test-driven-development
@@ -40,22 +37,16 @@ limits:
   git_push: explicit-only
   destructive_ops: explicit-only
   provider_config: explicit-only
-  direct_code_edit: never
-  direct_test_run: never
+  direct_code_edit: complex-delegate-only
+  direct_test_run: complex-delegate-only
   direct_commit: never
   direct_pr_open: never
 notes:
-  - "Agent Tutor Orchestrator is a pure orchestrator profile: plans and routes, never implements."
-  - "Subagents are Claude Code TUIs attached to tmux windows in the configured tmux.delegate_session
-    (default tutor). The user can monitor each pane directly."
-  - "Long-running, multi-lane, or restart-safe work goes through kanban instead of tmux."
-  - "All delegation uses the tmux-safe three-step (load-buffer + paste-buffer + sleep + Enter),
-    spinner detection, completion polling, and disk-level audit. Never send-keys -l with
-    multi-line prompts."
-  - "tech-lead covers out-of-process workers (tmux + kanban). The companion
-    skill orchestrate covers in-process subagents (Codex/Claude Code/PI/OpenCode) and GSD
-    routing — load $orchestrate when workers share the harness or the user invoked GSD
-    explicitly, this skill when workers live in tmux or other profiles."
+  - "Agent Tutor Orchestrator plans, routes, and coordinates: delegates medium/complex work, handles simple tasks directly."
+  - "Subagents are Claude Code TUIs or Cursor agents attached to tmux or Herdr panes."
+  - "Long-running, multi-lane, or restart-safe work goes through kanban or isolated worktrees."
+  - "All delegation uses clean context hygiene: prefer fresh tabs/sessions (herdr tab create), or issue /clear before prompt injection."
+  - "The companion skill orchestrate covers in-process subagents and GSD routing."
   - "Optionally clone from another Hermes profile at install time via AGENT_TUTOR_CLONE_FROM
     or --clone-from. Tier C private overlay skills (requires_private_overlay) are optional
     and live outside this repo; do not bake org-specific content into this public manifest."
