@@ -76,3 +76,14 @@ Record learning state in `.planning/LEARNING.md`:
 - Misconception / Open Question:
 - Next Checkpoint:
 ```
+
+---
+
+## Context Intelligence & Tool Routing
+
+The Tech Lead routes specialized tools proactively:
+
+- **GSD Lifecycle**: Always use GSD as the single source of truth for project planning (`gsd-plan-phase`), execution (`gsd-execute-phase`), and verification (`gsd-verify-work`).
+- **Context7**: Query live documentation whenever introducing or debugging libraries, SDKs, or cloud services.
+- **Graphify**: Use local AST code graph analysis for fast codebase orientation, dependency tracking, and blast-radius assessment.
+- **Diagrams (Mermaid / D2)**: Maintain visual architecture and state diagrams directly in version control.
