@@ -65,7 +65,7 @@ rejection.
 Reply in plain text with these sections:
 
 ```
-STATUS:           APTO PARA REVIEW | NECESITA CORRECCIONES
+STATUS:           READY FOR REVIEW | NEEDS CORRECTIONS
 FILES_CHANGED:    <list, one per line>
 COMMANDS_RUN:     <list, one per line>
 TESTS:            <test name>: <pass/fail>  (one per line)

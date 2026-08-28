@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="$ROOT/profiles/personal-dev-tutor.yml"
-SKILL="$ROOT/plugins/dev-skills/skills/personal-development-mentor/SKILL.md"
+SKILL="$ROOT/plugins/dev-skills/skills/tech-lead/SKILL.md"
 SOUL="$ROOT/templates/personal-dev-tutor-SOUL.md"
 PROMPT="$ROOT/templates/personal-codex-lane-prompt.md"
 DOC="$ROOT/docs/personal-dev-tutor.md"
@@ -81,7 +81,7 @@ assert_contains "$PROFILE" \
   'delegate_session: personal' \
   'worker_runtime: codex' \
   'workflow: gsd' \
-  'personal-development-mentor' \
+  'tech-lead' \
   'gsd-new-project' \
   'gsd-progress' \
   'provider: graphify' \
@@ -97,11 +97,11 @@ profile_section = text.split("include_skills:\n", 1)[1].split("codex_worker_skil
 profile_skills = [line.removeprefix("  - ").strip() for line in profile_section.splitlines() if line.startswith("  - ")]
 if len(profile_skills) != 19:
     raise SystemExit(f"FAIL Personal Tutor must expose 19 bounded capabilities, found {len(profile_skills)}")
-for forbidden in ("orchestrate", "ai-workflow-orchestrator", "find-skills"):
+for forbidden in ("orchestrate", "find-skills"):
     if forbidden in profile_skills:
         raise SystemExit(f"FAIL Hermes profile contains competing authority: {forbidden}")
 worker_section = text.split("codex_worker_skills:\n", 1)[1].split("requires_gsd_skills:\n", 1)[0]
-for forbidden in ("personal-development-mentor", "orchestrate", "ai-workflow-orchestrator", "find-skills"):
+for forbidden in ("tech-lead", "orchestrate", "find-skills"):
     if forbidden in worker_section:
         raise SystemExit(f"FAIL Codex worker set contains role-expanding skill: {forbidden}")
 if worker_section.count("  - java-development\n") != 1:
@@ -112,7 +112,7 @@ if external_skills != ["graphify", "caveman", "ponytail"]:
     raise SystemExit(f"FAIL external baseline mismatch: {external_skills}")
 PY
 
-assert_contains "$SKILL" '^name: personal-development-mentor$'
+assert_contains "$SKILL" '^name: tech-lead$'
 assert_contains_i "$SKILL" \
   'teach-back' \
   'cognitive debt' \

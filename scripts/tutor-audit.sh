@@ -8,8 +8,8 @@
 # /tmp/lane-<id>-prompt.md to extract acceptance criteria. Prints a verdict.
 #
 # Exit codes:
-#   0 = APTO PARA REVIEW
-#   1 = NECESITA CORRECCIONES (verdict failure, details printed)
+#   0 = READY FOR REVIEW
+#   1 = NEEDS CORRECTIONS (verdict failure, details printed)
 #   2 = setup error (missing args, bad lane id)
 set -uo pipefail
 
@@ -74,14 +74,14 @@ git diff --stat 2>/dev/null | sed 's/^/    /'
 echo
 echo "VERDICT:"
 if [ "$current_branch" != "$branch" ]; then
-  echo "  NECESITA CORRECCIONES: branch mismatch"
+  echo "  NEEDS CORRECTIONS: branch mismatch"
   exit 1
 fi
 if [ -n "$violations" ]; then
-  echo "  NECESITA CORRECCIONES: files outside allowlist"
+  echo "  NEEDS CORRECTIONS: files outside allowlist"
   exit 1
 fi
-echo "  APTO PARA REVIEW"
+echo "  READY FOR REVIEW"
 # Update lane state
 lane_script="$USER_HOME/.hermes/profiles/$PROFILE/scripts/tutor-lane-update.sh"
 [ -x "$lane_script" ] && \

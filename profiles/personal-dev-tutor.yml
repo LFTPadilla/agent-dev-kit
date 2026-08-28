@@ -65,7 +65,7 @@ diagrams:
   polished: d2
   keep_sources: true
 include_skills:
-  - personal-development-mentor
+  - tech-lead
 
   - diagram-render
   - drawio-skill

@@ -1,9 +1,9 @@
 ---
 name: multi-harness
-description: Delegate bounded coding-agent work through another local harness such as Pi or OpenCode, or through the local Codex CLI when the user explicitly requests a Codex-native model that the current session's subagent API does not expose. Use for explicit cross-harness requests, harness comparisons, external-only runtimes, or named Codex models such as GPT-5.3 Codex Spark that require a CLI fallback. Do not use for generic requests to spawn, delegate, fan out, orchestrate, or parallelize with models already exposed by the current harness.
+description: Universal Harness Adapter — Delegate bounded coding-agent work across local agent harnesses (Pi, OpenCode, Codex CLI, Claude Code CLI, DHS). Use for explicit cross-harness requests, model comparisons, external-only runtimes, or named models requiring a CLI fallback. Do not use for generic requests to spawn subagents already exposed by the current session.
 ---
 
-# Multi Harness
+# Multi Harness (Universal Harness Adapter)
 
 Coordinate local agent harnesses without losing control of scope, safety, or verification.
 
@@ -14,83 +14,49 @@ Use this skill as the primary agent. You remain the orchestrator: decide what to
 Apply this gate before diagnostics, profile selection, or running `delegate.py`:
 
 1. Default to the current harness's native subagents when they expose the requested model. Requests for generic subagents, workers, parallelism, or orchestration are not external-harness requests.
-2. Use this skill only with an explicit external signal: Pi, OpenCode, another/external/cross harness, multiple distinct harnesses, harness comparison, or an external-only runtime the user has asked to use.
-3. Treat model names independently from harness names. GPT-5.3 Codex Spark is Codex-native; never translate it into a Pi or OpenCode profile.
-4. When the user explicitly names a Codex model but the current subagent API does not expose it, probe and use the local Codex CLI fallback described below. This remains Codex-native even though it launches a separate local process.
-5. If this skill was auto-triggered without an external signal or an unavailable explicitly named Codex model, do not run diagnostics or delegation scripts. Continue using the current harness's native subagent tools.
-6. If neither the native subagent API nor the local Codex CLI exposes the requested model, report the limitation. Do not silently switch models or harnesses.
+2. Use this skill only with an explicit external signal: Pi, OpenCode, Codex CLI, Claude Code CLI, DHS, another/external/cross harness, multiple distinct harnesses, harness comparison, or an external-only runtime the user has asked to use.
+3. When the user explicitly requests an external runtime or specific CLI model, use the Universal Harness Adapter (`delegate.py`).
+4. If this skill was auto-triggered without an explicit external signal, do not run diagnostics or delegation scripts. Continue using the current harness's native subagent tools.
+5. If the requested harness or model is not available locally, report the limitation and ask for confirmation before switching to an alternative model, harness, or native subagents. Never silently substitute.
 
 Examples:
+- "Spawn three Codex subagents" -> use native Codex subagents when exposed; if unavailable, report the limitation and confirm before using the Codex CLI profile.
+- "Parallelize the review with subagents" -> native subagents; do not use `multi-harness`.
+- "Delegate this review to Pi with GLM or DeepSeek" -> use `multi-harness`.
+- "Run this implementation via DeepSeek Harness (DHS/DSH) or OpenCode" -> use `multi-harness`.
 
-- "Levanta tres subagentes GPT-5.3 Codex Spark" -> native Codex subagents when exposed; otherwise use the Codex CLI fallback in this skill.
-- "Paraleliza la revisión con subagentes" -> native subagents; do not use `multi-harness`.
-- "Manda esta revisión a Pi con GLM-5.2" -> use `multi-harness`.
-- "Compara el resultado de Codex con OpenCode" -> use `multi-harness`.
+## Universal CLI Harness Execution
 
-## Codex CLI Fallback for Named Native Models
+The adapter supports running bounded tasks across:
+- **Codex CLI**: `codex exec --ephemeral [-m <model>] [-C <dir>] [--yolo]`
+- **Claude Code CLI**: `claude -p "<prompt>" [--dangerously-skip-permissions]`
+- **DeepSeek Harness (DHS / DSH)**: `dsh exec --dir <dir> [--model <model>] [--yolo]` *(Headless execution engine; no terminal TUI)*
+- **Pi**: `pi --print --mode text [--model <model>] --tools <tools>`
+- **OpenCode**: `opencode run --dir <dir> [--model <model>] [--auto]`
 
-Use this path only when all of the following are true:
+For dynamic model resolution:
+Profiles with `model: auto` dynamically discover and select the highest active frontier model in your local runtime configuration (e.g. resolving `GLM-5.3+`, latest `DeepSeek-V4+`, or `GPT-5.x`), or accept explicit user overrides via `--model <name>`.
 
-- The user explicitly requested a particular Codex-native model.
-- The current session's native subagent API does not offer that model.
-- The local `codex` CLI is installed and accepts the model.
+For permission bypass across any harness:
+Pass `--yolo` or `--dangerously-skip-permissions` to `delegate.py`. It will map the flag to each harness's native permission bypass mechanism (`--yolo` for Codex/DHS, `--dangerously-skip-permissions` for Claude Code, `--auto` for OpenCode, full tool allowlist for Pi).
 
-Probe availability with a minimal, read-only, ephemeral run. Replace the model
-name with the exact identifier requested by the user:
-
-```bash
-codex exec --ephemeral -m gpt-5.3-codex-spark \
-  -C "$PWD" \
-  "Read no files and make no changes. Reply only MODEL_READY."
-```
-
-If the repository requires a command wrapper such as Hypa, use it and raise its
-timeout explicitly because a coding-agent process normally outlives short shell
-command defaults:
-
-```bash
-hypa --timeout-ms 600000 -c \
-  "codex exec --ephemeral -m gpt-5.3-codex-spark -C $PWD 'TASK_PROMPT'"
-```
-
-For delegated implementation:
-
-1. Create one isolated git worktree and branch per agent before launching it.
-2. Give each agent exclusive file or module ownership and say that other agents
-   are working concurrently and their changes must not be reverted.
-3. Include repository instructions, tests, forbidden actions, commit policy, and
-   expected final report in the prompt.
-4. Start independent `codex exec` processes concurrently and retain their process
-   or session identifiers so they can be polled without blocking longer than the
-   host's update interval.
-5. Inspect each worktree's status, diff, commit, and test evidence before merging.
-6. Run integration tests in the primary worktree after all merges.
-7. Remove only clean, explicitly named temporary worktrees and branches.
-
-Use `--yolo` only when the user explicitly authorizes that permission mode and
-the agent is isolated in a disposable worktree:
-
-```bash
-codex exec --yolo --ephemeral \
-  -m gpt-5.3-codex-spark \
-  -C /absolute/path/to/isolated-worktree \
-  "BOUNDED_TASK_PROMPT"
-```
-
-Without that authorization, preserve the CLI's normal approval and sandbox
-policy. Never infer permission to push, delete unrelated files, or mutate other
-worktrees from permission to edit the delegated worktree.
+For delegated implementation with worktree auto-isolation:
+Pass `--worktree <slug>` to `delegate.py`. It will:
+1. Validate `<slug>` (alphanumeric characters, dashes, and underscores only; rejecting `.`, `..`, traversal segments, and absolute paths) and resolve inside `.worktrees/<slug>` on branch `task/<slug>`.
+2. Verify the worktree path is registered with Git if it already exists, preventing escapes or hijacking of existing directories.
+3. Execute the delegated task inside the isolated worktree, requesting structured YAML output via prompt conventions.
+4. Capture raw output, exit code, and run metadata cleanly without touching the main checkout.
 
 ## Quick Start
 
-Run diagnostics first when the harness/model availability is uncertain:
+Run diagnostics to check installed harnesses and local models:
 
 ```bash
 python3 <skill_dir>/scripts/delegate.py --diagnose
 python3 <skill_dir>/scripts/delegate.py --list-profiles
 ```
 
-Delegate a read-only review to Pi with GLM 5.2:
+Delegate a read-only review to Pi with the latest GLM frontier model:
 
 ```bash
 python3 <skill_dir>/scripts/delegate.py \
@@ -116,13 +82,14 @@ Use `--dry-run` before any unfamiliar profile.
 Read `references/profiles.md` when choosing a profile or adding a new one.
 
 Default choices:
-
-- Research, planning, deep review, debugging: `pi-glm-*` profiles, especially `pi-glm-review` or `pi-glm-plan`.
+- Research, planning, deep review, debugging: `pi-glm-*` or `pi-deepseek-*` profiles.
+- Isolated Pi profiles: `pi-lean` (minimal/clean), `pi-gsd` (GSD prompts), `pi-search` (research), or any local profile via `--pi-profile <name>`.
 - Large context sweeps: `pi-minimax-large`.
+- Headless execution: `dhs-*` profiles via DeepSeek Harness.
 - Fast mechanical scan or OpenCode-specific command behavior: `opencode-fast`.
-- Implementation by another harness: only a `*-implement` profile with `--allow-write`.
+- Implementation by another harness: only a `*-implement` profile with `--allow-write` or `--yolo`.
 
-If GLM 5.2 is requested, prefer Pi profile `zai-coding-plan/glm-5.2` unless OpenCode is also configured with that model locally. Do not assume OpenCode can use GLM 5.2 just because Pi can.
+GLM, DeepSeek, and OpenAI profiles automatically resolve to the highest version available in your local runtime configuration (e.g. `glm-5.3` when configured) unless an explicit `--model` is supplied.
 
 ## Delegation Workflow
 
@@ -158,6 +125,8 @@ Every delegated prompt must include:
 - Stop and ask the user before delegating to a paid/quota-sensitive model for a large or open-ended job unless the user already requested it.
 
 ## Output Contract
+
+Structured output requested from delegated workers (e.g. YAML status/findings blocks) is a prompt-level convention rather than a machine-enforced schema in `delegate.py`. The runner captures raw stdout and stderr; as the orchestrator, you must inspect and validate returned content yourself.
 
 When reporting back to the user, include:
 

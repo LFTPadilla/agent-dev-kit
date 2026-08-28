@@ -418,7 +418,7 @@ The profile is public and organization-neutral. Organization rules, employer exa
 
 ```text
 profiles/personal-dev-tutor.yml
-plugins/dev-skills/skills/personal-development-mentor/SKILL.md
+plugins/dev-skills/skills/tech-lead/SKILL.md
 templates/personal-dev-tutor-SOUL.md
 templates/personal-codex-lane-prompt.md
 scripts/personal-tutor-{install,doctor,status,delegate,audit}.sh

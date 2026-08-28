@@ -1,58 +1,50 @@
-# Multi-harness Profiles
+# Multi-harness Profiles (Universal Harness Adapter)
 
 Use this reference to choose profiles and maintain the profile table in `scripts/delegate.py`.
 
-## Local diagnostics
+## Supported Local Harnesses
 
-- `opencode` is installed and supports `opencode run --model <provider/model> --agent <agent> --dir <cwd> --variant <level>`.
-- `pi` is installed and supports `pi -p --model <provider/model> --thinking <level> --tools <allowlist>`.
-- Re-run `delegate.py --diagnose` before assuming any specific model is available locally.
+- `codex`: Runs `codex exec --ephemeral -C <cwd> [-m <model>] [--yolo]`.
+- `claude`: Runs `claude -p "<prompt>" [--dangerously-skip-permissions]`.
+- `dhs` (alias `dsh`): Runs `dsh exec --dir <cwd> [--model <model>] [--yolo]` *(Headless execution engine; no interactive terminal TUI)*.
+- `pi`: Runs `pi --print --mode text [--model <provider/model>] --tools <allowlist>`.
+- `opencode`: Runs `opencode run --dir <cwd> [--model <provider/model>] [--agent <agent>]`.
 
-## Built-in profiles
+Run `delegate.py --diagnose` before assuming any specific harness or model is available locally.
 
-| Profile | Harness | Model | Mode | Use |
-| --- | --- | --- | --- | --- |
-| `pi-glm-review` | Pi | `zai-coding-plan/glm-5.2` | read-only | Deep code review, design critique, bug hunt, security reasoning. |
-| `pi-glm-plan` | Pi | `zai-coding-plan/glm-5.2` | read-only | Break down an ambiguous task, compare approaches, produce implementation plan. |
-| `pi-glm-debug` | Pi | `zai-coding-plan/glm-5.2` | read-only | Analyze logs, failing tests, stack traces, or hypotheses without changing files. |
-| `pi-glm-implement` | Pi | `zai-coding-plan/glm-5.2` | write | Execute a tightly scoped code change. Requires `--allow-write`. |
-| `pi-minimax-large` | Pi | `minimax/MiniMax-M3` | read-only | Very large-context source/doc sweeps where breadth matters more than top reasoning. |
-| `opencode-fast` | OpenCode | `default` | read-only contract | Fast scan, summarization, or OpenCode-specific workflow. Read-only is prompt-enforced unless the selected OpenCode agent enforces tools. |
-| `opencode-review` | OpenCode | `default` | read-only contract | Review with existing OpenCode/GSD agent conventions. |
-| `opencode-implement` | OpenCode | `default` | write | OpenCode implementation task. Requires `--allow-write`. |
+## Built-in Profiles (Dynamic Frontier Models)
 
-## Selection heuristics
+Profiles with `model: auto` dynamically discover and select the highest active version in your local configuration (e.g. `glm-5.3+`, latest `deepseek-v4+`, `gpt-5.x`), or accept explicit overrides via `--model <name>`.
 
-Prefer Pi when you need hard tool restrictions. Pi's `--tools` allowlist can make review truly read-only.
+| Profile | Harness | Model | Mode | Description |
+|---|---|---|---|---|
+| `codex-complex` | Codex | `auto` (flagship) | write | Complex multi-file implementation via Codex CLI. |
+| `codex-fast` | Codex | `auto` (fast tier) | read-only | Fast mechanical exploration and log triage via Codex CLI. |
+| `codex-review` | Codex | `auto` (reasoning) | read-only | Independent verifier and security/correctness reviewer. |
+| `claude-review` | Claude Code | `default` | read-only | Adversarial multi-lens code review via Claude Code CLI. |
+| `claude-implement` | Claude Code | `default` | write | Scoped implementation via Claude Code CLI. |
+| `dhs-review` | DHS / DSH | `default` | read-only | Headless review via DeepSeek Harness. |
+| `dhs-implement` | DHS / DSH | `default` | write | Headless scoped implementation via DeepSeek Harness. |
+| `dhs-fast` | DHS / DSH | `default` | read-only | Headless fast triage via DeepSeek Harness. |
+| `pi-glm-review` | Pi | `auto` (latest GLM) | read-only | Deep code review, design critique, and security reasoning. |
+| `pi-glm-plan` | Pi | `auto` (latest GLM) | read-only | Task decomposition and implementation planning. |
+| `pi-glm-debug` | Pi | `auto` (latest GLM) | read-only | Hypothesis and root-cause analysis without editing files. |
+| `pi-glm-implement` | Pi | `auto` (latest GLM) | write | Scoped implementation with latest active GLM model. |
+| `pi-deepseek-review` | Pi | `auto` (latest DeepSeek) | read-only | Deep review with latest active DeepSeek model. |
+| `pi-minimax-large` | Pi | `auto` (latest MiniMax) | read-only | Broad context sweeps across large repositories. |
+| `pi-lean` | Pi | `pi-profile:lean` | read-only | Isolated lightweight Pi runner via local pi-profile lean. |
+| `pi-gsd` | Pi | `pi-profile:gsd` | read-only | GSD-enhanced Pi runner via local pi-profile gsd. |
+| `pi-search` | Pi | `pi-profile:search` | read-only | Research and web search Pi runner via local pi-profile search. |
+| `opencode-fast` | OpenCode | `default` | read-only | Fast codebase scan via OpenCode. |
+| `opencode-review` | OpenCode | `default` | read-only | GSD-style review via OpenCode reviewer agent. |
+| `opencode-implement` | OpenCode | `default` | write | OpenCode implementation task. |
 
-Prefer OpenCode when the task benefits from configured OpenCode commands/agents, existing GSD agents, or the current OpenCode provider stack.
+## Permission Bypass Modes
 
-Prefer GLM 5.2 for high-reasoning analysis, planning, difficult debugging, and adversarial review. Use it deliberately for large jobs because it may consume paid quota.
+For write-capable profiles, use any of:
+- `--allow-write`: Grants write permissions.
+- `--yolo` / `--dangerously-skip-permissions`: Automatically bypasses interactive confirmations across all harnesses (`--yolo` for Codex/DHS, `--dangerously-skip-permissions` for Claude Code, `--auto` for OpenCode, full tool allowlist for Pi).
 
-Prefer MiniMax large-context for broad scans where missing relevant context is more likely than failing a reasoning step.
+## Worktree Auto-Isolation
 
-Prefer implementation profiles only when:
-
-1. The task is sharply scoped.
-2. The worktree state is known.
-3. The primary agent can inspect and verify the diff afterward.
-4. The user has explicitly accepted external-harness edits or the current task clearly requires them.
-
-## Adding or changing profiles
-
-Edit `DEFAULT_PROFILES` in `scripts/delegate.py`. Keep every profile explicit:
-
-- `harness`: `pi` or `opencode`
-- `model`: provider/model string accepted by that harness, or `default` to let the harness choose
-- `mode`: `read` or `write`
-- `timeout`: default seconds
-- `description`: short purpose
-- Optional: `thinking`, `variant`, `agent`
-
-After editing, run:
-
-```bash
-python3 scripts/delegate.py --list-profiles
-python3 scripts/delegate.py --diagnose
-python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py .
-```
+Pass `--worktree <slug>` to automatically isolate the delegated run inside `.worktrees/<slug>` on branch `task/<slug>`, keeping the main checkout clean. Slugs are strictly validated (alphanumeric, dashes, and underscores only; rejecting `.`, `..`, traversal segments, and absolute paths) and resolved under `.worktrees`, verifying git worktree registration.

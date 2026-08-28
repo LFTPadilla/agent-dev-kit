@@ -280,7 +280,7 @@ agent-dev-kit/
 ├── profiles/
 │   └── agent-tutor-orchestrator.yml
 ├── plugins/dev-skills/skills/
-│   ├── ai-workflow-orchestrator/
+│   ├── tech-lead/
 │   │   └── SKILL.md
 │   └── orchestrate/
 │       └── SKILL.md
@@ -327,7 +327,7 @@ tmux:
   delegate_session: tutor
 # Tier B — public skills only (cold-clone ready)
 include_skills:
-  - ai-workflow-orchestrator
+  - tech-lead
   - orchestrate
 # Tier C — not in this repo; missing on cold clone is expected
 requires_private_overlay:
@@ -482,7 +482,7 @@ Options:
 For public distribution, prefer direct URL or skill hub:
 
 ```bash
-hermes --profile agent-tutor-orchestrator skills install https://raw.githubusercontent.com/<org>/<repo>/main/plugins/dev-skills/skills/ai-workflow-orchestrator/SKILL.md
+hermes --profile agent-tutor-orchestrator skills install https://raw.githubusercontent.com/<org>/<repo>/main/plugins/dev-skills/skills/tech-lead/SKILL.md
 ```
 
 ### 6.4 Install templates
@@ -659,7 +659,7 @@ Core is already in-tree. Smoke the profile:
 ```bash
 ./scripts/tutor-preflight.sh
 ./scripts/tutor-smoke.sh
-hermes --profile agent-tutor-orchestrator -s ai-workflow-orchestrator
+hermes --profile agent-tutor-orchestrator -s tech-lead
 ```
 
 Optional next polish: richer templates under the profile, opt-in safe updater,
