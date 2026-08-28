@@ -68,6 +68,15 @@
         "git"
       ]
     },
+    "herdr": {
+      "source": "third-party-adapted",
+      "license": "Apache-2.0",
+      "visibility": "public",
+      "risk": "medium",
+      "dependencies": [
+        "herdr"
+      ]
+    },
     "human-writing-style": {
       "source": "local",
       "license": "MIT",
@@ -196,6 +205,15 @@
       "dependencies": [
         "node",
         "tex tooling when used"
+      ]
+    },
+    "tmux-delegation": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "medium",
+      "dependencies": [
+        "tmux"
       ]
     },
     "web-browse": {

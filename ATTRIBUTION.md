@@ -31,6 +31,14 @@ and writes execution plans for other agents.
 
 Source: https://github.com/shadcn/improve — MIT, Copyright (c) 2026 shadcn.
 
+## herdr — herdrdev/herdr (Apache-2.0)
+
+`plugins/dev-skills/skills/herdr/` adapts the agent-facing CLI reference
+and terminal multiplexing guidelines from Herdr. All credit to the original
+authors.
+
+Source: https://github.com/herdrdev/herdr — Apache License 2.0.
+
 ## pi-sandbox / sandbox-runtime — workflow pattern only
 
 `scripts/personal-tutor-sandbox.sh` applies the general pattern of wrapping
