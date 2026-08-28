@@ -299,7 +299,7 @@ install_global_skill() {
 
   # Hermes may have a sticky active profile. Explicitly selecting `default`
   # keeps the canonical copy under HERMES_ROOT/skills instead of that profile.
-  if ! HERMES_HOME="$HERMES_ROOT" hermes --profile default skills install "$source" --yes; then
+  if ! HERMES_HOME="$HERMES_ROOT" hermes --profile default skills install "$source" --yes --force; then
     echo "Hermes failed to install $name from its pinned source" >&2
     exit 1
   fi

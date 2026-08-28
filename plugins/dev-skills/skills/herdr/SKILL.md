@@ -193,3 +193,32 @@ After that failed read, ask the agent to write its complete response as Markdown
 - Never run `herdr server stop` from an active session unless the user explicitly intends to stop the server and its pane processes.
 - Never kill the main Herdr process. Use named test sessions for experiments that need an isolated server.
 - CLI server errors are JSON on stderr with exit status 1. CLI syntax errors exit with status 2.
+
+## Dispatcher Helper Script (`herdr-dispatch.sh`)
+
+For high-level agent-to-agent delegation and workspace routing, use the companion helper:
+
+```bash
+# Locate or list workspaces and agents
+./plugins/dev-skills/skills/herdr/scripts/herdr-dispatch.sh list --format toon
+
+# Run a command in a space/tab
+./plugins/dev-skills/skills/herdr/scripts/herdr-dispatch.sh run --space personal --tab build --command "npm test"
+
+# Launch and coordinate an agent
+./plugins/dev-skills/skills/herdr/scripts/herdr-dispatch.sh agent-start \
+  --space athena \
+  --tab review \
+  --name reviewer \
+  --kind claude \
+  --prompt "Audit recent commits" \
+  --wait
+```
+
+The dispatcher automatically handles auto-indexed workspace/tab prefixes (`1. athena` -> `athena`) and enforces clean pane allocation.
+
+## Detailed References
+
+For topology models, lifecycle details, and crash-recovery contracts, see:
+- [`references/herdr-routing-and-persistence.md`](references/herdr-routing-and-persistence.md)
+
