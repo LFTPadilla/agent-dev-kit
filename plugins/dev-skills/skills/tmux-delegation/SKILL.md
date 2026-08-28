@@ -159,7 +159,7 @@ Different CLI harnesses render status and completion differently. Use the matchi
 # Wait for Claude turn completion
 for i in $(seq 1 60); do
   PANE=$(tmux capture-pane -t "$TARGET" -p -S -5 2>/dev/null)
-  echo "$PANE" | grep -qE "Concocting|Cooking|Pondering|Slithering|Brewed|Hyperspacing|Baked|Sprouting|Flambéing|Running [0-9]+ shell" \
+  echo "$PANE" | grep -qE "Concocting|Cooking|Pondering|Slithering|Brewed|Hyperspacing|Baked|Sprouting|Flambéing|Running [0-9]+ shell|✢|✶|✻" \
     && { sleep 3; continue; }
   echo "$PANE" | tail -10 | grep -q "❯ *$" && break
   sleep 2
