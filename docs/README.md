@@ -16,7 +16,6 @@ in the [root README](../README.md), then pick a lane.
 
 | Doc | Read it when |
 |---|---|
-| [personal-dev-tutor.md](personal-dev-tutor.md) | **Flagship.** GSD + bounded Codex lanes + learning gates |
 | [agent-tutor-orchestrator.md](agent-tutor-orchestrator.md) | You need a strict liaison that never edits |
 | [agent-tutor-vs-firstmate.md](agent-tutor-vs-firstmate.md) | You are choosing between the strict profile and firstmate |
 
@@ -57,8 +56,6 @@ Two source styles live in [`diagrams/`](diagrams):
 |---|---|
 | [`stack.d2`](diagrams/stack.d2) | Hero: the whole tool stack |
 | [`agent-dev-kit-architecture.html`](diagrams/agent-dev-kit-architecture.html) | README hero — the kit, on one screen (diagram-design) |
-| [`personal-dev-tutor-architecture.html`](diagrams/personal-dev-tutor-architecture.html) | Flagship orchestrator internals (diagram-design) |
-| [`personal-dev-tutor-flow.mmd`](diagrams/personal-dev-tutor-flow.mmd) | Flagship request → verification flow |
 | [`agent-dev-kit-architecture.html`](diagrams/agent-dev-kit-architecture.html) | `social-preview.png` (1200×640) — the manual upload |
 
 **Social preview is the one manual step.** GitHub has no API for it: export

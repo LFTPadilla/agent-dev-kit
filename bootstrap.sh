@@ -96,5 +96,4 @@ echo
 echo "Done. See docs/how-it-fits-together.md and docs/external-deps.md."
 echo "Re-run sync.sh after 'git pull' to pick up new skills."
 echo "Optional: compose with a private org skills overlay outside this repo."
-echo "Personal Dev Tutor (recommended): install uv, then run 'npm i -g get-shit-done-cc && get-shit-done-cc --hermes --global', then ./scripts/personal-tutor-install.sh"
 echo "Agent Tutor Orchestrator: ./scripts/tutor-install.sh then ./scripts/tutor-doctor.sh"

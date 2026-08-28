@@ -104,13 +104,12 @@
 | Piece | Role |
 |---|---|
 | `overnight-task-kit/` | Local overnight protocol + templates; prefer **gnhf** as the runner |
-| Personal Dev Tutor profile | Flagship GSD + Codex tutor-orchestrator: `personal-tutor-install`; see [personal-dev-tutor.md](personal-dev-tutor.md) |
 | Agent Tutor Orchestrator profile | Pure orchestrator: `tutor-install` + `tutor-doctor`; see [agent-tutor-orchestrator.md](agent-tutor-orchestrator.md) |
 | vercel-labs/skills + addyosmani/agent-skills | External skill distribution / lifecycle packs — [external-deps.md](external-deps.md) |
 
 ## A typical session
 
-1. Plan with GSD (`/gsd:plan-phase` → execute → verify), optionally through Personal Dev Tutor.
+1. Plan with GSD (`/gsd:plan-phase` → execute → verify), optionally coordinated via Tech Lead.
 2. Use a bounded Codex lane and learning checkpoint for unfamiliar or consequential concepts.
 3. Isolate parallel agents with treehouse when fan-out is needed.
 4. `/knip` + `/semgrep` (or the lefthook gate) before committing.

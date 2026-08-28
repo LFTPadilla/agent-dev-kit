@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 # Shared real-user-home resolution for both tutor script families.
 #
-# The Agent Tutor Orchestrator (tutor-*.sh) and the Personal Dev Tutor
-# (personal-tutor-*.sh) both install into <real home>/.hermes/profiles/<profile>/
-# and both read credentials and write state relative to that home. They used to
-# answer "which home?" with two different algorithms, so the two products could
-# disagree about where secrets and profile state live. This file is the single
-# answer; each family keeps its own public function name as a thin wrapper.
+# The Agent Tutor Orchestrator (tutor-*.sh) installs into
+# <real home>/.hermes/profiles/<profile>/, reads credentials and writes
+# state relative to that home. This file is the single home resolution library.
 #
 # This file is a library: source it, do not execute it.
 

@@ -1,7 +1,7 @@
 # How it fits together
 
 One map of this kit. Install tables live in [`external-deps.md`](external-deps.md).
-Flagship orchestrator detail lives in [`personal-dev-tutor.md`](personal-dev-tutor.md).
+Orchestrator detail lives in [`agent-tutor-orchestrator.md`](agent-tutor-orchestrator.md).
 
 ## Everything at once
 
@@ -15,7 +15,7 @@ Regenerate with `npm run render:diagrams`.
 ```text
 direct          ship                 run
 ────────────    ─────────────────    ──────────────────────────
-caveman         /pr-review           personal-dev-tutor
+caveman         /pr-review           agent-tutor-orchestrator
 ponytail        no-mistakes          gnhf (+ overnight-task-kit)
 GSD             evals                treehouse
 superpowers*
@@ -24,7 +24,7 @@ superpowers*
 
 1. **direct** — how the agent talks (caveman), what it builds (ponytail), how multi-step work flows (GSD), execution-phase engineering guardrails (Superpowers: TDD, systematic debugging, verification before claims, receiving code review), plus discrete capabilities in this repo (`dev-skills`).
 2. **ship** — adversarial `/pr-review`, the no-mistakes gate, and measured evals. Prefer both LLM review and deterministic SAST.
-3. **run** — flagship tutor-orchestrator profile (Personal Dev Tutor), overnight runner (gnhf), and worktree isolation (treehouse).
+3. **run** — orchestrator profile (Agent Tutor Orchestrator), overnight runner (gnhf), and worktree isolation (treehouse).
 
 ## Recommended loop
 
@@ -58,11 +58,9 @@ Kanban. Compare the strict profile with firstmate in
 | Tier | What you get | Requires |
 | --- | --- | --- |
 | **A — Kit only** | `./bootstrap.sh` → plugins → `npm run doctor` / `validate`. Skills, `/pr-review`, evals. | Node/npm; no Hermes |
-| **B — Personal Dev Tutor (recommended)** | `personal-tutor-install.sh`; 19 bounded capabilities; GSD; pinned Graphify + Context7; isolated Codex workers in tmux `personal`; Mermaid + D2 | Hermes Agent, Codex, tmux, uv, D2, Mermaid CLI |
-| **Alternative — strict Agent Tutor** | `tutor-install.sh` + `tutor-doctor.sh`; Claude tmux / Hermes Kanban pure orchestration | Hermes Agent |
+| **B — Agent Tutor Orchestrator** | `tutor-install.sh` + `tutor-doctor.sh`; Claude tmux / Hermes Kanban pure orchestration | Hermes Agent |
 | **C — Private overlay** | Extra org skills linked from outside this tree | Optional; never assumed on cold clone |
 
 Full steps: [README](../README.md#install--cold-clone-tiers) and
-[`personal-dev-tutor.md`](personal-dev-tutor.md) and
 [`agent-tutor-orchestrator.md`](agent-tutor-orchestrator.md). Overlay pattern:
 [`private-overlays.md`](private-overlays.md).

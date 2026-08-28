@@ -36,20 +36,14 @@ ln -s ~/.claude/agents  ~/.claude-work/agents
 Then only `~/.claude` links into the registry. `jean-claude` (npm) automates
 this profile setup if you'd rather not do it by hand.
 
-## Flagship Hermes + Codex profile
+## Orchestration Profiles
 
-[`personal-dev-tutor.yml`](../profiles/personal-dev-tutor.yml) is the flagship
-profile contract. Its installer links 19 capabilities into the blank Hermes
-profile (excluding alternate orchestrators and dynamic discovery), installs a
-filtered implementation/review set into a profile-owned isolated Codex home,
-and links the six public GSD core workflow skills from `~/.hermes/skills/gsd`.
-Workers started with `personal-tutor-codex` run in tmux session `personal` by
-default. It also installs the pinned Graphify skill for both runtimes, links
-Graphify into the isolated Hermes profile, and configures Context7 for current
-library-documentation retrieval. GSD remains the only lifecycle authority.
+[`agent-tutor-orchestrator.yml`](../profiles/agent-tutor-orchestrator.yml) defines
+the strict orchestrator and liaison configuration, deploying `orchestrate`,
+`herdr`, and `tmux-delegation` across multiple harnesses.
 
-See [`personal-dev-tutor.md`](personal-dev-tutor.md) for installation, runtime
-commands, cognitive-debt checkpoints, and Mermaid/D2 diagram policy.
+See [`agent-tutor-orchestrator.md`](agent-tutor-orchestrator.md) for installation,
+runtime commands, and orchestration policies.
 
 ## What NOT to link this way
 

@@ -14,9 +14,6 @@ subsystems:
     description: "Long-running autonomous protocols, templates, and multi-harness delegation"
 
 profiles:
-  personal-dev-tutor:
-    path: "profiles/personal-dev-tutor.yml"
-    role: "Flagship GSD + Codex tutor-orchestrator"
   agent-tutor-orchestrator:
     path: "profiles/agent-tutor-orchestrator.yml"
     role: "Strict orchestrator and liaison"
