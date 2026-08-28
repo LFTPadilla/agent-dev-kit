@@ -7,8 +7,7 @@ read the README; agents follow this file.
 
 A public, generalist kit for directing coding agents. It ships curated skills,
 an adversarial `/pr-review` command, evals, overnight protocol templates, and
-the flagship Personal Dev Tutor profile. The strict Agent Tutor Orchestrator
-remains available as an alternative. The kit composes with optional
+orchestration profiles. The kit composes with optional
 **private org skills overlays** that live *outside* this git tree.
 
 ## Layers (do not collapse them)
@@ -20,7 +19,7 @@ remains available as an alternative. The kit composes with optional
 | GSD | how work flows (plan → execute → verify) | external (`get-shit-done-cc` for Hermes; optional `pi-gsd` helper) |
 | superpowers (guardrails) | how code tasks are executed (TDD, root-cause debug, verification evidence) | external (`obra/superpowers`) |
 | dev-skills | discrete capabilities | [`plugins/dev-skills/AGENTS.md`](plugins/dev-skills/AGENTS.md) |
-| ship / overnight / orchestration | gates, isolation, long runs, tutoring and pure orchestration | [`overnight-task-kit/AGENTS.md`](overnight-task-kit/AGENTS.md) + Personal Dev Tutor + Agent Tutor Orchestrator |
+| ship / overnight / orchestration | gates, isolation, long runs, and orchestration | [`overnight-task-kit/AGENTS.md`](overnight-task-kit/AGENTS.md) + Agent Tutor Orchestrator |
 
 Full map: [`docs/how-it-fits-together.md`](docs/how-it-fits-together.md).
 External installs: [`docs/external-deps.md`](docs/external-deps.md).
@@ -78,13 +77,12 @@ External installs: [`docs/external-deps.md`](docs/external-deps.md).
 | Declarative catalog (ANRS-1.0) | [`REGISTRY.yaml`](REGISTRY.yaml) |
 | Dev-Skills Subsystem | [`plugins/dev-skills/AGENTS.md`](plugins/dev-skills/AGENTS.md) |
 | Overnight Task Kit Subsystem | [`overnight-task-kit/AGENTS.md`](overnight-task-kit/AGENTS.md) |
-| Skill catalog (all 29) | [`docs/skills-catalog.md`](docs/skills-catalog.md) |
+| Skill catalog (all 26) | [`docs/skills-catalog.md`](docs/skills-catalog.md) |
 | Provenance / license / risk | [`skill-provenance.json`](skill-provenance.json) |
 | Curation decisions | [`CURATION.md`](CURATION.md) |
 | Design thesis | [`WRITEUP.md`](WRITEUP.md) |
 | Going-public checklist | [`docs/going-public.md`](docs/going-public.md) |
 | Agent Tutor Orchestrator | [`docs/agent-tutor-orchestrator.md`](docs/agent-tutor-orchestrator.md), [`profiles/agent-tutor-orchestrator.yml`](profiles/agent-tutor-orchestrator.yml) |
-| Personal Dev Tutor | [`docs/personal-dev-tutor.md`](docs/personal-dev-tutor.md), [`profiles/personal-dev-tutor.yml`](profiles/personal-dev-tutor.yml) |
 | How layers fit | [`docs/how-it-fits-together.md`](docs/how-it-fits-together.md) |
 | Profiles / multi-runtime | [`docs/profiles.md`](docs/profiles.md) |
 

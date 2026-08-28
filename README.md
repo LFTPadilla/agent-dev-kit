@@ -63,41 +63,39 @@ planted bugs are clearer than production bugs* — that caveat is written down i
 
 The contribution isn't the borrowed pieces (caveman, ponytail, GSD are credited)
 — it's the architecture they sit in, the original parts (adversarial PR review,
-layered live-QA, prompt-injection defense, Personal Dev Tutor), and the
+layered live-QA, prompt-injection defense, Tech Lead mentorship), and the
 judgment about what to leave out.
 
 Compose this public kit with a **private org skills overlay** outside this repo
 (symlink or profile install). Employer-specific skills stay private; this tree
 stays generic.
 
-**Read next:** [docs index](docs/README.md) · [Personal Dev Tutor](docs/personal-dev-tutor.md) · [WRITEUP.md](WRITEUP.md) · [how it fits together](docs/how-it-fits-together.md) · [evals/](evals) · [skills catalog](docs/skills-catalog.md)
+**Read next:** [docs index](docs/README.md) · [WRITEUP.md](WRITEUP.md) · [how it fits together](docs/how-it-fits-together.md) · [evals/](evals) · [skills catalog](docs/skills-catalog.md)
 
 ## What this demonstrates
 
-1. **Agent orchestration** — Personal Dev Tutor as the flagship GSD + Codex tutor-orchestrator; strict Agent Tutor Orchestrator as an alternative; multi-runtime skill sync.
+1. **Agent orchestration** — Tech Lead as the unified orchestrator and mentor; strict Agent Tutor Orchestrator as an alternative; multi-runtime skill sync.
 2. **Measuring AI systems** — eval set with planted bugs + clean control, scored on recall *and* false-positive rate.
 3. **Designing for the real failure mode** — LLM reviewers' confident false positives, attacked with a pre-report gate + refuter panel.
 4. **Day-to-day ship discipline** — no-mistakes gate, treehouse isolation, gnhf overnight, AXI/TOON contracts.
 5. **Security awareness** — prompt-injection defense on every agent that reads untrusted input (diffs, web pages).
 6. **Senior judgment** — honest attribution ([ATTRIBUTION.md](ATTRIBUTION.md)) and deliberate curation ([CURATION.md](CURATION.md)).
 
-## Flagship — Personal Dev Tutor
+## Flagship — Tech Lead
 
-GSD-led development mentoring, bounded Codex workers in tmux, proactive local
-Graphify code graphs, current Context7 library docs, independent verification,
-and understanding checkpoints that prevent cognitive debt.
+Unified orchestrator and mentor: multi-agent tmux and Kanban coordination,
+proactive local Graphify code graphs, current Context7 library docs, independent
+verification, and understanding checkpoints across `learning`, `flow`, and `autonomous` modes.
 
-[![Personal Dev Tutor architecture](docs/diagrams/personal-dev-tutor-architecture.svg)](docs/personal-dev-tutor.md)
-
-Full detail: [`docs/personal-dev-tutor.md`](docs/personal-dev-tutor.md).
+Full detail: [`plugins/dev-skills/skills/tech-lead/SKILL.md`](plugins/dev-skills/skills/tech-lead/SKILL.md).
 
 ## Agentic core
 
 | Concern | Piece | Doc |
 |---|---|---|
-| Flagship orchestrator | Personal Dev Tutor: GSD + Codex + learning gates | [personal-dev-tutor.md](docs/personal-dev-tutor.md) |
+| Flagship orchestrator | Tech Lead: multi-agent coordination + learning gates | [tech-lead](plugins/dev-skills/skills/tech-lead/SKILL.md) |
 | Talk / build / flow | caveman, ponytail, GSD | [how-it-fits-together.md](docs/how-it-fits-together.md) |
-| Capabilities | `orchestrate`, `ai-workflow-orchestrator`, `/pr-review`, evals | [skills-catalog.md](docs/skills-catalog.md) |
+| Capabilities | `orchestrate`, `tech-lead`, `/pr-review`, evals | [skills-catalog.md](docs/skills-catalog.md) |
 | Ship gate | [no-mistakes](https://github.com/kunchenguid/no-mistakes) | [external-deps.md](docs/external-deps.md) |
 | Worktree isolation | [treehouse](https://github.com/kunchenguid/treehouse) | [external-deps.md](docs/external-deps.md) |
 | Overnight | [gnhf](https://github.com/kunchenguid/gnhf) + `overnight-task-kit/` | [external-deps.md](docs/external-deps.md) |
@@ -119,16 +117,16 @@ agent-dev-kit/
 │   ├── skills/<skill>/SKILL.md
 │   └── commands/pr-review.md         # multi-lens review + adversarial verify
 ├── evals/                            # planted bugs + clean controls
-├── profiles/                         # runtime manifests + flagship personal-dev-tutor
+├── profiles/                         # runtime manifests + agent-tutor-orchestrator
 ├── policies/                         # sandbox policy contracts
-├── scripts/                          # validation + Personal Dev Tutor runtime + strict tutor runtime
+├── scripts/                          # validation + strict tutor runtime
 ├── overnight-task-kit/               # overnight protocol (prefer gnhf as runner)
 ├── WRITEUP.md · AGENTS.md · CURATION.md · ATTRIBUTION.md
 ├── bootstrap.sh
 └── docs/
     ├── README.md                     # index — start here
     ├── how-it-fits-together.md       # one map: runtimes → gates
-    ├── personal-dev-tutor.md         # flagship GSD + Codex tutor-orchestrator
+    ├── agent-tutor-orchestrator.md   # strict orchestrator and liaison
     ├── skills-catalog.md · external-deps.md · profiles.md · …
     └── diagrams/                     # .d2 / .mmd sources → npm run render:diagrams
 ```
@@ -139,9 +137,8 @@ A fresh clone does **not** assume Hermes or any private overlay. Pick a tier:
 
 | Tier | You get | Requires |
 |---|---|---|
-| **A — Kit only** | 22 skills, `/pr-review`, evals | Node/npm |
-| **B — Personal Dev Tutor** *(recommended)* | Everything in A + GSD-led tutor, bounded Codex lanes, Graphify + Context7 | Hermes, Codex, tmux, uv, D2, Mermaid CLI |
-| **Alt — strict orchestrator** | Pure orchestrator that never edits | Hermes |
+| **A — Kit only** | 26 skills, `/pr-review`, evals | Node/npm |
+| **B — Agent Tutor Orchestrator** | Pure orchestrator that coordinates via tmux / Kanban | Hermes |
 | **C — Private overlay** | Org skills linked from outside this tree | optional |
 
 <details>
@@ -172,35 +169,10 @@ outside the managed installers.
 </details>
 
 <details open>
-<summary><b>Tier B — Personal Dev Tutor (recommended)</b></summary>
-
-Requires [Hermes Agent](https://github.com/NousResearch/hermes-agent), Codex,
-tmux, `uv`, D2, and Mermaid CLI. Bubblewrap (`bwrap`, Linux) is optional and is
-used only for explicitly offline or untrusted-code verification. Normal
-development runs on the trusted workstation with network access and existing
-configured tools. The installer creates a blank, public-only profile, defaults to
-`openai-codex/gpt-5.6-sol`, and never copies credentials. Provider/model flags
-keep the installer adaptable.
-
-```bash
-npm i -g get-shit-done-cc
-get-shit-done-cc --hermes --global
-./scripts/personal-tutor-install.sh
-personal-tutor-doctor
-personal-dev-tutor
-```
-
-Default tmux session: `personal`. The profile owns GSD state and teaching;
-Codex owns bounded product-source edits. Details:
-[`docs/personal-dev-tutor.md`](docs/personal-dev-tutor.md).
-
-</details>
-
-<details>
-<summary><b>Alternative — strict Agent Tutor Orchestrator</b></summary>
+<summary><b>Tier B — Agent Tutor Orchestrator</b></summary>
 
 Requires [Hermes Agent](https://github.com/NousResearch/hermes-agent) installed.
-Public skills only: `ai-workflow-orchestrator`, `orchestrate`.
+Public skills: `orchestrate`, `herdr`, `tmux-delegation`.
 
 ```bash
 ./scripts/tutor-install.sh
@@ -234,7 +206,6 @@ npm run doctor
 npm run validate
 npm run inventory
 npm run test:java
-npm run test:personal-tutor
 npm run eval:semgrep        # deterministic floor, also runs in CI
 npm run render:diagrams     # .d2 / .mmd -> SVG + social preview PNG
 npm run render:demo         # real session transcript -> README GIF (needs ffmpeg)
@@ -258,8 +229,7 @@ Full catalog: [`docs/skills-catalog.md`](docs/skills-catalog.md).
 1. **Commands** in `plugins/dev-skills/commands/`. `/pr-review` is generic; project-specific commands belong in that project's `.claude/commands/`.
 2. **Profiles** — [`docs/profiles.md`](docs/profiles.md), `profiles/*.yml`, `manifests/example.yml`.
 3. **Private overlays** — [`docs/private-overlays.md`](docs/private-overlays.md).
-4. **Personal Dev Tutor** — [`docs/personal-dev-tutor.md`](docs/personal-dev-tutor.md).
-5. **Strict Agent Tutor Orchestrator** — [`docs/agent-tutor-orchestrator.md`](docs/agent-tutor-orchestrator.md).
+4. **Strict Agent Tutor Orchestrator** — [`docs/agent-tutor-orchestrator.md`](docs/agent-tutor-orchestrator.md).
 
 ## Quality gates & observability
 

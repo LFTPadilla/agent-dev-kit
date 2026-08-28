@@ -8,7 +8,7 @@ trap 'rm -rf "$FIXTURE"' EXIT
 HERMES_HOME="$FIXTURE/.hermes"
 FAKE_BIN="$FIXTURE/bin"
 mkdir -p "$FAKE_BIN" "$HERMES_HOME/profiles/alpha/skills" \
-  "$HERMES_HOME/profiles/personal-dev-tutor/skills"
+  "$HERMES_HOME/profiles/agent-tutor-orchestrator/skills"
 
 cat > "$FAKE_BIN/hermes" <<'SH'
 #!/usr/bin/env bash
@@ -153,7 +153,7 @@ for name in caveman ponytail; do
   test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-source"
   test -f "$HERMES_HOME/skills/$name/.agent-dev-kit-sha256"
   assert_skill_checksum "$name"
-  for profile in alpha personal-dev-tutor; do
+  for profile in alpha agent-tutor-orchestrator; do
     assert_profile_skill_link "$profile" "$name"
   done
 done
@@ -463,10 +463,6 @@ assert_skill_source caveman "$bundle_caveman_source"
 assert_skill_source ponytail "$bundle_ponytail_source"
 assert_no_workhorse_lock "successful bundle refresh left a workhorse lock behind"
 
-grep -q 'AGENT_DEV_KIT_HERMES_HOME="\$PERSONAL_TUTOR_USER_HOME/.hermes"' \
-  "$ROOT/scripts/personal-tutor-install.sh"
-grep -q 'install-hermes-workhorse.sh.*--profile.*PROFILE' \
-  "$ROOT/scripts/personal-tutor-install.sh"
 grep -q 'AGENT_DEV_KIT_HERMES_HOME="\$USER_HOME/.hermes"' \
   "$ROOT/scripts/tutor-install.sh"
 grep -q 'install-hermes-workhorse.sh.*--profile.*PROFILE' \

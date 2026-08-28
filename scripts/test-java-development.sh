@@ -6,10 +6,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SKILL="$ROOT/plugins/dev-skills/skills/java-development/SKILL.md"
 DETECT="$ROOT/plugins/dev-skills/skills/java-development/scripts/java-project-detect.sh"
 REFERENCES="$ROOT/plugins/dev-skills/skills/java-development/references/official-guidance.md"
-PROFILE="$ROOT/profiles/personal-dev-tutor.yml"
-LIB="$ROOT/scripts/personal-tutor-lib.sh"
-
-for file in "$SKILL" "$DETECT" "$REFERENCES" "$PROFILE" "$LIB"; do
+for file in "$SKILL" "$DETECT" "$REFERENCES"; do
   [ -f "$file" ] || { printf 'FAIL missing %s\n' "${file#$ROOT/}"; exit 1; }
 done
 [ -x "$DETECT" ] || { echo 'FAIL Java detector is not executable'; exit 1; }
@@ -51,23 +48,6 @@ assert_file_contains "$REFERENCES" \
   'java.testcontainers.org' \
   'eclipse-jdtls'
 
-python3 - "$PROFILE" "$LIB" <<'PY'
-from pathlib import Path
-import re
-import sys
-
-profile = Path(sys.argv[1]).read_text()
-lib = Path(sys.argv[2]).read_text()
-include = profile.split("include_skills:\n", 1)[1].split("codex_worker_skills:\n", 1)[0]
-worker = profile.split("codex_worker_skills:\n", 1)[1].split("external_skills:\n", 1)[0]
-if include.count("  - java-development\n") != 1:
-    raise SystemExit("FAIL profile include_skills must contain java-development exactly once")
-if worker.count("  - java-development\n") != 1:
-    raise SystemExit("FAIL profile codex_worker_skills must contain java-development exactly once")
-match = re.search(r"PERSONAL_TUTOR_CODEX_SKILLS=\((.*?)\n\)", lib, re.S)
-if not match or len(re.findall(r"\bjava-development\b", match.group(1))) != 1:
-    raise SystemExit("FAIL runtime Codex allowlist must contain java-development exactly once")
-PY
 
 assert_file_contains "$ROOT/skill-provenance.json" '"java-development"'
 assert_file_contains "$ROOT/docs/skills-catalog.md" '`java-development`'

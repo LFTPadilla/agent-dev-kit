@@ -39,15 +39,6 @@ authors.
 
 Source: https://github.com/herdrdev/herdr — Apache License 2.0.
 
-## pi-sandbox / sandbox-runtime — workflow pattern only
-
-`scripts/personal-tutor-sandbox.sh` applies the general pattern of wrapping
-agent verification in an OS-level filesystem/network boundary after audits of
-[`pi-sandbox`](https://github.com/carderne/pi-sandbox) (MIT) and
-[`sandbox-runtime`](https://github.com/carderne/sandbox-runtime) (Apache-2.0).
-No source code was copied. The local helper is a smaller bubblewrap-only,
-offline, empty-home, read-only-by-default contract rather than an installation
-or adaptation of either package.
 
 ## Day-to-day toolchain (external, not vendored)
 

@@ -10,9 +10,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LIB="$ROOT/scripts/tutor-home-lib.sh"
 TUTOR_LIB="$ROOT/scripts/tutor-lib.sh"
-PERSONAL_LIB="$ROOT/scripts/personal-tutor-lib.sh"
 
-for file in "$LIB" "$TUTOR_LIB" "$PERSONAL_LIB"; do
+for file in "$LIB" "$TUTOR_LIB"; do
   [ -f "$file" ] || { printf 'FAIL missing %s\n' "$file"; exit 1; }
   bash -n "$file"
 done
@@ -54,12 +53,12 @@ resolve() {
 override_home="$FIXTURE/override-home"
 other_home="$FIXTURE/other-home"
 ancestor_home="$FIXTURE/ancestor-home"
-installed_scripts="$ancestor_home/.hermes/profiles/personal-dev-tutor/scripts"
+installed_scripts="$ancestor_home/.hermes/profiles/agent-tutor-orchestrator/scripts"
 mkdir -p "$override_home" "$other_home" "$installed_scripts"
 
 # --- 1. an explicit env override wins over every other signal -----------------
-got="$(resolve "$installed_scripts/personal-tutor-lib.sh" PERSONAL_TUTOR_USER_HOME \
-  "PERSONAL_TUTOR_USER_HOME=$override_home" "HOME=$FIXTURE/unused" "$REAL_PASSWD")"
+got="$(resolve "$installed_scripts/tutor-lib.sh" AGENT_TUTOR_USER_HOME \
+  "AGENT_TUTOR_USER_HOME=$override_home" "HOME=$FIXTURE/unused" "$REAL_PASSWD")"
 [ "$got" = "$override_home" ] || fail "family override lost to the .hermes ancestor: $got"
 
 got="$(resolve "$installed_scripts/tutor-lib.sh" AGENT_TUTOR_USER_HOME \
@@ -67,14 +66,14 @@ got="$(resolve "$installed_scripts/tutor-lib.sh" AGENT_TUTOR_USER_HOME \
 [ "$got" = "$override_home" ] || fail "generic TUTOR_USER_HOME override ignored: $got"
 
 # The family-specific variable is the more specific signal and must win.
-got="$(resolve "$installed_scripts/personal-tutor-lib.sh" PERSONAL_TUTOR_USER_HOME \
-  "PERSONAL_TUTOR_USER_HOME=$override_home" "TUTOR_USER_HOME=$other_home" \
+got="$(resolve "$installed_scripts/tutor-lib.sh" AGENT_TUTOR_USER_HOME \
+  "AGENT_TUTOR_USER_HOME=$override_home" "TUTOR_USER_HOME=$other_home" \
   "HOME=$FIXTURE/unused" "$REAL_PASSWD")"
 [ "$got" = "$override_home" ] || fail "generic override beat the family override: $got"
 
 # An override that is not an existing directory is not a home. Keep resolving.
-got="$(resolve "$installed_scripts/personal-tutor-lib.sh" PERSONAL_TUTOR_USER_HOME \
-  "PERSONAL_TUTOR_USER_HOME=$FIXTURE/missing-home" "HOME=$FIXTURE/unused" "$REAL_PASSWD")"
+got="$(resolve "$installed_scripts/tutor-lib.sh" AGENT_TUTOR_USER_HOME \
+  "AGENT_TUTOR_USER_HOME=$FIXTURE/missing-home" "HOME=$FIXTURE/unused" "$REAL_PASSWD")"
 [ "$got" = "$ancestor_home" ] || fail "a non-existent override was trusted: $got"
 
 # --- 2. .hermes ancestor detection (installed-profile layout) -----------------
@@ -92,19 +91,19 @@ got="$(resolve "$deep/tutor-audit.sh" AGENT_TUTOR_USER_HOME \
 checkout="$FIXTURE/checkout/scripts"
 home_only="$FIXTURE/home-only"
 mkdir -p "$checkout" "$home_only"
-got="$(resolve "$checkout/personal-tutor-lib.sh" PERSONAL_TUTOR_USER_HOME \
+got="$(resolve "$checkout/tutor-lib.sh" AGENT_TUTOR_USER_HOME \
   "HOME=$home_only" "$STUB_PASSWD")"
 [ "$got" = "$passwd_home" ] || fail "passwd entry did not outrank \$HOME: $got"
 
 # --- 4. fallback to $HOME, and fail closed when even that is unusable --------
-got="$(resolve "$checkout/personal-tutor-lib.sh" PERSONAL_TUTOR_USER_HOME \
+got="$(resolve "$checkout/tutor-lib.sh" AGENT_TUTOR_USER_HOME \
   "HOME=$home_only" "$NO_PASSWD")"
 [ "$got" = "$home_only" ] || fail "did not fall back to \$HOME: $got"
 
-if resolve "$checkout/personal-tutor-lib.sh" '' "$NO_PASSWD" >/dev/null 2>&1; then
+if resolve "$checkout/tutor-lib.sh" '' "$NO_PASSWD" >/dev/null 2>&1; then
   fail "resolution succeeded with no override, no .hermes ancestor, and no HOME"
 fi
-if resolve "$checkout/personal-tutor-lib.sh" '' \
+if resolve "$checkout/tutor-lib.sh" '' \
   "HOME=$FIXTURE/no-such-home" "$NO_PASSWD" >/dev/null 2>&1; then
   fail "resolution accepted a non-existent HOME"
 fi
@@ -116,11 +115,6 @@ got="$(env -i "$REAL_PASSWD" "HOME=$FIXTURE/unused" bash -c \
   _ "$TUTOR_LIB" "$installed_scripts/tutor-status.sh")"
 [ "$got" = "$ancestor_home" ] || fail "tutor_set_user_home did not set USER_HOME: $got"
 
-# personal_tutor_real_home still echoes the home on stdout.
-got="$(env -i "$REAL_PASSWD" "PERSONAL_TUTOR_USER_HOME=$override_home" \
-  "HOME=$FIXTURE/unused" bash -c \
-  'set -uo pipefail; source "$1"; personal_tutor_real_home' _ "$PERSONAL_LIB")"
-[ "$got" = "$override_home" ] || fail "personal_tutor_real_home lost its contract: $got"
 
 # --- 6. resolve_path on existing and non-existent paths ----------------------
 existing="$FIXTURE/resolve/existing"
@@ -140,18 +134,7 @@ ln -s "$existing" "$FIXTURE/resolve/link"
 got="$(tutor_home_resolve_path "$FIXTURE/resolve/link/inner")"
 [ "$got" = "$existing/inner" ] || fail "resolve_path did not follow a symlink: $got"
 
-# The Personal Dev Tutor wrapper keeps the same contract, without python3.
-got="$(env -i "$REAL_PASSWD" "PERSONAL_TUTOR_USER_HOME=$override_home" bash -c \
-  'set -uo pipefail; source "$1"; personal_tutor_resolve_path "$2"' \
-  _ "$PERSONAL_LIB" "$missing")"
-[ "$got" = "$missing" ] || fail "personal_tutor_resolve_path changed contract: $got"
-if grep -q 'python3' "$PERSONAL_LIB"; then
-  fail "personal-tutor-lib.sh still depends on python3"
-fi
-
-# --- 7. the installers must ship the shared library into the profile ---------
-grep -q 'scripts/tutor-home-lib.sh' "$ROOT/scripts/personal-tutor-install.sh" \
-  || fail "personal-tutor-install.sh does not copy tutor-home-lib.sh into the profile"
+# --- 7. the installer must ship the shared library into the profile -----------
 grep -q 'tutor-home-lib.sh' "$ROOT/scripts/tutor-install.sh" \
   || fail "tutor-install.sh does not assert tutor-home-lib.sh is present"
 

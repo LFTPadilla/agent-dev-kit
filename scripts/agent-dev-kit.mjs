@@ -15,7 +15,6 @@ const privatePatterns = [
 ]
 const yamlExtensions = ['.yml', '.yaml']
 const profileSkillListKeys = ['include_skills', 'codex_worker_skills']
-const tutorCodexSkillsPattern = /PERSONAL_TUTOR_CODEX_SKILLS=\(([^)]*)\)/
 const privacyScanExtensions = ['.md', '.json', '.yml', '.yaml', '.mjs', '.js', '.ts', '.tsx', '.sh']
 const ignoreDirs = new Set(['.git', '.agents', 'node_modules', '.pi', '.venv', 'venv', 'playwright-report', 'test-results'])
 
@@ -288,38 +287,6 @@ function validateProfiles(checks, { skillDirs: dirs }) {
   checks.push(ok(`${files.length} profile manifests checked`))
 }
 
-function validateTutorSkillSync(checks) {
-  const profileFile = path.join(root, 'profiles/personal-dev-tutor.yml')
-  const libFile = path.join(root, 'scripts/personal-tutor-lib.sh')
-  for (const file of [profileFile, libFile]) {
-    if (!existsSync(file)) {
-      checks.push(fail(`${rel(file)} is missing`))
-      return
-    }
-  }
-  const declared = stringListOrNull(readYamlConfig(profileFile)?.codex_worker_skills)
-  if (!declared) {
-    checks.push(fail(`${rel(profileFile)} codex_worker_skills must be a list of skill names`))
-    return
-  }
-  const match = readFileSync(libFile, 'utf8').match(tutorCodexSkillsPattern)
-  if (!match) {
-    checks.push(fail(`${rel(libFile)} does not define PERSONAL_TUTOR_CODEX_SKILLS`))
-    return
-  }
-  const runtime = match[1].split(/\s+/).filter(Boolean)
-  const missingInRuntime = unknownNames(declared, new Set(runtime))
-  const extraInRuntime = unknownNames(runtime, new Set(declared))
-  for (const name of missingInRuntime) {
-    checks.push(fail(`${rel(libFile)} PERSONAL_TUTOR_CODEX_SKILLS is missing ${name} declared in ${rel(profileFile)} codex_worker_skills`))
-  }
-  for (const name of extraInRuntime) {
-    checks.push(fail(`${rel(libFile)} PERSONAL_TUTOR_CODEX_SKILLS has ${name} that ${rel(profileFile)} codex_worker_skills does not declare`))
-  }
-  if (!missingInRuntime.length && !extraInRuntime.length) {
-    checks.push(ok(`tutor Codex allowlist matches ${declared.length} declared worker skills`))
-  }
-}
 
 function validatePiPackageResearch(checks) {
   const dir = path.join(root, 'pi-profiles')
@@ -441,7 +408,6 @@ function collectValidationChecks() {
     validateProvenance,
     validateSkillsLock,
     validateProfiles,
-    validateTutorSkillSync,
     validatePiPackageResearch,
     validatePolicies,
     validateEvals,
