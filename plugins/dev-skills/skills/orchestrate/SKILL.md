@@ -46,7 +46,7 @@ model and effort directly in the subagent instruction.
 
 | Route | Model | Effort | Use for |
 | --- | --- | --- | --- |
-| Orchestrator | current session, ideally `gpt-5.5` | `high` or `xhigh` | planning, routing, synthesis, final judgment |
+| Orchestrator | current session, ideally `gpt-5.5` | `high` or `xhigh` | planning, routing, synthesis, final judgment, direct execution of simple/trivial tasks |
 | Complex worker | `gpt-5.5` | `high` | ambiguous bugs, multi-file edits, architecture, migrations, auth, security, data integrity |
 | Spark worker | `gpt-5.3-codex-spark` | `xhigh` | read-heavy exploration, summaries, mechanical one-file edits, log triage, simple docs |
 | Verifier | `gpt-5.5` | `high` | independent verification after implementation |
@@ -106,8 +106,9 @@ instead of approximating a GSD workflow.
 
 ## Orchestrator rules
 
-1. Never implement directly while subagents are available. Delegate searches,
-   edits, tests, and log analysis to bounded workers.
+1. Complexity-based delegation: Only delegate medium to complex tasks.
+   - **Simple tasks:** Handle directly in the orchestrator session. Do NOT spawn delegates for routine single-command executions, basic file inspections, quick searches, or trivial 1-line edits. Spawning workers for trivial work wastes tokens and creates process latency.
+   - **Medium to complex tasks:** Delegate to bounded workers (Claude, Cursor, Codex, worktree panes). This includes multi-file implementations, non-trivial refactors, deep architectural investigations, complex bug triage, and multi-lens reviews.
 
 2. Keep subagent prompts self-contained. Assume the worker has none of the
    parent conversation. Include exact goal, paths, allowed/prohibited files,
@@ -138,6 +139,17 @@ instead of approximating a GSD workflow.
    workers must happen in dedicated worktrees under `.worktrees/<task-slug>` to
    protect the main checkout from in-place edits.
 
+10. Clean delegate context: When dispatching a new task to an external worker
+    (Claude Code, Cursor, Herdr pane, or tmux session):
+    - Do NOT dump unrelated tasks into a dirty session where previous context acts as noise.
+    - **Preferred:** Spawn or target a new window/tab/session so past transcripts remain readable for reference.
+    - **Fallback:** If reusing an existing session/pane for an unrelated task, issue `/clear` before dispatching.
+    - Only reuse a dirty session without `/clear` when directly continuing the exact same task from the previous turn.
+
+11. Background notification hygiene: When background tasks finish after their results
+    were already collected or audited, do not treat the delayed exit notification as an
+    actionable new turn or persist meta-logs to long-term memory. Acknowledge minimally
+    without conversational churn or memory pollution.
 
 ---
 

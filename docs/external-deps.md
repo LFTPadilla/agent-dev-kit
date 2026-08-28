@@ -12,6 +12,7 @@ don't vendor. Flow map: [`how-it-fits-together.md`](how-it-fits-together.md).
 | **pi-gsd** | Optional Pi-native GSD helper/runtime | `npm i -g pi-gsd` |
 | **caveman** | Compressed agent talk | Codex: `./scripts/install-codex-workhorse.sh`; Claude: `/plugin marketplace add JuliusBrussee/caveman` then `/plugin install caveman@caveman`; Hermes: `./scripts/install-hermes-workhorse.sh --all-profiles` |
 | **ponytail** | Minimal diffs / YAGNI build mode | Codex: `./scripts/install-codex-workhorse.sh`; Claude: `/plugin marketplace add DietrichGebert/ponytail` then `/plugin install ponytail@ponytail`; Hermes: `./scripts/install-hermes-workhorse.sh --all-profiles` |
+| **Superpowers** (`obra/superpowers`) | Execution discipline (TDD, systematic debugging, verification evidence, review reception) | Antigravity: `agy plugin install https://github.com/obra/superpowers`; Codex: `/plugins` → search `superpowers`; Hermes: `hermes plugins install obra/superpowers --enable`; Claude: `/plugin marketplace add obra/superpowers-marketplace && /plugin install superpowers@superpowers-marketplace` (or `/plugin install superpowers@claude-plugins-official`) |
 | **hypa** (`@hypabolic/hypa`) | Token-efficient shell + MCP proxy | `npm i -g @hypabolic/hypa && hypa init --agent claude && hypa init --agent codex` |
 | **jean-claude** *(optional)* | Multi-machine / multi-account Claude sync | `npm i -g jean-claude` |
 

@@ -101,11 +101,14 @@ and report the actual verification performed; do not treat it as a blocker.
 
 1. Read the relevant files and neighboring patterns before proposing a change.
 2. Use the smallest vertical slice that satisfies the acceptance criteria.
-3. Follow test-first development for behavior changes: produce a failing test, implement the minimum change, then run the focused and relevant regression tests.
+3. Follow test-first development for behavior changes: produce a failing test, implement the minimum change, then run the focused and relevant regression tests (invoke `superpowers:test-driven-development` when installed).
 4. Record non-obvious decisions and alternatives for the tutor.
 5. Report actual commands and results. Never invent test output.
 6. Treat a bounded output preview as a navigation aid, not verification by
    itself; report the exit status, transcript hash/path, and focused evidence.
+7. Debug defects and test failures systematically: form a hypothesis, trace root cause, and verify before editing (invoke `superpowers:systematic-debugging` when installed).
+8. Evidence before claims: never mark work ready or claim tests pass without fresh verification evidence run in the current message (invoke `superpowers:verification-before-completion` when installed).
+9. Evaluate review feedback technically against codebase reality; reject performative agreement and verify suggestions before implementing (invoke `superpowers:receiving-code-review` when installed).
 
 ## Verification
 

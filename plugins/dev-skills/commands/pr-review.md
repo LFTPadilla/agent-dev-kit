@@ -1,13 +1,13 @@
 ---
-description: Multi-lens self-review of GitHub PRs before merge. Fans out review lenses via a Workflow, adversarially verifies each BLOCKER/HIGH/MEDIUM finding, reports the full severity spectrum plus a non-blocking minimalism advisory. Read-only — never posts or applies without explicit confirmation.
+description: Heavy, multi-lens adversarial review of GitHub PRs before merge. Fans out correctness, security, performance, quality, and ponytail lenses via Workflow, adversarially verifies each finding, and eliminates false positives. For simple, single-pass PR diff reviews, use github-code-review instead. Read-only — never posts or applies without explicit confirmation.
 allowed-tools: Read, Bash, Agent, Workflow, mcp__github__*
 ---
 
-# /pr-review <PR-URL> [<PR-URL> ...]
+# /pr-review <PR-URL> [<PR-URL> ...] — Heavy Adversarial Review
 
-Pre-merge review of your own PRs across multiple lenses, then an adversarial
-verification pass so the report is precise, not noisy. Read-only against
-GitHub.
+Deep, multi-lens adversarial critique of GitHub PRs before merge. Every
+BLOCKER/HIGH/MEDIUM finding is independently verified to eliminate false
+positives. For quick, lightweight single-pass PR reviews, use `github-code-review`.
 
 ## When invoked
 
