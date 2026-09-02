@@ -123,6 +123,85 @@ Use only when the user explicitly requests to monitor the worker live in a termi
      git diff -- <allowlist-files>
      ```
 
+6. **Agent-Native Navigation (ANRS-1.0)**:
+   - Guide subagents to inspect `REGISTRY.yaml` and hub `AGENTS.md` to map dependencies and subsystem boundaries before broad sweeps.
+
+7. **Keep Subagent Prompts Self-Contained**:
+   - Assume the worker has none of the parent conversation. Include exact goal, paths, allowed/prohibited files, commands, constraints, skill names, and output format.
+
+8. **Fan-Out Discipline & Concurrency**:
+   - Exploration, review, test triage, and summarization can run in parallel. Writes to the same files must run serially.
+   - Cap fan-out at 3 to 4 workers by default. Use more only when the work is naturally partitioned and the user asked for broad parallelism.
+   - Do not allow recursive fan-out unless the user asks for it. Workers should complete their bounded task and return.
+
+9. **Context Cleanliness**:
+   - Read only enough to plan and verify. Pass file paths to workers. Request summaries, diffs, command names, and findings, not raw command output.
+
+10. **Escalate Ambiguity**:
+    - Escalate ambiguous or wrong results by tightening the worker prompt and rerunning, or by asking the user when the ambiguity is truly external.
+
+11. **Clean Delegate Context**:
+    - When dispatching a new task to an external worker (Claude Code, Cursor, Herdr pane, or tmux session):
+      - Do NOT dump unrelated tasks into a dirty session where previous context acts as noise.
+      - **Preferred:** Spawn or target a new window/tab/session so past transcripts remain readable for reference.
+      - **Fallback:** If reusing an existing session/pane for an unrelated task, issue `/clear` before dispatching.
+      - Only reuse a dirty session without `/clear` when directly continuing the exact same task from the previous turn.
+
+12. **Background Notification Hygiene**:
+    - When background tasks finish after their results were already collected or audited, do not treat the delayed exit notification as an actionable new turn or persist meta-logs to long-term memory. Acknowledge minimally without conversational churn or memory pollution.
+
+13. **Mid-Task Handoff Trigger**:
+    - When a multi-hour task has accumulated enough complex state (PRs, cluster mutations, blocked deploys, ambiguous errors) that continuing in the current session would burn context and slow the user down, WRITE A HANDOFF.
+    - Do not keep grinding "to finish it". The signal is: user says "this is taking too long" / "do a handoff" / "switch sessions" / context window filling past ~60% on a task that still has many subtasks.
+    - The handoff is itself a deliverable; the session that writes it well is succeeding, not giving up.
+    - Variant phrase observed in the wild: "why is taking so long?" — treat that as the same handoff signal and stop over-auditing/killing the in-flight worker, then report the current state succinctly.
+    - Pre-emptive kill: if a worker has been running for 2+ windows with no useful output, kill it and re-scope rather than waiting for the user to complain.
+
+14. **Parallel-Session Guard Prompt**:
+    - When the user signals that ANOTHER session is working on the same fleet/scope in parallel, generate a "guard prompt" that the user can paste into the other session to prevent collision.
+    - The guard MUST enumerate: (a) the exact scope owned by this session, (b) forbidden paths/keys/gateways/cronjobs/keys, (c) the operations the other session can run freely (read-only is usually safe), and (d) the communications channel (how either session will see the other's changes).
+    - Do NOT assume the other session will see this session's work — be explicit about which files/configs/cluster namespaces are the source of truth at any given moment.
+    - The guard is a one-page block of text; if it's longer than 30 lines the user will not paste it. (Validated pattern, 2026-08-31, fleet migration phase 1+2.)
+
+15. **Local-Only Fleet Ops (No GSD)**:
+    - On the CLI / non-GSD harness, the orchestrator (this session) should stay read-only + planning and delegate ALL execution to subagents on `z.ai/glm-5.3-flash` (z.ai subscription, `reasoning_effort: high`).
+    - Reasons: (a) the orchestrator's context is the only thing keeping the multi-step rollout coherent — burning it on `kubectl apply` is wasteful; (b) `z.ai/glm-5.3-flash` with high reasoning is enough to follow a bounded brief, run a Python harness, and return a compact structured summary; (c) it preserves budget vs. using the flagship tier for mechanical work.
+    - Reserve the flagship tier (whatever the session is using) for: planning, decomposition, conflict resolution, and final independent verification.
+    - Concretely: never have the orchestrator run a `kubectl apply`, `kubectl patch`, `ssh ... 'kubectl ...'`, or build a docker image in-band. Delegate those to a worker.
+    - The orchestrator can still run read-only diagnostics (`kubectl get/describe/logs`, `gh pr view`, `curl` to public APIs, `git` read operations) — those don't mutate state.
+
+16. **Codex CLI Host Fallback**:
+    - On Felipe's laptop, `codex exec ...` for non-trivial work often fails with SIGILL or auth-missing errors and returns an empty result.
+    - When dispatching a Codex-tasked worker, prefer running the same model through the Hermes CLI chat front, which has working OAuth/device-flow auth in the active profile:
+      ```bash
+      hermes -p <active-profile> --reasoning <effort> chat -m <model> \
+        --provider openai-codex -t <toolsets> -Q -q "$(cat prompt.txt)" > out.txt
+      ```
+    - Reserve raw `codex exec` for short commands or when you have already confirmed auth in the current shell. The same applies to the `--ephemeral --skip-git-repo-check` flags: useful but never required when the alternative is the Hermes CLI path.
+
+17. **Verify the Prior Claim, Not the Worker**:
+    - When a worker reports a finding (e.g. "manifest contains only ConfigMap X"), the independent verifier must RE-INSPECT the file/render with a parser, not just accept the worker's summary.
+    - Prior claims in this session have been partial (correct about a file, wrong about the production render that includes it).
+    - The verifier's deliverable must state `final_verdict: PRIOR_CLAIM_CORRECT | PARTIAL | WRONG` and quote exact line ranges / resource counts as evidence.
+    - Skip this only when the prior claim is about a single short fact and the cost of re-verification exceeds the risk of being wrong.
+
+18. **Output Style When Reporting to Felipe**:
+    - When the user asks for investigation / explanation / "vamos lento / corto y fácil / punto por punto" / "explain", the response to the user is one point at a time, short sentences, no long lists, no context dumps. Confirm before advancing.
+    - This applies to digests, summaries, and final syntheses too. Internal worker prompts may still be detailed; the rule is about what reaches the user, not what workers receive.
+
+19. **Parallel-Session PR Number Collision**:
+    - When two sessions share a repo and both call `gh pr create`, GitHub assigns the next number to the FIRST request that lands; the other session's number is the one returned to its caller.
+    - After that, `gh pr view N` returns the OTHER session's PR if you use the number without checking title/state. This caused a near-miss merge in 2026-09-01: session A's `gh pr create` returned 457, session B's returned 456 (a different workstream). A's subsequent `gh pr view 456 --json state,mergeCommit,title` then printed B's title with `MERGED` — leading A to think its own PR was already merged.
+    - The fix is mechanical: BEFORE every `gh pr view`, `gh pr merge`, or `gh pr close`, run:
+      ```bash
+      gh pr view <n> --json state,mergeCommit,title --jq '"\(.state) \(.mergeCommit.oid[0:8]) \(.title)"'
+      ```
+      and confirm the title matches the branch you just pushed. If it doesn't, find YOUR number by branch:
+      ```bash
+      gh pr list --head <branch> --json number,title --jq '.[] | "\(.number) \(.title)"'
+      ```
+    - Applies symmetrically to `gh pr merge --admin`, `gh pr close`, and `gh api repos/<owner>/<repo>/pulls/<n>/merge` — the number is authoritative and the title is the only reliable cross-check when two sessions race.
+
 ---
 
 ## Model Routing & Single Source of Truth (SSoT)
