@@ -1,0 +1,154 @@
+# config/model-routing.yaml — Single Source of Truth for Model Routing
+# Standard: ANRS-1.0 (Agent-Native Repository Specification)
+version: "1.0"
+updated: "2026-09-02"
+
+endpoints:
+  litellm_proxy: "http://10.43.128.53:4000/v1"
+  litellm_local: "http://127.0.0.1:4000/v1"
+  cliproxyapi_rpi: "http://192.168.5.5:8317/v1"
+  cliproxyapi_local: "http://127.0.0.1:8317/v1"
+  tracking_dashboard: "http://192.168.5.5:3000/tracking"
+
+# Provider Tiers & Subscriptions
+subscriptions:
+  google_ai_pro:
+    endpoint: "cliproxyapi_rpi"
+    models:
+      orchestrator:
+        model: "gemini-3.8-flash"
+        api_model: "gemini-3.8-flash-high"
+        reasoning_effort: "high"
+      worker:
+        model: "gemini-3.8-flash"
+        api_model: "gemini-3.8-flash-high"
+        reasoning_effort: "low"
+      fast_worker:
+        model: "gemini-3.8-flash"
+        api_model: "gemini-3.8-flash-high"
+        reasoning_effort: "low"
+    prohibited_models:
+      - "gemini-3.7-flash"  # Deprecated — strictly use 3.8
+
+  openai_chatgpt_sub:
+    endpoint: "litellm_proxy"
+    models:
+      orchestrator:
+        model: "gpt-5.6-sol"
+        reasoning_effort: "high"
+      worker:
+        model: "gpt-5.6"
+        reasoning_effort: "high"
+      fast_worker:
+        model: "gpt-5.6-luna"
+        reasoning_effort: "medium"
+      reviewer:
+        model: "gpt-5.6-sol"
+        reasoning_effort: "high"
+
+  opencode_go_sub:
+    endpoint: "https://opencode.ai/zen/go/v1"
+    role: "subscription"
+    models:
+      fast_worker: "deepseek-v4-flash"
+      vision_worker: "deepseek-v4-flash-vision-exp"
+      free_tier: "ox-alpha-free"
+
+  zai_coding_plan:
+    endpoint: "https://api.z.ai/api/coding/paas/v4/"
+    role: "subscription"
+    models:
+      balanced_worker: "glm-5.3"
+      fast_worker: "glm-5.3-flash"
+
+  minimax_token_plan:
+    endpoint: "https://api.minimax.io/v1"
+    role: "subscription"
+    models:
+      chat_cheap: "MiniMaxAI/MiniMax-M3"
+
+# Pay-As-You-Go (PAYG) Providers & Aggregators (Priority order enforced)
+payg_priority:
+  - tokenrouter     # Priority 1 over OpenRouter
+  - gmi_serving     # Priority 2 for MiniMax
+  - deepseek_direct # Priority 3 for DeepSeek V4 Pro
+  - nous_research   # Priority 4 for frontier research models
+  - openrouter      # Priority 5 (fallback aggregator)
+  - groq            # Priority 6 for free open-weights (Qwen 27B)
+
+payg_providers:
+  tokenrouter:
+    endpoint: "https://tokenrouter.com/v1"
+    models:
+      qwen: "qwen/qwen3.8-max"
+      glm: "z-ai/glm-5.3"
+
+  gmi_serving:
+    endpoint: "https://api.gmi-serving.com/v1"
+    models:
+      minimax: "MiniMaxAI/MiniMax-M3"
+
+  deepseek_direct:
+    endpoint: "https://api.deepseek.com/v1"
+    models:
+      pro: "deepseek-v4-pro"
+
+  nous_research:
+    endpoint: "https://inference-api.nousresearch.com/v1"
+    models:
+      deepseek_v4: "deepseek/deepseek-v4-flash-0731"
+      free_tiers: ["tencent/hy3:free", "upstage/solar-pro4:free"]
+
+  openrouter:
+    endpoint: "https://openrouter.ai/api/v1"
+    models:
+      gemini_fallback: "google/gemini-3.8-flash"
+      grok: "x-ai/grok-4.6"
+      glm_fallback: "z-ai/glm-5.3-flash"
+
+# Semantic Chat Aliases (LiteLLM SSoT Mapping)
+semantic_aliases:
+  chat-fast:
+    primary: "opencode_go_sub/deepseek-v4-flash"
+    fallback: "zai_coding_plan/glm-5.3-flash"
+  chat-balanced:
+    primary: "zai_coding_plan/glm-5.3-flash"
+    fallback: "openai_chatgpt_sub/gpt-5.6-terra"
+  chat-smart:
+    primary: "openai_chatgpt_sub/gpt-5.6-sol"
+    fallback: "zai_coding_plan/glm-5.3"
+  chat-reasoning:
+    primary: "openai_chatgpt_sub/gpt-5.6-luna"
+    fallback: "deepseek_direct/deepseek-v4-pro"
+  vision:
+    primary: "google_ai_pro/gemini-3.8-flash"
+    fallback: "opencode_go_sub/deepseek-v4-flash-vision-exp"
+  chat-free:
+    primary: "groq/qwen3.8-27b"
+    fallback: "minimax_token_plan/MiniMax-M3"
+
+# Delegation Modes & Harness Capabilities
+harness_capabilities:
+  hermes:
+    default_mode: "headless"
+    headless_tool: "delegate_task"
+    visual_multiplexer: "herdr"
+    anti_patterns:
+      - "prohibit_recursive_hermes_chat_cli_for_workers"
+  claude_code:
+    default_mode: "headless"
+    headless_tool: "Task"
+    visual_multiplexer: "herdr"
+  codex:
+    default_mode: "headless"
+    headless_tool: "subagents"
+    visual_multiplexer: "herdr"
+  antigravity:
+    default_mode: "headless"
+    headless_tool: "invoke_subagent"
+    visual_multiplexer: "herdr"
+  pi:
+    default_mode: "headless"
+    headless_command: "pi -p --model <m> --tools read,grep,find,ls"
+    in_session_extension: "@tintinweb/pi-subagents"
+    visual_multiplexer: "herdr"
