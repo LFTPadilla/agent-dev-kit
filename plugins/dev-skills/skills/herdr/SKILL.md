@@ -194,6 +194,32 @@ After that failed read, ask the agent to write its complete response as Markdown
 - Never kill the main Herdr process. Use named test sessions for experiments that need an isolated server.
 - CLI server errors are JSON on stderr with exit status 1. CLI syntax errors exit with status 2.
 
+## Felipe's always-visible delegation anchor
+
+When delegating Claude or Cursor work from this orchestrator, Felipe wants the
+session to be **watchable** in a specific Herdr location. Anchor every
+delegated task to:
+
+- **Workspace:** `kommit`
+- **Window:** `4`
+- **Position:** right side
+
+This means prefer routing multi-step implementation, review, or QA work
+through `herdr agent start` + `herdr agent prompt` in that location, not
+through invisible background `delegate_task` subagents. Use `delegate_task`
+only for short read-only research, exploration, or when Felipe explicitly
+asks for a non-visible run. If you reach for `delegate_task` for a non-trivial
+implementation pass, you have almost certainly made the wrong call — bounce
+the same work into a Herdr pane so Felipe can monitor progress and intervene.
+
+Discovery helper to find the anchor pane:
+
+```bash
+herdr agent list | jq -r '.result.agents[]
+  | select(.workspace=="kommit")
+  | "\(.pane_id)  w\(.window_index)  \(.agent_status)  \(.agent)  \(.cwd)"'
+```
+
 ## Dispatcher Helper Script (`herdr-dispatch.sh`)
 
 For high-level agent-to-agent delegation and workspace routing, use the companion helper:
