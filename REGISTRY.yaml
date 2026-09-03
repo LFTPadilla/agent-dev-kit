@@ -31,6 +31,9 @@ skills:
   orchestrate:
     path: "plugins/dev-skills/skills/orchestrate"
     scope: "orchestration"
+  orchestrate-lite:
+    path: "plugins/dev-skills/skills/orchestrate-lite"
+    scope: "orchestration"
   tech-lead:
     path: "plugins/dev-skills/skills/tech-lead"
     scope: "orchestration-and-mentorship"

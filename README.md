@@ -137,7 +137,7 @@ A fresh clone does **not** assume Hermes or any private overlay. Pick a tier:
 
 | Tier | You get | Requires |
 |---|---|---|
-| **A — Kit only** | 26 skills, `/pr-review`, evals | Node/npm |
+| **A — Kit only** | 27 skills, `/pr-review`, evals | Node/npm |
 | **B — Agent Tutor Orchestrator** | Pure orchestrator that coordinates via tmux / Kanban | Hermes |
 | **C — Private overlay** | Org skills linked from outside this tree | optional |
 

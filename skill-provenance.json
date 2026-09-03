@@ -125,6 +125,13 @@
       "risk": "medium",
       "dependencies": []
     },
+    "orchestrate-lite": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "low",
+      "dependencies": []
+    },
     "tech-lead": {
       "source": "local",
       "license": "MIT",
