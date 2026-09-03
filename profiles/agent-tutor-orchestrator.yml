@@ -12,6 +12,7 @@ tmux:
 # Tier B — skills that ship in this public repo (cold-clone ready).
 include_skills:
   - orchestrate
+  - orchestrate-lite
   - herdr
   - tmux-delegation
   - agent-native-scaffold

@@ -329,6 +329,7 @@ tmux:
 include_skills:
   - tech-lead
   - orchestrate
+  - orchestrate-lite
 # Tier C — not in this repo; missing on cold clone is expected
 requires_private_overlay:
   - delegating-to-tmux-claude
