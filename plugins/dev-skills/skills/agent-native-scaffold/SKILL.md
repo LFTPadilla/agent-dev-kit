@@ -159,7 +159,7 @@ hand-wave — and the agent must report its exit code:
 5. **Hub link integrity:** extract every Markdown link target
    `[text](<target>)` and `Path.resolve()` it; report any miss.
 6. **Stale-path sweep:** grep every non-binary file for old path
-   patterns (e.g. `/home/user/kommit/empresa|~/kommit/empresa`) and
+   patterns (e.g. `/home/user/<old-name>|~/<old-name>`) and
    confirm the old directory no longer exists.
 7. **Permission check on secrets:** `stat -c %a` on `.env`, `.p12`, and
    the Digital ID file — must be `600`. Flag any `644` or `755` for a
@@ -181,11 +181,10 @@ hand-wave — and the agent must report its exit code:
     PDF integrity, and the absence of legacy directory names. Ship the
     validator as `scripts/validate_ops.py` (or repo-equivalent) and run
     it on every refactor. Two-line `--json` output makes it cheap to
-    diff against the previous PASS. See
-    `references/ops-folder-validator.md` for the verified recipe.
+    diff against the previous PASS.
 12. **TDD the portable-root claim.** For any ops script that derives
     its location from `__file__`/`BASH_SOURCE`, write a test that runs
-    the script with `KOMMIT_OPS_ROOT=<tempdir>/relocated-ops` and
+    the script with `OPS_ROOT=<tempdir>/relocated-ops` and
     asserts the script wrote to the relocated root, not the real one.
     Verified 2026-08-31: this catches the silent "first-run-with-no-env
     defaults to real path" regression that the lint-only checks miss.
@@ -216,11 +215,3 @@ hand-wave — and the agent must report its exit code:
   canonical source lives in another repo (e.g. `agent-dev-kit`'s
   `plugins/dev-skills/skills/`). Patch the canonical source, not the
   sync shadow, unless the skill is curator-managed locally.
-
-## Files in this skill
-
-- `references/ops-folder-validator.md` — verified recipe for the
-  repo-local `validate_ops.py` script that pairs with the external ANRS
-  audit when scaffolding a non-Git ops/records folder. Use this whenever
-  the target holds secrets, signed PDFs, runtime state, or any
-  folder-specific invariant the generic audit does not know about.
