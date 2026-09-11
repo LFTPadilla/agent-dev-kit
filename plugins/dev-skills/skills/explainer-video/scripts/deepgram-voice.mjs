@@ -11,35 +11,22 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
+import { parseArgs } from 'node:util'
 
-function parseArgs(argv) {
-  const args = {
-    script: 'SCRIPT.md',
-    out: 'audio_meta.json',
-    voice: 'aura-2-orion-en',
-    dir: 'assets/voice',
-    cuesDir: '.hyperframes/word-cues',
-    lang: 'en',
-  }
-  const map = { '--script': 'script', '--out': 'out', '--voice': 'voice', '--dir': 'dir', '--cues-dir': 'cuesDir', '--lang': 'lang' }
-  for (let i = 0; i < argv.length; i += 1) {
-    const key = map[argv[i]]
-    if (!key) continue
-    args[key] = argv[i + 1]
-    i += 1
-  }
-  return args
+const OPTIONS = {
+  script: { type: 'string', default: 'SCRIPT.md' },
+  out: { type: 'string', default: 'audio_meta.json' },
+  voice: { type: 'string', default: 'aura-2-orion-en' },
+  dir: { type: 'string', default: 'assets/voice' },
+  'cues-dir': { type: 'string', default: '.hyperframes/word-cues' },
+  lang: { type: 'string', default: 'en' },
 }
 
 function readKey() {
   if (process.env.DEEPGRAM_API_KEY) return process.env.DEEPGRAM_API_KEY.trim()
   const file = path.join(homedir(), '.config', 'deepgram.env')
-  if (existsSync(file)) {
-    for (const line of readFileSync(file, 'utf8').split('\n')) {
-      const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+?)\s*$/)
-      if (match && match[1] === 'DEEPGRAM_API_KEY') return match[2].replace(/^["']|["']$/g, '')
-    }
-  }
+  const found = existsSync(file) && readFileSync(file, 'utf8').match(/^\s*DEEPGRAM_API_KEY\s*=\s*["']?(.+?)["']?\s*$/m)
+  if (found) return found[1]
   console.error('Deepgram key not found. Set DEEPGRAM_API_KEY, or write DEEPGRAM_API_KEY=... into ~/.config/deepgram.env')
   process.exit(1)
 }
@@ -105,7 +92,8 @@ async function transcribe(key, lang, wav) {
 }
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2))
+  const { values } = parseArgs({ options: OPTIONS })
+  const args = { ...values, cuesDir: values['cues-dir'] }
   const key = readKey()
   const entries = parseScript(args.script)
   mkdirSync(args.dir, { recursive: true })

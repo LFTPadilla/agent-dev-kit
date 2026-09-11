@@ -10,19 +10,6 @@ Turns a written concept into `renders/video.mp4`. Thin wrapper: HyperFrames owns
 the rendering, this skill owns the pipeline order, the video direction, and the
 voice step.
 
-## Location
-
-```
-<skill_folder>/
-├── SKILL.md
-├── references/
-│   ├── pipeline.md          # the 7 steps, exact commands
-│   ├── video-direction.md   # reusable ## Video direction template
-│   └── lessons.md           # dated, append after every video
-└── scripts/
-    └── deepgram-voice.mjs   # TTS + word cues, zero deps
-```
-
 ## When to use
 
 - The explanation is a sequence in time: a race condition, a retry loop, a
