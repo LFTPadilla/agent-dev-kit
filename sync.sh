@@ -26,7 +26,8 @@ KIT="$(cd "$(dirname "$0")/plugins/dev-skills/skills" && pwd)"
 RUNTIMES=()
 
 # 1. Codex
-[[ -d "$HOME/.agents" || -d "$HOME/.agents/skills" ]] && RUNTIMES+=("$HOME/.agents/skills")
+# Codex is the baseline runtime: always sync, even on a fresh HOME.
+RUNTIMES+=("$HOME/.agents/skills")
 
 # 2. Claude Code & profiles
 for candidate in \

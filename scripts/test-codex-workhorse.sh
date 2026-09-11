@@ -32,6 +32,11 @@ for skill in "$ROOT"/plugins/dev-skills/skills/*/; do
   expected=$((expected + 1))
 done
 
+# sync.sh also links the agent-native alias to agent-native-scaffold.
+assert_skill_link "$HOME/.agents/skills/agent-native" \
+  "$ROOT/plugins/dev-skills/skills/agent-native-scaffold" Codex agent-native
+expected=$((expected + 1))
+
 actual="$(find "$HOME/.agents/skills" -mindepth 1 -maxdepth 1 -type l | wc -l)"
 [ "$actual" -eq "$expected" ] || { echo "Codex skill count: $actual/$expected"; exit 1; }
 [ ! -e "$HOME/.codex/skills" ] || { echo "legacy Codex skill directory was created"; exit 1; }
