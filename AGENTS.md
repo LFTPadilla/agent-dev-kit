@@ -50,6 +50,22 @@ External installs: [`docs/external-deps.md`](docs/external-deps.md).
    `receiving-code-review`) during task implementation while keeping GSD
    authoritative for project lifecycle and state.
 
+## Writing style
+
+Prose that a person or another agent must act on follows **Simplified Technical
+English (ASD-STE100)**: active voice, one idea per sentence, one verb per action,
+25 words or fewer, noun clusters of 3 words or fewer, at most one hedge. This
+applies to skill text, `AGENTS.md` files, tool and skill descriptions, error
+messages, eval fixtures, PR descriptions, and commit messages.
+
+Two exemptions. Persuasive or marketing copy is out of scope. Quoted text is
+never rewritten.
+
+Agent-facing text pays twice for ambiguity: the reader has no author to ask, and
+a misread becomes a wrong action rather than a re-read. The
+`writing-simplified-technical-english` skill carries the full rule table and
+worked examples.
+
 ## Hard rules
 
 1. **Do not invent dependencies.** If a tool is not listed in
