@@ -48,6 +48,14 @@ skills:
   diagram-render:
     path: "plugins/dev-skills/skills/diagram-render"
     scope: "visualization"
+  explain-concept:
+    path: "plugins/dev-skills/skills/explain-concept"
+    scope: "visualization"
+    requires: [diagram-render, drawio-skill, explainer-video]
+  explainer-video:
+    path: "plugins/dev-skills/skills/explainer-video"
+    scope: "visualization"
+    requires: [node, ffmpeg]
   herdr:
     path: "plugins/dev-skills/skills/herdr"
     scope: "orchestration"

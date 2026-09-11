@@ -8,7 +8,7 @@ client/personal. This file tracks the triage so migration stays honest.
 end and strip: absolute paths, host IPs, account IDs, internal system names
 (brokers, gateways, bot names), client names, vendored `node_modules`/`.clawhub`.
 
-## Migrated (public, in repo) — 22 skills
+## Migrated (public, in repo) — 24 skills
 
 ### Agentic core
 
@@ -27,6 +27,8 @@ end and strip: absolute paths, host IPs, account IDs, internal system names
 - [x] excel-xlsx        — scrubbed: absolute paths → relative, creator string → generic
 - [x] word-docx         — same scrub as excel
 - [x] diagram-render    — scrubbed paths/example hostnames; needs `sharp` (npm install per host)
+- [x] explain-concept  — umbrella router: picks diagram, draw.io, video, or a file:line trail
+- [x] explainer-video   — narrated faceless explainer video via HyperFrames; needs node/ffmpeg (Deepgram key optional)
 - [x] tex-render        — scrubbed; needs mathjax/svg2img/sharp (npm install per host)
 - [x] knip
 - [x] improve           — vendored (shadcn/improve, MIT)
