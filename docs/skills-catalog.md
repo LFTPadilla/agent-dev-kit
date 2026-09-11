@@ -35,6 +35,8 @@
 | `word-docx` | Build `.docx` from a title + body | "write a Word doc", "make a .docx" |
 | `diagram-render` | Network/infra/flow diagrams → PNG (SVG+sharp) — quick, static | "draw the topology", "render this diagram" |
 | `drawio-skill` | NL → editable `.drawio` diagrams (presets, 10k+ shapes, AI/LLM logos, PNG/SVG/PDF export) — when you want an *editable* diagram, not just a PNG. Needs draw.io desktop CLI. Vendored, MIT. | "make an architecture/ER/UML diagram", "diagram I can edit" |
+| `explain-concept` | Router for explanations: picks a `file:line` trail, a rendered diagram, an editable draw.io file, or a narrated video | "explain this", "how does X work" |
+| `explainer-video` | Narrated faceless explainer video via HyperFrames + TTS → `renders/video.mp4`. Needs node/ffmpeg; Deepgram key optional | "make a video explaining", "explainer video" |
 | `tex-render` | LaTeX math → PNG/SVG (MathJax) | "render this equation as an image" |
 | `image-finalize` | Two-stage image gen (draft → polish) | "generate an image", "refine this image" |
 

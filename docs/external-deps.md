@@ -44,6 +44,9 @@ Per-project usually; install where you use them.
 | **Context7 MCP** | Current upstream library documentation for Hermes and Codex | endpoint `https://mcp.context7.com/mcp`; Codex: `codex mcp add context7 --url https://mcp.context7.com/mcp && codex mcp login context7` |
 | **Playwright MCP** | Browser tools for `live-qa` | `claude mcp add playwright npx '@playwright/mcp@latest'` |
 | **Stagehand** | Self-healing NL browser steps | `npm i @browserbasehq/stagehand` |
+| **HyperFrames** | Video/animation framework used by `explainer-video`; installed on demand, pin nothing | `npx hyperframes` |
+| **Deepgram** | Optional TTS + word timings for `explainer-video`; without a key the skill falls back to HyperFrames' local Kokoro TTS (`npx hyperframes tts`) | API key in `DEEPGRAM_API_KEY`, or `DEEPGRAM_API_KEY=...` in `~/.config/deepgram.env` |
+| **ffmpeg / ffprobe** | Media duration and encoding for `explainer-video` | distro package, e.g. `apt install ffmpeg` |
 | **draw.io desktop CLI** | Export for `drawio-skill` | `brew install drawio` (+ optional `graphviz`) |
 | **D2** | Polished, presentation-ready architecture diagrams | [d2lang.com](https://d2lang.com/tour/install) |
 | **Mermaid CLI** (`mmdc`) | Render maintainable Mermaid sources to SVG/PNG | `npm i -g @mermaid-js/mermaid-cli` |

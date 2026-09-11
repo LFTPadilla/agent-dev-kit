@@ -41,6 +41,25 @@
         "office/xlsx tooling when used"
       ]
     },
+    "explain-concept": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "low",
+      "dependencies": []
+    },
+    "explainer-video": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "low",
+      "dependencies": [
+        "node",
+        "npx hyperframes",
+        "ffmpeg",
+        "DEEPGRAM_API_KEY (optional)"
+      ]
+    },
     "find-skills": {
       "source": "local",
       "license": "MIT",
