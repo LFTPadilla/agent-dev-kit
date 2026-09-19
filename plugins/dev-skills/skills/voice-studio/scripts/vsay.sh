@@ -82,6 +82,7 @@ if ! curl -s --max-time 2 "http://127.0.0.1:${PORT}/health" >/dev/null 2>&1; the
 fi
 
 TMP_AUDIO=$(mktemp /tmp/voicestudio-XXXXXX.wav)
+trap 'rm -f "$TMP_AUDIO"' EXIT
 
 PAYLOAD=$(jq -n \
   --arg model "$MODEL" \
@@ -103,7 +104,11 @@ PAYLOAD=$(jq -n \
   } + (if $steps != "" then {num_step: ($steps | tonumber)} else {} end)
     + (if $cfg != "" then {guidance_scale: ($cfg | tonumber)} else {} end)')
 
-CURL_OUT=$(curl -s -w "%{http_code}:%{time_total}" -X POST "http://127.0.0.1:${PORT}/v1/audio/speech" \
+CONNECT_TIMEOUT="${VOICE_CONNECT_TIMEOUT:-10}"
+SYNTHESIS_TIMEOUT="${VOICE_SYNTHESIS_TIMEOUT:-300}"
+
+CURL_OUT=$(curl -s --connect-timeout "$CONNECT_TIMEOUT" --max-time "$SYNTHESIS_TIMEOUT" \
+  -w "%{http_code}:%{time_total}" -X POST "http://127.0.0.1:${PORT}/v1/audio/speech" \
   -H "Content-Type: application/json" \
   -d "$PAYLOAD" \
   --output "$TMP_AUDIO")
@@ -114,7 +119,6 @@ TIME_TOTAL="${CURL_OUT##*:}"
 if [ "$HTTP_CODE" != "200" ]; then
   echo "Error: VoiceStudio returned HTTP $HTTP_CODE" >&2
   cat "$TMP_AUDIO" >&2
-  rm -f "$TMP_AUDIO"
   exit 1
 fi
 
@@ -127,13 +131,12 @@ if [ -n "$OUTPUT_FILE" ]; then
 fi
 
 if [ "$NO_PLAY" = true ]; then
-  rm -f "$TMP_AUDIO"
   exit 0
 fi
 
 if [ "$PLAY_BG" = true ]; then
+  trap - EXIT
   nohup bash -c "pw-play \"$TMP_AUDIO\" >/dev/null 2>&1; rm -f \"$TMP_AUDIO\"" >/dev/null 2>&1 &
 else
-  trap 'rm -f "$TMP_AUDIO"' EXIT
   pw-play "$TMP_AUDIO"
 fi
