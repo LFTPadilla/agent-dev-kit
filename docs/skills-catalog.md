@@ -39,6 +39,7 @@
 | `explainer-video` | Narrated faceless explainer video via HyperFrames + TTS → `renders/video.mp4`. Needs node/ffmpeg; Deepgram key optional | "make a video explaining", "explainer video" |
 | `tex-render` | LaTeX math → PNG/SVG (MathJax) | "render this equation as an image" |
 | `image-finalize` | Two-stage image gen (draft → polish) | "generate an image", "refine this image" |
+| `voice-studio` | Expressive local speech synthesis and audio playback via VoiceStudio + ROCm GPU. Supports 18 non-verbal tokens (`[laughter]`, `[breathing]`, `[sigh]`), background async playback (`vsay -b`), and custom voice profiles. | "voice synthesis", "tts", "speech", "say aloud", "voice response" |
 
 ### Code quality
 
