@@ -200,7 +200,7 @@ When delegating Claude or Cursor work from this orchestrator, Felipe wants the
 session to be **watchable** in a specific Herdr location. Anchor every
 delegated task to:
 
-- **Workspace:** `kommit`
+- **Workspace:** `acme`
 - **Window:** `4`
 - **Position:** right side
 
@@ -216,7 +216,7 @@ Discovery helper to find the anchor pane:
 
 ```bash
 herdr agent list | jq -r '.result.agents[]
-  | select(.workspace=="kommit")
+  | select(.workspace=="acme")
   | "\(.pane_id)  w\(.window_index)  \(.agent_status)  \(.agent)  \(.cwd)"'
 ```
 
