@@ -8,7 +8,7 @@ don't vendor. Flow map: [`how-it-fits-together.md`](how-it-fits-together.md).
 | Tool | What it does | Install |
 |---|---|---|
 | **GSD** (`get-shit-done-cc`) | Spec-driven plan → execute → verify; installs the Hermes skill pack and `gsd-sdk` | `npm i -g get-shit-done-cc && get-shit-done-cc --hermes --global` |
-| **Graphify** (`graphifyy`) | Local AST code graph for architecture, call paths, and impact analysis; Personal Dev Tutor uses the reviewed code-only release | `uv tool install graphifyy==0.9.25` (the profile installer installs platform skills) |
+| **Graphify** (`graphifyy`) | Local AST code graph for architecture, call paths, and impact analysis | `uv tool install graphifyy==0.9.25` |
 | **pi-gsd** | Optional Pi-native GSD helper/runtime | `npm i -g pi-gsd` |
 | **caveman** | Compressed agent talk | Codex: `./scripts/install-codex-workhorse.sh`; Claude: `/plugin marketplace add JuliusBrussee/caveman` then `/plugin install caveman@caveman`; Hermes: `./scripts/install-hermes-workhorse.sh --all-profiles` |
 | **ponytail** | Minimal diffs / YAGNI build mode | Codex: `./scripts/install-codex-workhorse.sh`; Claude: `/plugin marketplace add DietrichGebert/ponytail` then `/plugin install ponytail@ponytail`; Hermes: `./scripts/install-hermes-workhorse.sh --all-profiles` |
@@ -36,7 +36,7 @@ Per-project usually; install where you use them.
 |---|---|---|
 | **knip** | Dead code / unused exports | `npx knip` |
 | **semgrep** | Deterministic SAST | `pipx install semgrep` |
-| **bubblewrap** (`bwrap`, Linux) | Offline, empty-home verification boundary used by Personal Dev Tutor | distro package, e.g. `apt install bubblewrap`; requires unprivileged user namespaces |
+| **bubblewrap** (`bwrap`, Linux) | Offline, empty-home verification boundary used by sandbox test assertions | distro package, e.g. `apt install bubblewrap`; requires unprivileged user namespaces |
 | **lefthook** | Parallel git hooks | `npm i -D lefthook && npx lefthook install` |
 | **gitleaks** | Secret scanning | `brew install gitleaks` or [releases](https://github.com/gitleaks/gitleaks) |
 | **pip-audit** | Python dependency CVEs | `pipx install pip-audit` |
@@ -62,8 +62,8 @@ When Hermes is present, bootstrap additionally installs the pinned caveman and
 ponytail skills and links them into every existing Hermes profile. Each managed
 Hermes profile installer repeats that step for profiles created later.
 
-Graphify is an Apache-2.0 upstream dependency and is not vendored. Personal Dev
-Tutor requires the reviewed version 0.9.25 and runs `--code-only` by default. Semantic
+Graphify is an Apache-2.0 upstream dependency and is not vendored. Use the
+reviewed version 0.9.25 and run `--code-only` by default. Semantic
 LLM extraction and document/media/URL ingestion remain opt-in because they can
 cross a provider boundary. Context7 requests should contain library questions,
 not project source, secrets, or private documents.

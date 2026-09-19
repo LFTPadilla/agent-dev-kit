@@ -8,13 +8,11 @@ client/personal. This file tracks the triage so migration stays honest.
 end and strip: absolute paths, host IPs, account IDs, internal system names
 (brokers, gateways, bot names), client names, vendored `node_modules`/`.clawhub`.
 
-## Migrated (public, in repo) — 24 skills
+## Migrated (public, in repo) — 22 skills
 
 ### Agentic core
 
 - [x] orchestrate
-- [x] ai-workflow-orchestrator — Agent Tutor Orchestrator playbook; keep employer-free
-- [x] personal-development-mentor — flagship GSD + Codex tutor-orchestrator; employer-neutral
 
 ### Utilities
 
@@ -77,8 +75,8 @@ be promoted at all until upstream adds a license. No current entry is
 `UNLICENSED-UPSTREAM`.
 
 **Not adopted as runtime:** firstmate (compare in
-[docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md); Personal Dev Tutor is the
-flagship learning orchestrator, while Agent Tutor Orchestrator remains the strict pure-orchestrator alternative).
+[docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md); Agent Tutor Orchestrator remains the
+strict pure-orchestrator alternative, and `orchestrate` covers lean native delegation).
 
 ## Held back — need a rewrite, not a scrub
 

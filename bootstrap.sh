@@ -40,7 +40,7 @@ cat <<'EOF'
     # do not copy that pack into this repo tree
 
   TOON (agent-facing structured output): https://toonformat.dev
-  Graphify (Personal Dev Tutor installs this automatically when uv is available):
+  Graphify (optional AST code graph; install manually when uv is available):
     uv tool install graphifyy==0.9.25
     graphify install --platform hermes
     graphify install --platform codex

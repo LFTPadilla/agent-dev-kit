@@ -66,6 +66,10 @@ TASK_TYPE_DEFAULTS = {
 READ_ONLY_TOOLS = "read,grep,find,ls"
 WRITE_TOOLS = "read,grep,find,ls,bash,edit,write"
 
+# Worker contract mode (--task-json): task_id doubles as the worktree slug.
+TASK_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+CONTRACT_STATUSES = ("done", "blocked", "failed")
+
 
 def load_json(path: Path) -> dict[str, Any]:
     try:
@@ -166,9 +170,30 @@ def setup_worktree(repo_root: Path, slug: str) -> Path:
     return worktree_dir
 
 
-def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: str, allow_write: bool) -> str:
+def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: str, allow_write: bool, contract: dict[str, Any] | None = None) -> str:
     mode = "WRITE_ALLOWED" if profile["mode"] == "write" and allow_write else "READ_ONLY"
     mode_rule = "- Do not modify files or mutate the workspace." if mode == "READ_ONLY" else "- Keep edits tightly scoped to the task and report every changed file."
+
+    # Contract mode: the return format (result.json) already ships inside the task block.
+    if contract:
+        return textwrap.dedent(f"""
+            You are a bounded worker delegated by the primary orchestrator.
+
+            Working directory: {cwd}
+            Profile: {profile_name}
+            Harness: {profile['harness']}
+            Model: {profile['model']}
+            Permission mode: {mode}
+
+            Task:
+            {task.strip()}
+
+            Rules:
+            - Read project instructions (REGISTRY.yaml / AGENTS.md) before acting.
+            {mode_rule}
+            - Do not reveal secrets, push commits, deploy, or modify cloud/production systems.
+            - If blocked, explain the blocker and stop instead of broadening scope.
+        """).strip()
 
     return textwrap.dedent(f"""
         You are a bounded worker delegated by the primary orchestrator.
@@ -204,6 +229,113 @@ def build_prompt(profile_name: str, profile: dict[str, Any], cwd: Path, task: st
           - "Next suggested step"
         ```
     """).strip()
+
+
+def load_task_contract(path: Path) -> dict[str, Any]:
+    """Load and validate a task.json worker contract (stdlib only)."""
+    if not path.is_file():
+        raise SystemExit(f"Task contract not found: {path}")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Invalid task contract {path}: not valid JSON (line {exc.lineno}, column {exc.colno}).")
+
+    def fail(msg: str) -> None:
+        raise SystemExit(f"Invalid task contract {path}: {msg}")
+
+    if not isinstance(data, dict):
+        fail("top-level value must be a JSON object.")
+    for field in ("task_id", "objective", "scope", "acceptance"):
+        if field not in data:
+            fail(f"missing required field {field!r}.")
+    if not isinstance(data["task_id"], str) or not TASK_ID_RE.fullmatch(data["task_id"]):
+        fail("field 'task_id' must be a string matching ^[A-Za-z0-9_-]+$ (it doubles as the worktree slug).")
+    if not isinstance(data["objective"], str) or not data["objective"].strip():
+        fail("field 'objective' must be a non-empty string.")
+    for field in ("scope", "acceptance"):
+        value = data[field]
+        if not isinstance(value, list) or not value or not all(isinstance(item, str) and item.strip() for item in value):
+            fail(f"field {field!r} must be a non-empty array of non-empty strings.")
+    constraints = data.get("constraints") or []
+    if not isinstance(constraints, list) or not all(isinstance(item, str) and item.strip() for item in constraints):
+        fail("field 'constraints' must be an array of non-empty strings.")
+    budget = data.get("budget") or {}
+    if not isinstance(budget, dict):
+        fail("field 'budget' must be an object.")
+    timeout_min = budget.get("timeout_min", 15)
+    if isinstance(timeout_min, bool) or not isinstance(timeout_min, int) or timeout_min < 1:
+        fail("field 'budget.timeout_min' must be an integer >= 1.")
+    feedback = data.get("feedback")
+    if feedback is not None and not isinstance(feedback, str):
+        fail("field 'feedback' must be a string or null.")
+    return {**data, "constraints": constraints, "budget": {"timeout_min": timeout_min}}
+
+
+def contract_task_block(t: dict[str, Any]) -> str:
+    """Render the fixed worker prompt from a validated task.json."""
+    constraints = "; ".join(t["constraints"])
+    constraint_line = f"{constraints}; " if constraints else ""
+    feedback = f"\n\nFEEDBACK from previous attempt:\n{t['feedback'].strip()}" if t.get("feedback") else ""
+    return textwrap.dedent(f"""
+        TASK: {t['objective'].strip()}
+        SCOPE: {', '.join(t['scope'])}
+        CONSTRAINTS: {constraint_line}do not git commit or push; do not leave the worktree.
+        VERIFICATION: run from worktree root and ensure exit 0: {' && '.join(t['acceptance'])}
+        FORMAT: write `result.json` at worktree root with {{"task_id": "{t['task_id']}", "status": "done|blocked|failed", "notes": "<summary <=5 lines>", "blocker": "<required if status != done>"}} and end with a summary of <=10 lines.{feedback}
+    """).strip()
+
+
+def validate_result_contract(data: Any, task_id: str) -> tuple[str | None, str]:
+    """Validate the worker's result.json. Returns (status, detail); status is None when invalid."""
+    if not isinstance(data, dict):
+        return None, "result.json is not a JSON object."
+    for field in ("task_id", "status", "notes"):
+        if field not in data:
+            return None, f"result.json is missing required field {field!r}."
+    status = data.get("status")
+    if status not in CONTRACT_STATUSES:
+        return None, f"result.json field 'status' must be one of {', '.join(CONTRACT_STATUSES)} (got {status!r})."
+    if data.get("task_id") != task_id:
+        return None, f"result.json field 'task_id' is {data.get('task_id')!r}, expected {task_id!r}."
+    notes = data.get("notes")
+    if not isinstance(notes, str):
+        return None, "result.json field 'notes' must be a string."
+    blocker = data.get("blocker")
+    if status != "done" and (not isinstance(blocker, str) or not blocker.strip()):
+        return None, f"result.json field 'blocker' must be a non-empty string when status is {status!r}."
+    if status == "done" and blocker is not None:
+        return None, "result.json field 'blocker' must be null when status is 'done'."
+    return status, "ok"
+
+
+def check_worker_result(worktree: Path, task_id: str) -> tuple[str | None, str]:
+    """Read and validate result.json at the root of the target worktree."""
+    result_path = worktree / "result.json"
+    if not result_path.is_file():
+        return "failed", f"worker did not write {result_path}."
+    try:
+        data = json.loads(result_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return "failed", f"result.json is not valid JSON ({exc})."
+    return validate_result_contract(data, task_id)
+
+
+def append_event(root: Path, task_id: str, event: str, harness: str, status: str | None) -> None:
+    """Append one JSON line to the orchestrator-side log .agent-runs/orchestration/events.jsonl (gitignored)."""
+    record = {
+        "ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "task_id": task_id,
+        "event": event,
+        "harness": harness,
+        "status": status,
+    }
+    path = root / ".agent-runs/orchestration/events.jsonl"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record) + "\n")
+    except OSError as exc:
+        print(f"[multi-harness] warning: could not append {event!r} event to {path}: {exc}", file=sys.stderr)
 
 
 def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bool, skip_permissions: bool) -> list[str]:
@@ -368,6 +500,7 @@ def main() -> int:
     parser.add_argument("--task-type", choices=sorted(TASK_TYPE_DEFAULTS), help="Routing hint for --profile auto.")
     parser.add_argument("--task", help="Delegated task text.")
     parser.add_argument("--task-file", help="Read delegated task text from file.")
+    parser.add_argument("--task-json", help="Load a validated task.json worker contract (contract mode) instead of free text.")
     parser.add_argument("--cwd", default=os.getcwd(), help="Working directory for the delegated harness.")
     parser.add_argument("--worktree", help="Isolate task in a dedicated git worktree under .worktrees/<slug>.")
     parser.add_argument("--timeout", type=int, help="Override timeout in seconds.")
@@ -394,18 +527,35 @@ def main() -> int:
     allow_write = args.allow_write or skip_perms
     profile_name, profile = resolve_profile(args)
 
+    contract: dict[str, Any] | None = None
+    if args.task_json:
+        if args.task or args.task_file:
+            raise SystemExit("--task-json cannot be combined with --task or --task-file.")
+        if not allow_write or profile["mode"] != "write":
+            raise SystemExit("Contract mode requires a write-capable profile with --allow-write: the worker must write result.json in the worktree.")
+        contract = load_task_contract(Path(args.task_json).expanduser().resolve())
+        if args.worktree and args.worktree != contract["task_id"]:
+            raise SystemExit(f"--worktree {args.worktree!r} does not match task_id {contract['task_id']!r} from the task contract.")
+        if not args.timeout:
+            profile["timeout"] = contract["budget"]["timeout_min"] * 60
+    harness_label = f"{profile['harness']}:{profile.get('pi_profile', profile_name)}"
+
     cwd = Path(args.cwd).expanduser().resolve()
     if not cwd.exists():
         raise SystemExit(f"Working directory does not exist: {cwd}")
-    if args.worktree:
-        cwd = setup_worktree(cwd, args.worktree)
+    orchestrator_root = cwd
+    if args.worktree or contract:
+        cwd = setup_worktree(cwd, args.worktree or contract["task_id"])
 
     # Read task
-    task = args.task or (Path(args.task_file).read_text(encoding="utf-8") if args.task_file else None) or (sys.stdin.read() if not sys.stdin.isatty() else None)
-    if not task or not task.strip():
-        raise SystemExit("Provide --task, --task-file, or stdin.")
+    if contract:
+        task = contract_task_block(contract)
+    else:
+        task = args.task or (Path(args.task_file).read_text(encoding="utf-8") if args.task_file else None) or (sys.stdin.read() if not sys.stdin.isatty() else None)
+        if not task or not task.strip():
+            raise SystemExit("Provide --task, --task-file, or stdin.")
 
-    prompt = build_prompt(profile_name, profile, cwd, task, allow_write)
+    prompt = build_prompt(profile_name, profile, cwd, task, allow_write, contract=contract)
     cmd = command_for(profile, cwd, prompt, allow_write, skip_perms)
 
     display_cmd = [arg if arg != prompt else "<prompt>" for arg in cmd]
@@ -413,6 +563,8 @@ def main() -> int:
 
     if args.dry_run:
         print("DRY RUN\nCommand:", " ".join(display_cmd))
+        if contract:
+            print("\nPrompt:\n" + prompt)
         if save_path:
             save_path.mkdir(parents=True, exist_ok=True)
             (save_path / "prompt.md").write_text(prompt + "\n", encoding="utf-8")
@@ -420,26 +572,53 @@ def main() -> int:
             print("Run dir:", save_path)
         return 0
 
+    if contract:
+        result_path = cwd / "result.json"
+        try:
+            result_path.unlink()
+        except FileNotFoundError:
+            pass
+        append_event(orchestrator_root, contract["task_id"], "dispatch", harness_label, None)
+
     try:
         proc = subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True, timeout=int(profile["timeout"]), check=False)
     except FileNotFoundError:
+        if contract:
+            append_event(orchestrator_root, contract["task_id"], "result", harness_label, "failed")
         print(f"Error: Harness executable '{cmd[0]}' not found. Run --diagnose to check installed harnesses.", file=sys.stderr)
         return 127
     except subprocess.TimeoutExpired as exc:
+        if contract:
+            append_event(orchestrator_root, contract["task_id"], "result", harness_label, "failed")
         print(f"Timed out after {profile['timeout']}s: {exc}", file=sys.stderr)
         return 124
+
+    # Contract mode: validate result.json at the worktree root and log the outcome.
+    result_status: str | None = None
+    result_detail = ""
+    if contract:
+        result_status, result_detail = check_worker_result(cwd, contract["task_id"])
+        append_event(orchestrator_root, contract["task_id"], "result", harness_label, result_status or "failed")
 
     if save_path:
         save_path.mkdir(parents=True, exist_ok=True)
         (save_path / "prompt.md").write_text(prompt + "\n", encoding="utf-8")
         (save_path / "stdout.md").write_text(proc.stdout or "", encoding="utf-8")
         (save_path / "stderr.txt").write_text(proc.stderr or "", encoding="utf-8")
-        (save_path / "meta.json").write_text(json.dumps({"profile": profile_name, "cwd": str(cwd), "command": display_cmd, "returncode": proc.returncode}, indent=2) + "\n", encoding="utf-8")
+        meta: dict[str, Any] = {"profile": profile_name, "cwd": str(cwd), "command": display_cmd, "returncode": proc.returncode}
+        if contract:
+            meta["task_id"] = contract["task_id"]
+            meta["status"] = result_status or "failed"
+        (save_path / "meta.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
         print(f"[multi-harness] run dir: {save_path}", file=sys.stderr)
 
     if proc.stderr:
         print(proc.stderr, file=sys.stderr, end="")
     print(proc.stdout, end="")
+
+    if contract and result_status != "done":
+        print(f"[multi-harness] contract check failed: {result_detail}", file=sys.stderr)
+        return proc.returncode or 1
     return proc.returncode
 
 

@@ -22,6 +22,7 @@ __pycache__/
 .pi/
 .kube/
 private-overlays/
+docs/orchestration-research/
 
 .agent-runs/
 

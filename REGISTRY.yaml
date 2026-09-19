@@ -1,7 +1,7 @@
 # REGISTRY.yaml — Canonical Machine-Readable Catalog for agent-dev-kit
 # Standard: ANRS-1.0 (Agent-Native Repository Specification)
 version: "1.0"
-updated: "2026-08-22"
+updated: "2026-09-13"
 
 subsystems:
   dev-skills:
@@ -18,11 +18,6 @@ profiles:
     path: "profiles/agent-tutor-orchestrator.yml"
     role: "Strict orchestrator and liaison"
 
-routing:
-  model-routing:
-    path: "config/model-routing.yaml"
-    description: "Single Source of Truth (SSoT) for model routing, provider tiers, and harness delegation capabilities"
-
 skills:
   agent-native-scaffold:
     path: "plugins/dev-skills/skills/agent-native-scaffold"
@@ -31,13 +26,6 @@ skills:
   orchestrate:
     path: "plugins/dev-skills/skills/orchestrate"
     scope: "orchestration"
-  orchestrate-lite:
-    path: "plugins/dev-skills/skills/orchestrate-lite"
-    scope: "orchestration"
-  tech-lead:
-    path: "plugins/dev-skills/skills/tech-lead"
-    scope: "orchestration-and-mentorship"
-    requires: [tmux, gsd]
   multi-harness:
     path: "overnight-task-kit/skills/multi-harness"
     scope: "cross-harness"
@@ -79,3 +67,7 @@ tools:
   overnight-runner:
     entrypoint: "overnight-task-kit/scripts/overnight-runner.mjs"
     commands: [init]
+  delegate:
+    entrypoint: "overnight-task-kit/skills/multi-harness/scripts/delegate.py"
+    description: "Multi-harness dispatcher with worker contract mode (--task-json: task.json in, result.json validated, events.jsonl appended)"
+    commands: ["--task", "--task-file", "--task-json", "--worktree", "--dry-run", "--diagnose", "--list-profiles"]

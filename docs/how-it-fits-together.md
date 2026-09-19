@@ -40,9 +40,9 @@ GSD (plan / execute / verify)
   → gnhf for unsupervised multi-hour work
 ```
 
-Use **Personal Dev Tutor** for personal, portfolio, interview, and learning
-projects where GSD should ship verified increments without hiding the reasoning
-from the developer. Use **Agent Tutor Orchestrator** when you specifically need
+Use **`orchestrate`** for lean native delegation: self-contained briefs, host
+subagents, and independent verification on disk. Use **Agent Tutor
+Orchestrator** when you specifically need
 a strict liaison that never edits and routes to Claude tmux panes or Hermes
 Kanban. Compare the strict profile with firstmate in
 [`agent-tutor-vs-firstmate.md`](agent-tutor-vs-firstmate.md).

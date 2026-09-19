@@ -12,15 +12,13 @@
    [external-deps.md](external-deps.md) and
    [how-it-fits-together.md](how-it-fits-together.md).
 
-## Skills (27)
+## Skills (28)
 
 ### Orchestration (agentic core)
 
 | Skill | Layer | Adds | Triggers on |
 |---|---|---|---|
-| `orchestrate` | In-Session Subagents | Explicit planner/orchestrator mode: decompose, route to workers, verify independently. Keeps the expensive model on judgment. | "$orchestrate", "orchestrate", "delegate to subagents", "use cheaper models", "route through GSD with subagents" |
-| `orchestrate-lite` | Native Subagents | Lean harness-native orchestrator: zero-touch code ban, strictly delegates to host workers, verifies on disk. No tmux or external model routing. | "$orchestrate-lite", "orchestrate-lite", "orchestrate --lite", "lean orchestrator", "native workers only" |
-| `tech-lead` | Tech Lead & Mentorship | Unified orchestrator & mentor: multi-agent tmux/Kanban coordination, cognitive-debt tracking (`learning` mode), and pure autonomous lane management (`autonomous` mode). | "$tech-lead", "tech lead", personal/learning projects, multi-agent tmux workflows |
+| `orchestrate` | Native Subagents | Lean native orchestrator: zero-touch code ban, self-contained briefs (implementation + read-only), strictly delegates to host workers, verifies on disk. Cap of 3 parallel writers; no tmux or model routing. | "$orchestrate", "orchestrate", "delegate to subagents", "orchestrate this", "use workers" |
 | `herdr` | Multi-Pane Workspaces | Agent-native terminal multiplexer: workspaces, tabs, panes, and agent lifecycle management (idle, working, blocked, done). | "herdr", running inside Herdr (HERDR_ENV=1), inspecting/controlling Herdr agents or panes |
 | `tmux-delegation` | Out-of-Process Panes | Multi-harness tmux delegation (Codex, Claude Code, Pi, OpenCode, cursor-agent): pane allocation, reliable multiline buffer injection, completion detection, disk audit. | "tmux delegation", delegating tasks to agents running in tmux panes across multiple harnesses |
 | `multi-harness` | Cross-Harness Delegation | Delegate bounded subtasks to other local harnesses (Pi, OpenCode, Codex CLI, Claude Code CLI, DHS) with prompt isolation and output contracts. | cross-harness requests, comparing harnesses, external-only runtimes |
@@ -113,7 +111,7 @@
 
 ## A typical session
 
-1. Plan with GSD (`/gsd:plan-phase` → execute → verify), optionally coordinated via Tech Lead.
+1. Plan with GSD (`/gsd:plan-phase` → execute → verify), optionally coordinated via `orchestrate`.
 2. Use a bounded Codex lane and learning checkpoint for unfamiliar or consequential concepts.
 3. Isolate parallel agents with treehouse when fan-out is needed.
 4. `/knip` + `/semgrep` (or the lefthook gate) before committing.

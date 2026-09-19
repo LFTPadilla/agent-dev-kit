@@ -16,7 +16,7 @@ const privatePatterns = [
 const yamlExtensions = ['.yml', '.yaml']
 const profileSkillListKeys = ['include_skills', 'codex_worker_skills']
 const privacyScanExtensions = ['.md', '.json', '.yml', '.yaml', '.mjs', '.js', '.ts', '.tsx', '.sh']
-const ignoreDirs = new Set(['.git', '.agents', 'node_modules', '.pi', '.venv', 'venv', 'playwright-report', 'test-results'])
+const ignoreDirs = new Set(['.git', '.agents', '.worktrees', 'node_modules', '.pi', '.venv', 'venv', 'playwright-report', 'test-results'])
 
 function color(code, text) {
   return process.stdout.isTTY ? `\u001b[${code}m${text}\u001b[0m` : text

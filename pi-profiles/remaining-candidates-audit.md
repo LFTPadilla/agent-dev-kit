@@ -2,7 +2,7 @@
 
 This document records the batch-3 exact-artifact audits and the disposition of
 the highest-ranked remaining candidates. It is not installation guidance. No Pi
-package below is enabled by agent-dev-kit or Personal Dev Tutor.
+package below is enabled by agent-dev-kit.
 
 Architecture gate: GSD owns lifecycle state; Hermes owns context, teaching,
 routing, and independent verification; Codex is one bounded implementation lane;
@@ -118,7 +118,7 @@ value does not justify
 its context authority, provider disclosure, retention, permissions, and
 dependency surface.
 
-**Decision:** reject for Personal Dev Tutor and do not extract another pattern;
+**Decision:** reject and do not extract another pattern;
 batch 2 already implemented the narrower deterministic one.
 
 Disposable evidence remains at `/tmp/pi-distill-audit/` for this run.

@@ -37,10 +37,9 @@ External installs: [`docs/external-deps.md`](docs/external-deps.md).
    a human-facing config file, or an existing schema that already requires JSON.
 6. Install extra skills via **vercel-labs/skills** (`npx skills`); reference
    lifecycle packs from **addyosmani/agent-skills** without vendoring them here.
-7. Prefer **Tech Lead** (`$tech-lead`) as the unified orchestrator and
-   mentor for multi-agent workflows, GSD execution, and learning projects.
-   Operates across `learning` (pedagogical tutor), `flow` (balanced), and
-   `autonomous` (pure orchestration) modes.
+7. Prefer **`orchestrate`** as the unified orchestrator: plan, decompose,
+   delegate every bounded unit to native subagents, and verify independently
+   on disk. See [`docs/skills-catalog.md`](docs/skills-catalog.md).
 8. Prefer **Agent-Native Repository Architecture (ANRS-1.0)**: Use lightweight
    Hub-and-Spoke `AGENTS.md`, declarative `REGISTRY.yaml`, and progressive
    disclosure. See [`docs/agent-native-architecture.md`](docs/agent-native-architecture.md)
@@ -93,7 +92,7 @@ worked examples.
 | Declarative catalog (ANRS-1.0) | [`REGISTRY.yaml`](REGISTRY.yaml) |
 | Dev-Skills Subsystem | [`plugins/dev-skills/AGENTS.md`](plugins/dev-skills/AGENTS.md) |
 | Overnight Task Kit Subsystem | [`overnight-task-kit/AGENTS.md`](overnight-task-kit/AGENTS.md) |
-| Skill catalog (all 27) | [`docs/skills-catalog.md`](docs/skills-catalog.md) |
+| Skill catalog (all 25) | [`docs/skills-catalog.md`](docs/skills-catalog.md) |
 | Provenance / license / risk | [`skill-provenance.json`](skill-provenance.json) |
 | Curation decisions | [`CURATION.md`](CURATION.md) |
 | Design thesis | [`WRITEUP.md`](WRITEUP.md) |

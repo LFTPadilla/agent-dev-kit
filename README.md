@@ -5,7 +5,7 @@
 ![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin%20marketplace-8A2BE2)
 ![Codex](https://img.shields.io/badge/Codex-compatible-000000)
 ![Hermes](https://img.shields.io/badge/Hermes-profiles-4B0082)
-![Skills](https://img.shields.io/badge/skills-22-4f46e5)
+![Skills](https://img.shields.io/badge/skills-25-4f46e5)
 ![Profiles](https://img.shields.io/badge/profiles-7-f59e0b)
 ![Evals](https://img.shields.io/badge/evals-12%20planted%20%C2%B7%203%20controls-10b981)
 [![Live Website](https://img.shields.io/badge/live--demo-agent--dev--kit.devpipe.net-00d2ff)](https://agent-dev-kit.devpipe.net/)
@@ -36,8 +36,6 @@ npm run doctor          # what's wired, what's missing
 
 `bootstrap.sh` prints the copy-paste `/plugin install` block for Claude Code.
 No Hermes, no private overlay, no credentials assumed.
-Deeper tiers (Personal Dev Tutor, strict orchestrator):
-[install](#install--cold-clone-tiers).
 
 ## Does it actually catch bugs?
 
@@ -63,7 +61,7 @@ planted bugs are clearer than production bugs* — that caveat is written down i
 
 The contribution isn't the borrowed pieces (caveman, ponytail, GSD are credited)
 — it's the architecture they sit in, the original parts (adversarial PR review,
-layered live-QA, prompt-injection defense, Tech Lead mentorship), and the
+layered live-QA, prompt-injection defense), and the
 judgment about what to leave out.
 
 Compose this public kit with a **private org skills overlay** outside this repo
@@ -74,28 +72,28 @@ stays generic.
 
 ## What this demonstrates
 
-1. **Agent orchestration** — Tech Lead as the unified orchestrator and mentor; strict Agent Tutor Orchestrator as an alternative; multi-runtime skill sync.
+1. **Agent orchestration** — `orchestrate` as the lean native orchestrator; strict Agent Tutor Orchestrator as an alternative; multi-runtime skill sync.
 2. **Measuring AI systems** — eval set with planted bugs + clean control, scored on recall *and* false-positive rate.
 3. **Designing for the real failure mode** — LLM reviewers' confident false positives, attacked with a pre-report gate + refuter panel.
 4. **Day-to-day ship discipline** — no-mistakes gate, treehouse isolation, gnhf overnight, AXI/TOON contracts.
 5. **Security awareness** — prompt-injection defense on every agent that reads untrusted input (diffs, web pages).
 6. **Senior judgment** — honest attribution ([ATTRIBUTION.md](ATTRIBUTION.md)) and deliberate curation ([CURATION.md](CURATION.md)).
 
-## Flagship — Tech Lead
+## Flagship — Orchestrate
 
-Unified orchestrator and mentor: multi-agent tmux and Kanban coordination,
-proactive local Graphify code graphs, current Context7 library docs, independent
-verification, and understanding checkpoints across `learning`, `flow`, and `autonomous` modes.
+Lean native orchestrator: plan, decompose, and delegate every bounded unit to
+the host's native subagents behind self-contained briefs, then verify
+independently on disk (worktree isolation, zero-trust gate, TOON returns).
 
-Full detail: [`plugins/dev-skills/skills/tech-lead/SKILL.md`](plugins/dev-skills/skills/tech-lead/SKILL.md).
+Full detail: [`plugins/dev-skills/skills/orchestrate/SKILL.md`](plugins/dev-skills/skills/orchestrate/SKILL.md).
 
 ## Agentic core
 
 | Concern | Piece | Doc |
 |---|---|---|
-| Flagship orchestrator | Tech Lead: multi-agent coordination + learning gates | [tech-lead](plugins/dev-skills/skills/tech-lead/SKILL.md) |
+| Orchestrator | `orchestrate`: decompose, delegate to native workers, verify on disk | [orchestrate](plugins/dev-skills/skills/orchestrate/SKILL.md) |
 | Talk / build / flow | caveman, ponytail, GSD | [how-it-fits-together.md](docs/how-it-fits-together.md) |
-| Capabilities | `orchestrate`, `tech-lead`, `/pr-review`, evals | [skills-catalog.md](docs/skills-catalog.md) |
+| Capabilities | `orchestrate`, `/pr-review`, evals | [skills-catalog.md](docs/skills-catalog.md) |
 | Ship gate | [no-mistakes](https://github.com/kunchenguid/no-mistakes) | [external-deps.md](docs/external-deps.md) |
 | Worktree isolation | [treehouse](https://github.com/kunchenguid/treehouse) | [external-deps.md](docs/external-deps.md) |
 | Overnight | [gnhf](https://github.com/kunchenguid/gnhf) + `overnight-task-kit/` | [external-deps.md](docs/external-deps.md) |
@@ -137,7 +135,7 @@ A fresh clone does **not** assume Hermes or any private overlay. Pick a tier:
 
 | Tier | You get | Requires |
 |---|---|---|
-| **A — Kit only** | 27 skills, `/pr-review`, evals | Node/npm |
+| **A — Kit only** | 25 skills, `/pr-review`, evals | Node/npm |
 | **B — Agent Tutor Orchestrator** | Pure orchestrator that coordinates via tmux / Kanban | Hermes |
 | **C — Private overlay** | Org skills linked from outside this tree | optional |
 

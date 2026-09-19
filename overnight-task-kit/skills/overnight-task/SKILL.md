@@ -7,9 +7,9 @@ description: |
   execution, keep a journal and checkpoints, produce a final report, and only run
   shutdown or production steps when explicitly authorized in the same session.
 created: '2026-06-17'
-updated: '2026-06-30'
+updated: '2026-09-16'
 status: canonical
-version: '3.0'
+version: '3.1'
 ---
 
 # overnight-task
@@ -69,8 +69,11 @@ Then use the generated files:
 5. **Verify:** run tests, linters, smoke checks, or manual checks appropriate to
    the task.
 6. **Report:** fill `REPORT.md` and include plan deviations.
-7. **Shutdown handoff:** if shutdown was authorized, follow the private overlay's
-   shutdown procedure. If none exists, stop and report that shutdown was skipped.
+7. **Shutdown handoff:** only if the user authorized a shutdown in this session.
+   Follow `references/shutdown-sequence.md`: run the exact command they gave,
+   never fire while the run still has work of its own, and decide "finished"
+   from agent *activity*, not from process existence. Record the evidence from
+   that reference in the final report.
 
 ## Output Contract
 
