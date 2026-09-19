@@ -68,9 +68,12 @@ $ARGUMENTS (the user's overnight brief, if provided; otherwise interpret session
 
 2. Read all 8 references in ~/programming/agent-dev-kit/overnight-task-kit/skills/overnight-task/references/.
 
-3. If the user named a shutdown target (e.g., "apaga pve-main", "apaga el PC"), check
+3. If the user named a shutdown target (e.g., "power off host", "shutdown the PC"), check
    `hostname` and `ip -4 addr show` to determine whether the agent is running on that
    target. If YES, abort the shutdown and flag; the agent would kill its own session.
+   If the agent runs *inside* the target (this VM runs on the host), an immediate
+   shutdown kills the run too: fire only after the work is done, or from a detached
+   watcher (`systemd-run --user`) that outlives the session.
 
 4. **Phase 0 — Plan + Research** (NEW in v2.0, MANDATORY):
    a. Spawn 3 parallel research subagents (per references/planning-protocol.md §"Phase 0.1"):
@@ -99,11 +102,14 @@ $ARGUMENTS (the user's overnight brief, if provided; otherwise interpret session
    - Include the pre-execution self-test results
 
 7. **Phase 3 — Shutdown** (per references/shutdown-sequence.md):
-   - Only if the target is NOT the agent's host
-   - Graceful VM shutdown first
-   - wall broadcast
-   - shutdown -h now
-   - Report the result in the final report
+   - Only if the user authorized it in this session, and run their exact command.
+   - Never fire while the run still has work: shutting down the target host kills this VM
+     and the run with it.
+   - Decide "finished" from CPU activity of the agent processes and their
+     descendants, never from process existence — idle agent TUIs live for days.
+   - Graceful VM shutdown first, wall broadcast, then
+     `ssh <user>@<target-host> "shutdown now"`; log the command and its exit status.
+   - Report the result in the final report.
 
 8. Final one-paragraph summary to the user linking to the report.
 </process>
