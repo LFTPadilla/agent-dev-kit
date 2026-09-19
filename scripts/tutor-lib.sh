@@ -12,8 +12,7 @@ TUTOR_LIB_DIR="$(cd "$(dirname "$TUTOR_LIB_PATH")" && pwd)"
 source "$TUTOR_LIB_DIR/tutor-home-lib.sh"
 
 # Sets USER_HOME to the real user home for the given script path. See
-# tutor_home_resolve in tutor-home-lib.sh for the resolution precedence, which
-# is shared with the Personal Dev Tutor scripts.
+# tutor_home_resolve in tutor-home-lib.sh for the resolution precedence.
 tutor_set_user_home() {
   USER_HOME="$(tutor_home_resolve "$1" AGENT_TUTOR_USER_HOME)" || return 1
   [ -d "$USER_HOME" ] || {

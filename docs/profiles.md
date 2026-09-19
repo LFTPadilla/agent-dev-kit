@@ -53,9 +53,7 @@ runtime commands, and orchestration policies.
   project here, and don't symlink them into `skills/`.
 - **GSD** — use `get-shit-done-cc` for the authoritative Hermes pack; `pi-gsd`
   is only the optional Pi-native helper. Don't mirror GSD into the shared
-  Claude/Codex registry because that fights the runtime installers. The
-  Personal Dev Tutor installer intentionally links only six core GSD skills
-  from the Hermes installation into its isolated profile.
+  Claude/Codex registry because that fights the runtime installers.
 
 See [`external-deps.md`](external-deps.md).
 
