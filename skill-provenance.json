@@ -242,6 +242,16 @@
         "network access"
       ]
     },
+    "voice-studio": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "low",
+      "dependencies": [
+        "VoiceStudio",
+        "PipeWire"
+      ]
+    },
     "word-docx": {
       "source": "local",
       "license": "MIT",

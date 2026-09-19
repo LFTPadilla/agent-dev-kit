@@ -64,6 +64,10 @@ skills:
     path: "plugins/dev-skills/skills/tmux-delegation"
     scope: "orchestration"
     requires: [tmux]
+  voice-studio:
+    path: "plugins/dev-skills/skills/voice-studio"
+    scope: "voice-synthesis"
+    requires: [VoiceStudio, PipeWire]
 
 tools:
   agent-dev-kit:

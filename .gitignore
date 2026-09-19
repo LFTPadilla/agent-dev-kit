@@ -20,6 +20,7 @@ __pycache__/
 *.local
 .DS_Store
 .pi/
+.kube/
 private-overlays/
 
 .agent-runs/
