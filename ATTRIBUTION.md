@@ -54,6 +54,7 @@ does not vendor their binaries or full skill trees.
 | [TOON](https://toonformat.dev) | Token-efficient structured output for agent-facing channels | toonformat.dev |
 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | Modern skill install CLI (`npx skills`) | vercel-labs/skills |
 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | Reference lifecycle skill packs (install via skills CLI; not copied into this tree) | addyosmani/agent-skills |
+| [jev-review](https://github.com/NiazMorshed2007/jev-review) | Scalar software-quality MCP loop during implementation. Kit docs: [`docs/jev/`](docs/jev/) | NiazMorshed2007/jev-review |
 
 Layer plugins already called out in README / external-deps (caveman, ponytail,
 GSD/pi-gsd, hypa) remain external with their own licenses and update channels.

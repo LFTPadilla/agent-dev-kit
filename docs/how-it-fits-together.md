@@ -1,6 +1,7 @@
 # How it fits together
 
 One map of this kit. Install tables live in [`external-deps.md`](external-deps.md).
+Jev Review lives in [`jev/`](jev/).
 Orchestrator detail lives in [`agent-tutor-orchestrator.md`](agent-tutor-orchestrator.md).
 
 ## Everything at once
@@ -17,13 +18,13 @@ direct          ship                 run
 ────────────    ─────────────────    ──────────────────────────
 caveman         /pr-review           agent-tutor-orchestrator
 ponytail        no-mistakes          gnhf (+ overnight-task-kit)
-GSD             evals                treehouse
-superpowers*
+GSD             jev-review           treehouse
+superpowers*    evals
 (+ dev-skills)
 ```
 
 1. **direct** — how the agent talks (caveman), what it builds (ponytail), how multi-step work flows (GSD), execution-phase engineering guardrails (Superpowers: TDD, systematic debugging, verification before claims, receiving code review), plus discrete capabilities in this repo (`dev-skills`).
-2. **ship** — adversarial `/pr-review`, the no-mistakes gate, and measured evals. Prefer both LLM review and deterministic SAST.
+2. **ship** — adversarial `/pr-review`, the Jev Review score loop ([`jev/`](jev/)), the no-mistakes gate, and measured evals. Prefer both LLM review and deterministic SAST. Jev supplies scores; the coding agent still diagnoses and edits.
 3. **run** — orchestrator profile (Agent Tutor Orchestrator), overnight runner (gnhf), and worktree isolation (treehouse).
 
 ## Recommended loop
@@ -36,7 +37,7 @@ GSD (plan / execute / verify)
   → independent diff / test audit (verification before completion)
   → one teach-back question + durable learning evidence
   → treehouse when parallel agents would collide
-  → /pr-review + no-mistakes before merge (receiving code review rigor)
+  → /pr-review + jev-review + no-mistakes before merge (receiving code review rigor)
   → gnhf for unsupervised multi-hour work
 ```
 
