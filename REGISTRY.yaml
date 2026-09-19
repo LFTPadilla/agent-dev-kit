@@ -67,3 +67,7 @@ tools:
   overnight-runner:
     entrypoint: "overnight-task-kit/scripts/overnight-runner.mjs"
     commands: [init]
+  delegate:
+    entrypoint: "overnight-task-kit/skills/multi-harness/scripts/delegate.py"
+    description: "Multi-harness dispatcher with worker contract mode (--task-json: task.json in, result.json validated, events.jsonl appended)"
+    commands: ["--task", "--task-file", "--task-json", "--worktree", "--dry-run", "--diagnose", "--list-profiles"]
