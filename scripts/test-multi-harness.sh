@@ -44,12 +44,14 @@ spec.loader.exec_module(d)
 scratch = pathlib.Path(sys.argv[2])
 t = d.load_task_contract(scratch / "task-ok.json")
 assert t["budget"] == {"timeout_min": 10}
+assert d.TASK_ID_RE.fullmatch("smoke-ok\n") is None
 block = d.contract_task_block(t)
 for marker in ("TASK: Add a --json flag", "SCOPE: overnight-task-kit", "CONSTRAINTS:", "VERIFICATION:", "FORMAT:", "result.json", "smoke-ok"):
     assert marker in block, marker
 
 ok = {"task_id": "smoke-ok", "status": "done", "notes": "fine"}
 assert d.validate_result_contract(ok, "smoke-ok") == ("done", "ok")
+assert d.validate_result_contract({"task_id": "smoke-ok", "status": "done"}, "smoke-ok")[0] is None  # missing notes
 assert d.validate_result_contract({**ok, "task_id": "other"}, "smoke-ok")[0] is None
 assert d.validate_result_contract({**ok, "status": "blocked"}, "smoke-ok")[0] is None  # blocker required
 assert d.validate_result_contract({**ok, "status": "blocked", "blocker": "need X"}, "smoke-ok")[0] == "blocked"
@@ -70,6 +72,19 @@ legacy = d.build_prompt("codex-complex", profile, pathlib.Path("/tmp/wt"), "free
 assert "Return structured output formatted in compact YAML" in legacy
 contract = d.build_prompt("codex-complex", profile, pathlib.Path("/tmp/wt"), block, True, contract=t)
 assert "```yaml" not in contract and "FORMAT:" in contract
+
+# verify stale result.json removal
+stale_wt = scratch / "stale-wt"
+stale_wt.mkdir(parents=True, exist_ok=True)
+stale_file = stale_wt / "result.json"
+stale_file.write_text("{}", encoding="utf-8")
+assert stale_file.is_file()
+try:
+    stale_file.unlink()
+except FileNotFoundError:
+    pass
+assert not stale_file.is_file()
+
 print("unit checks: OK")
 PY
 

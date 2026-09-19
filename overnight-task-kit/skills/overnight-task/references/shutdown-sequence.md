@@ -32,9 +32,9 @@ Decide from *activity* — two signals, both required:
   their descendants (an agent blocked on a build has an idle parent and a busy
   child). Track **per pid** and diff each pid against its own previous value:
   the set of pids changes between samples, and a delta over a changing
-  population goes negative. Keep the table in the same shell as the loop — put
-  the sampler in `$( ... )` and it runs in a subshell, the table is discarded,
-  and you are measuring a cumulative total.
+  population goes negative. Keep the table in the same shell as the loop:
+  do not put the sampler in `$( ... )` because subshells discard the table
+  and measure cumulative totals. Run the sampler directly in the loop shell.
 - **No process in the tree is in state `R` or `D`** at the sample instant.
   Bursty tool calls average out below any CPU threshold (measured: 148-190 ticks
   per sample, under a 750 limit, while the agent was working); the runnable

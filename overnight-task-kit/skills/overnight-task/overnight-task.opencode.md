@@ -68,12 +68,12 @@ $ARGUMENTS (the user's overnight brief, if provided; otherwise interpret session
 
 2. Read all 8 references in ~/programming/agent-dev-kit/overnight-task-kit/skills/overnight-task/references/.
 
-3. If the user named a shutdown target (e.g., "power off host", "shutdown the PC"), check
-   `hostname` and `ip -4 addr show` to determine whether the agent is running on that
-   target. If YES, abort the shutdown and flag; the agent would kill its own session.
-   If the agent runs *inside* the target (this VM runs on the host), an immediate
-   shutdown kills the run too: fire only after the work is done, or from a detached
-   watcher (`systemd-run --user`) that outlives the session.
+3. Check shutdown authorization and target topology when the user requests powering off:
+   Verify that the user explicitly authorized shutdown in the current session. Check `hostname`
+   and `ip -4 addr show` against the target. Abort and report if the agent runs directly on the
+   target host. When running inside a VM or container on the target host, require an authoritative
+   VM-to-host mapping; do not treat a detached watcher inside the guest VM as safe for host poweroff.
+   Perform the handoff outside the target host, or stop and report without initiating shutdown.
 
 4. **Phase 0 — Plan + Research** (NEW in v2.0, MANDATORY):
    a. Spawn 3 parallel research subagents (per references/planning-protocol.md §"Phase 0.1"):
@@ -102,13 +102,13 @@ $ARGUMENTS (the user's overnight brief, if provided; otherwise interpret session
    - Include the pre-execution self-test results
 
 7. **Phase 3 — Shutdown** (per references/shutdown-sequence.md):
-   - Only if the user authorized it in this session, and run their exact command.
-   - Never fire while the run still has work: shutting down the target host kills this VM
-     and the run with it.
-   - Decide "finished" from CPU activity of the agent processes and their
-     descendants, never from process existence — idle agent TUIs live for days.
-   - Graceful VM shutdown first, wall broadcast, then
-     `ssh <user>@<target-host> "shutdown now"`; log the command and its exit status.
+   - Only if the user authorized it in this session.
+   - Write all reports, deviations, and evidence before starting shutdown procedures.
+   - Never fire while the run still has work. Decide "finished" from CPU activity of the agent
+     processes and their descendants, never from process existence.
+   - Run the user-authorized shutdown command unchanged; never substitute placeholder hosts or arguments.
+   - Log the exact command and its exit status.
+   - If guest VM shutdown is required, schedule it via a detached watcher only after the handoff succeeds.
    - Report the result in the final report.
 
 8. Final one-paragraph summary to the user linking to the report.

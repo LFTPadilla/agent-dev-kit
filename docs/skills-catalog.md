@@ -12,7 +12,7 @@
    [external-deps.md](external-deps.md) and
    [how-it-fits-together.md](how-it-fits-together.md).
 
-## Skills (25)
+## Skills (28)
 
 ### Orchestration (agentic core)
 
@@ -111,7 +111,7 @@
 
 ## A typical session
 
-1. Plan with GSD (`/gsd:plan-phase` → execute → verify), optionally coordinated via Tech Lead.
+1. Plan with GSD (`/gsd:plan-phase` → execute → verify), optionally coordinated via `orchestrate`.
 2. Use a bounded Codex lane and learning checkpoint for unfamiliar or consequential concepts.
 3. Isolate parallel agents with treehouse when fan-out is needed.
 4. `/knip` + `/semgrep` (or the lefthook gate) before committing.

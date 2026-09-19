@@ -248,7 +248,7 @@ def load_task_contract(path: Path) -> dict[str, Any]:
     for field in ("task_id", "objective", "scope", "acceptance"):
         if field not in data:
             fail(f"missing required field {field!r}.")
-    if not isinstance(data["task_id"], str) or not TASK_ID_RE.match(data["task_id"]):
+    if not isinstance(data["task_id"], str) or not TASK_ID_RE.fullmatch(data["task_id"]):
         fail("field 'task_id' must be a string matching ^[A-Za-z0-9_-]+$ (it doubles as the worktree slug).")
     if not isinstance(data["objective"], str) or not data["objective"].strip():
         fail("field 'objective' must be a non-empty string.")
@@ -289,13 +289,16 @@ def validate_result_contract(data: Any, task_id: str) -> tuple[str | None, str]:
     """Validate the worker's result.json. Returns (status, detail); status is None when invalid."""
     if not isinstance(data, dict):
         return None, "result.json is not a JSON object."
+    for field in ("task_id", "status", "notes"):
+        if field not in data:
+            return None, f"result.json is missing required field {field!r}."
     status = data.get("status")
     if status not in CONTRACT_STATUSES:
         return None, f"result.json field 'status' must be one of {', '.join(CONTRACT_STATUSES)} (got {status!r})."
     if data.get("task_id") != task_id:
         return None, f"result.json field 'task_id' is {data.get('task_id')!r}, expected {task_id!r}."
     notes = data.get("notes")
-    if notes is not None and not isinstance(notes, str):
+    if not isinstance(notes, str):
         return None, "result.json field 'notes' must be a string."
     blocker = data.get("blocker")
     if status != "done" and (not isinstance(blocker, str) or not blocker.strip()):
@@ -570,6 +573,11 @@ def main() -> int:
         return 0
 
     if contract:
+        result_path = cwd / "result.json"
+        try:
+            result_path.unlink()
+        except FileNotFoundError:
+            pass
         append_event(orchestrator_root, contract["task_id"], "dispatch", harness_label, None)
 
     try:
