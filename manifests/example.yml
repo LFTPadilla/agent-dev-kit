@@ -1,4 +1,7 @@
-# Example profile manifest.
+# Example profile manifest — ILLUSTRATIVE ONLY. Nothing in this repo reads it.
+# It shows the shape of a per-profile manifest; `npm run validate` checks the
+# shipped profiles in `profiles/*.yml`, not this file. Copy the shape into
+# `manifests/<your-name>.yml` for local experiments, or into a private overlay.
 #
 # Pattern: keep skills in ONE registry (a git repo), then link the subset a
 # given runtime/profile needs into that runtime's skills dir. One source of

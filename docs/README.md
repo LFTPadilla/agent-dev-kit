@@ -61,7 +61,7 @@ Two source styles live in [`diagrams/`](diagrams):
 
 | Source | Renders |
 |---|---|
-| [`stack.d2`](diagrams/stack.d2) | Hero: the whole tool stack |
+| [`stack.d2`](diagrams/stack.d2) | `stack.svg` — the full tool stack (D2, rebuilt by `npm run render:diagrams`) |
 | [`agent-dev-kit-architecture.html`](diagrams/agent-dev-kit-architecture.html) | README hero — the kit, on one screen (diagram-design) |
 | [`agent-dev-kit-architecture.html`](diagrams/agent-dev-kit-architecture.html) | `social-preview.png` (1200×640) — the manual upload |
 

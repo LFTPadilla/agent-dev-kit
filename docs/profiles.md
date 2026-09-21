@@ -10,6 +10,10 @@ single source of truth. Each runtime or profile gets the subset it needs via
 **symlinks**, declared in a per-profile manifest (`profiles/*.yml` for shipped
 profiles, `manifests/*.yml` for examples or local experiments).
 
+[`manifests/example.yml`](../manifests/example.yml) is **illustrative only**:
+it documents the manifest shape, and no script in this repo reads it.
+`npm run validate` checks the shipped profiles in `profiles/*.yml`.
+
 ```
 registry (git)                 runtime config
 ─────────────                  ──────────────
