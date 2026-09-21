@@ -45,6 +45,7 @@ Per-project usually; install where you use them.
 | **Context7 MCP** | Current upstream library documentation for Hermes and Codex | endpoint `https://mcp.context7.com/mcp`; Codex: `codex mcp add context7 --url https://mcp.context7.com/mcp && codex mcp login context7` |
 | **Playwright MCP** | Browser tools for `live-qa` | `claude mcp add playwright npx '@playwright/mcp@latest'` |
 | **Stagehand** | Self-healing NL browser steps | `npm i @browserbasehq/stagehand` |
+| **BrowserSkill** (`bsk`) | Deterministic CLI control of a local, logged-in Chromium; needs a browser extension | `curl -fsSL https://raw.githubusercontent.com/Tencent/BrowserSkill/main/install.sh \| sh` — see [`browserskill.md`](browserskill.md) |
 | **HyperFrames** | Video/animation framework used by `explainer-video`; installed on demand, pin nothing | `npx hyperframes` |
 | **Deepgram** | Optional TTS + word timings for `explainer-video`; without a key the skill falls back to HyperFrames' local Kokoro TTS (`npx hyperframes tts`) | API key in `DEEPGRAM_API_KEY`, or `DEEPGRAM_API_KEY=...` in `~/.config/deepgram.env` |
 | **ffmpeg / ffprobe** | Media duration and encoding for `explainer-video` | distro package, e.g. `apt install ffmpeg` |
