@@ -274,6 +274,23 @@ if AGENT_DEV_KIT_HERMES_HOME="$symlinked_root" \
 fi
 test -z "$(find "$outside_skills" -mindepth 1 -print -quit)"
 
+# A Hermes runtime exports HERMES_HOME as the data directory of the active
+# profile. That path is not a root. The installer must ignore it and keep the
+# AGENT_DEV_KIT_HERMES_HOME root, so the global skills stay under that root.
+active_profile_home="$HERMES_HOME/profiles/sample-profile"
+mkdir -p "$active_profile_home"
+test_before_profile_root_count="$(wc -l < "$HERMES_TEST_LOG")"
+HERMES_HOME="$active_profile_home" \
+  "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null
+test -f "$HERMES_HOME/skills/caveman/SKILL.md"
+test -f "$HERMES_HOME/skills/caveman/.agent-dev-kit-source"
+test -f "$HERMES_HOME/skills/ponytail/.agent-dev-kit-source"
+test ! -e "$active_profile_home/skills"
+assert_skill_checksum caveman
+assert_profile_skill_link alpha caveman
+test "$(wc -l < "$HERMES_TEST_LOG")" -eq "$test_before_profile_root_count"
+assert_no_workhorse_lock "profile HERMES_HOME run left a workhorse lock behind"
+
 mkdir -p "$HERMES_HOME/profiles/beta/skills" \
   "$HERMES_HOME/profiles/link-collision/skills/external/ponytail"
 if "$ROOT/scripts/install-hermes-workhorse.sh" --profile beta \

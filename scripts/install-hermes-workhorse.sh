@@ -19,7 +19,19 @@ validate_override_pair ponytail \
   "${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:-}" \
   "${AGENT_DEV_KIT_PONYTAIL_HERMES_SHA256:-}"
 
-HERMES_ROOT="${AGENT_DEV_KIT_HERMES_HOME:-${HERMES_HOME:-${HOME:?HOME is required}/.hermes}}"
+# Resolve the Hermes root. Two values are valid.
+# 1. An explicit override from AGENT_DEV_KIT_HERMES_HOME.
+# 2. The user-level directory $HOME/.hermes.
+# Hermes exports HERMES_HOME as the data directory of the active profile. That
+# path is not a root. Reject it and keep the profiles directory correct.
+HERMES_HOME_ENV="${HERMES_HOME:-}"
+if [ -n "${AGENT_DEV_KIT_HERMES_HOME:-}" ]; then
+  HERMES_ROOT="$AGENT_DEV_KIT_HERMES_HOME"
+elif [ -n "$HERMES_HOME_ENV" ] && [ -d "$HERMES_HOME_ENV/profiles" ]; then
+  HERMES_ROOT="$HERMES_HOME_ENV"
+else
+  HERMES_ROOT="${HOME:?HOME is required}/.hermes"
+fi
 CAVEMAN_SOURCE="${AGENT_DEV_KIT_CAVEMAN_HERMES_SOURCE:-https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.9.1/skills/caveman/SKILL.md}"
 PONYTAIL_SOURCE="${AGENT_DEV_KIT_PONYTAIL_HERMES_SOURCE:-https://raw.githubusercontent.com/DietrichGebert/ponytail/v4.8.4/skills/ponytail/SKILL.md}"
 CAVEMAN_SHA256="${AGENT_DEV_KIT_CAVEMAN_HERMES_SHA256:-5e30bb56afbd0b01bd736f2da84180e76f18db4a64de8e124525d5c8dc2e8605}"
