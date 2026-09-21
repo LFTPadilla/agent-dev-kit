@@ -127,6 +127,20 @@ function skillDirs() {
     .sort()
 }
 
+// Every skill the kit ships in git, across both subsystems. The count in the
+// public docs is derived from this list, so REGISTRY.yaml drift cannot hide.
+function shippedSkills() {
+  return [root, path.join(root, 'plugins')]
+    .flatMap((parent) => bundleDirs(parent).map((name) => path.relative(root, path.join(parent, name))))
+    .flatMap((bundle) => {
+      const base = path.join(root, bundle, 'skills')
+      return readdirSync(base, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && existsSync(path.join(base, entry.name, 'SKILL.md')))
+        .map((entry) => ({ name: entry.name, rel: path.join(bundle, 'skills', entry.name) }))
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
 function bundleDirs(parent) {
   if (!existsSync(parent)) return []
   return readdirSync(parent, { withFileTypes: true })
@@ -236,6 +250,35 @@ function validateProvenance(checks, { skillDirs: dirs }) {
     addMissingFieldFailures(checks, item, ['source', 'license', 'visibility', 'risk', 'dependencies'], `skill-provenance.json ${name}`)
   }
   if (!missing.length && !stale.length) checks.push(ok('skill provenance covers all skills'))
+}
+
+function validateRegistry(checks, { skillDirs: dirs } = {}) {
+  const file = path.join(root, 'REGISTRY.yaml')
+  if (!existsSync(file)) {
+    checks.push(fail('REGISTRY.yaml is missing'))
+    return
+  }
+  const document = parseDocument(readFileSync(file, 'utf8'), { prettyErrors: true, strict: true })
+  if (document.errors.length) {
+    checks.push(fail(`REGISTRY.yaml is not valid YAML: ${document.errors[0].message.replaceAll('\n', ' ')}`))
+    return
+  }
+  const data = document.toJS() || {}
+  const expected = shippedSkills()
+  const recorded = Object.keys(data.skills || {}).sort()
+  const names = expected.map((item) => item.name)
+  const missing = names.filter((name) => !recorded.includes(name))
+  const stale = recorded.filter((name) => !names.includes(name))
+  for (const name of missing) checks.push(fail(`REGISTRY.yaml missing skill: ${name}`))
+  for (const name of stale) checks.push(fail(`REGISTRY.yaml has stale skill: ${name}`))
+  // A wrong path is drift the name check cannot see: the entry looks present
+  // while pointing at a directory that no longer ships.
+  for (const item of expected) {
+    const entry = data.skills?.[item.name]
+    if (!entry) continue
+    if (entry.path !== item.rel) checks.push(fail(`REGISTRY.yaml ${item.name} path is ${entry.path ?? 'missing'}, expected ${item.rel}`))
+  }
+  if (!missing.length && !stale.length) checks.push(ok(`REGISTRY.yaml catalogs all ${names.length} shipped skills`))
 }
 
 function validateSkillsLock(checks) {
@@ -406,6 +449,7 @@ function collectValidationChecks() {
     validateReleaseVersions,
     validateSkills,
     validateProvenance,
+    validateRegistry,
     validateSkillsLock,
     validateProfiles,
     validatePiPackageResearch,
