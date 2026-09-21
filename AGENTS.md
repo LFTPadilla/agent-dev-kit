@@ -29,6 +29,7 @@ External installs: [`docs/external-deps.md`](docs/external-deps.md).
 1. Prefer **GSD** for multi-step work (plan → execute → verify).
 2. Prefer **treehouse** (or equivalent) for isolated parallel agent worktrees.
 3. Prefer **no-mistakes** as a ship gate alongside `/pr-review`.
+   Prefer **jev-review** during implementation. See [`docs/jev/`](docs/jev/).
 4. Prefer **gnhf** as the overnight runner; treat `overnight-task-kit/` as
    protocol and templates, not a second ralph-loop.
 5. Prefer **AXI** principles for agent contracts; prefer **TOON** for
@@ -99,6 +100,7 @@ worked examples.
 | Going-public checklist | [`docs/going-public.md`](docs/going-public.md) |
 | Agent Tutor Orchestrator | [`docs/agent-tutor-orchestrator.md`](docs/agent-tutor-orchestrator.md), [`profiles/agent-tutor-orchestrator.yml`](profiles/agent-tutor-orchestrator.yml) |
 | How layers fit | [`docs/how-it-fits-together.md`](docs/how-it-fits-together.md) |
+| Jev Review score loop | [`docs/jev/AGENTS.md`](docs/jev/AGENTS.md) |
 | Profiles / multi-runtime | [`docs/profiles.md`](docs/profiles.md) |
 
 ## Git Worktree & Multi-Agent Coordination

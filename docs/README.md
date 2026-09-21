@@ -34,6 +34,7 @@ in the [root README](../README.md), then pick a lane.
 |---|---|
 | [prompt-defense.md](prompt-defense.md) | An agent reads untrusted input (diffs, web pages, issues) |
 | [sentry-mcp.md](sentry-mcp.md) | You want prod errors inside the agent loop |
+| [jev/](jev/) | You want the Jev Review score loop (install, harness wiring, operating rules) |
 
 ## Meta
 

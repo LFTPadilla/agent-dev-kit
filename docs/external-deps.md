@@ -21,6 +21,7 @@ don't vendor. Flow map: [`how-it-fits-together.md`](how-it-fits-together.md).
 | Tool | What it does | Install |
 |---|---|---|
 | **no-mistakes** | Ship-gate before merge (complements `/pr-review`) | Curl installer from [kunchenguid/no-mistakes](https://github.com/kunchenguid/no-mistakes) |
+| **jev-review** | Scalar quality loop during implementation | see [`jev/`](jev/) |
 | **treehouse** | Multi-agent worktree isolation | Curl installer from [kunchenguid/treehouse](https://github.com/kunchenguid/treehouse) |
 | **gnhf** | Overnight / long-running runner (pair with `overnight-task-kit/`) | `npm i -g gnhf` |
 | **gh-axi** | Agent-shaped GitHub CLI output | `npm i -g gh-axi` |

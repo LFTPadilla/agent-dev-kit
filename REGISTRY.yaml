@@ -1,7 +1,7 @@
 # REGISTRY.yaml — Canonical Machine-Readable Catalog for agent-dev-kit
 # Standard: ANRS-1.0 (Agent-Native Repository Specification)
 version: "1.0"
-updated: "2026-09-13"
+updated: "2026-09-18"
 
 subsystems:
   dev-skills:
@@ -12,6 +12,10 @@ subsystems:
     path: "overnight-task-kit"
     context: "overnight-task-kit/AGENTS.md"
     description: "Long-running autonomous protocols, templates, and multi-harness delegation"
+  jev:
+    path: "docs/jev"
+    context: "docs/jev/AGENTS.md"
+    description: "Jev Review score loop: install, harness wiring, and operating rules"
 
 profiles:
   agent-tutor-orchestrator:
@@ -71,3 +75,6 @@ tools:
     entrypoint: "overnight-task-kit/skills/multi-harness/scripts/delegate.py"
     description: "Multi-harness dispatcher with worker contract mode (--task-json: task.json in, result.json validated, events.jsonl appended)"
     commands: ["--task", "--task-file", "--task-json", "--worktree", "--dry-run", "--diagnose", "--list-profiles"]
+  install-jev-review:
+    entrypoint: "scripts/install-jev-review.sh"
+    description: "Opt-in wiring of the Jev Review MCP into Hermes and Codex"

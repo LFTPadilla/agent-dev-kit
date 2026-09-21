@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Opt-in Jev Review wiring (`scripts/install-jev-review.sh`) for Hermes and Codex
+- `docs/jev/` as the single source of truth for the Jev Review loop, install, and harness map
+
 ## [0.13.0] - 2026-08-17
 
 ### Added

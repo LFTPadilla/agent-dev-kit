@@ -21,7 +21,7 @@ Orthogonal layers, each governing one thing, composed together:
 | **ponytail** | what the agent *builds* | YAGNI / stdlib-first / shortest diff |
 | **GSD** | how work *flows* | plan → execute → verify |
 | **dev-skills** (this repo) | discrete *capabilities* | per-task skills + commands (25 skills) |
-| **ship / overnight / orchestration** | gates, isolation, long runs | no-mistakes, treehouse, gnhf, AXI/TOON, `orchestrate` |
+| **ship / overnight / orchestration** | gates, isolation, long runs | no-mistakes, jev-review, treehouse, gnhf, AXI/TOON, `orchestrate` |
 
 They don't overlap, so they don't fight. caveman and ponytail are other people's
 plugins (credited); GSD is an npm package; the ship/overnight tools are external
@@ -49,6 +49,7 @@ Prevention is cheap, refutation is expensive — so prevention runs first and th
 expensive pass only sees what survived. The skip-list/gate ideas are adapted from
 ECC (MIT, credited); the multi-lens + adversarial-verify architecture is mine.
 **no-mistakes** sits beside this as an external ship gate, not a replacement.
+**jev-review** is the during-implementation score loop; see [`docs/jev/`](docs/jev/).
 
 ## Live QA as three layers, not one tool
 

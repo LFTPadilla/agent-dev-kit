@@ -15,6 +15,7 @@
     "test:codex-workhorse": "bash scripts/test-codex-workhorse.sh",
     "test:tutor-home": "bash scripts/test-tutor-home-lib.sh",
     "test:multi-harness": "bash scripts/test-multi-harness.sh",
+    "test:jev-review": "bash scripts/test-jev-review.sh",
     "render:diagrams": "bash scripts/render-diagrams.sh",
     "overnight:init": "node overnight-task-kit/scripts/overnight-runner.mjs init",
     "eval:semgrep": "node evals/run.mjs",

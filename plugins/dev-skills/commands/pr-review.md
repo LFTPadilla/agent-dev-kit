@@ -8,6 +8,8 @@ allowed-tools: Read, Bash, Agent, Workflow, mcp__github__*
 Deep, multi-lens adversarial critique of GitHub PRs before merge. Every
 BLOCKER/HIGH/MEDIUM finding is independently verified to eliminate false
 positives. For quick, lightweight single-pass PR reviews, use `github-code-review`.
+For a during-implementation score loop, use Jev Review (`docs/jev/`). Do not
+treat Jev scores as a substitute for this command.
 
 ## When invoked
 

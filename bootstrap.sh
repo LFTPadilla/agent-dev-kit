@@ -49,6 +49,10 @@ cat <<'EOF'
     codex mcp add context7 --url https://mcp.context7.com/mcp
     codex mcp login context7
 
+  Jev Review (scalar quality loop; see docs/jev/):
+    export JEV_API_KEY=...    # https://console.typesafe.ai/
+    ./scripts/install-jev-review.sh
+
   Flow map: docs/how-it-fits-together.md
   Dep table:  docs/external-deps.md
 EOF

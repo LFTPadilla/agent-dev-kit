@@ -75,7 +75,7 @@ stays generic.
 1. **Agent orchestration** — `orchestrate` as the lean native orchestrator; strict Agent Tutor Orchestrator as an alternative; multi-runtime skill sync.
 2. **Measuring AI systems** — eval set with planted bugs + clean control, scored on recall *and* false-positive rate.
 3. **Designing for the real failure mode** — LLM reviewers' confident false positives, attacked with a pre-report gate + refuter panel.
-4. **Day-to-day ship discipline** — no-mistakes gate, treehouse isolation, gnhf overnight, AXI/TOON contracts.
+4. **Day-to-day ship discipline** — no-mistakes gate, Jev Review score loop, treehouse isolation, gnhf overnight, AXI/TOON contracts.
 5. **Security awareness** — prompt-injection defense on every agent that reads untrusted input (diffs, web pages).
 6. **Senior judgment** — honest attribution ([ATTRIBUTION.md](ATTRIBUTION.md)) and deliberate curation ([CURATION.md](CURATION.md)).
 
@@ -233,9 +233,10 @@ Full catalog: [`docs/skills-catalog.md`](docs/skills-catalog.md).
 
 1. **knip** + **semgrep** skills; **`templates/lefthook.yml`** for commit/push gates.
 2. **no-mistakes** (external) complements `/pr-review`.
-3. **Sentry MCP** — [`docs/sentry-mcp.md`](docs/sentry-mcp.md).
-4. **security-checklist** + **prompt-injection defense** — [`docs/prompt-defense.md`](docs/prompt-defense.md).
-5. **Skill provenance** — `skill-provenance.json` for the skills this repo ships;
+3. **jev-review** (external MCP) — [`docs/jev/`](docs/jev/). Score loop during implementation. It does not replace `/pr-review`.
+4. **Sentry MCP** — [`docs/sentry-mcp.md`](docs/sentry-mcp.md).
+5. **security-checklist** + **prompt-injection defense** — [`docs/prompt-defense.md`](docs/prompt-defense.md).
+6. **Skill provenance** — `skill-provenance.json` for the skills this repo ships;
    `skills-lock.json` for third-party skills that are pinned, never vendored
    (restore: `npx skills@1.5.22 experimental_install`).
 
