@@ -28,6 +28,12 @@ in the [root README](../README.md), then pick a lane.
 | [private-overlays.md](private-overlays.md) | Employer/org skills must stay out of this tree |
 | [sandbox-policies.md](sandbox-policies.md) | You are changing what a worker is allowed to touch |
 
+## Browser automation
+
+| Doc | Read it when |
+|---|---|
+| [browserskill.md](browserskill.md) | You want the agent to drive a local, logged-in Chromium instead of a remote lab |
+
 ## Safety & observability
 
 | Doc | Read it when |
