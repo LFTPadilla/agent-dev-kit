@@ -1,0 +1,500 @@
+#!/usr/bin/env python3
+"""Power off a host when monitored coding-agent work stops.
+
+Two independent signals decide whether an agent is active:
+
+  1. Agent lifecycle state. `herdr agent list` reports `working` for agents that
+     run inside Herdr, including turns that wait on the model with 0 % CPU.
+  2. Process CPU. The watcher sums CPU ticks for the process tree of every
+     monitored harness (Herdr, ZCode, DSH, Hermes, Codex, Claude, OpenCode,
+     Cursor). This covers harnesses that expose no state on the CLI.
+
+When neither signal is active for `--grace-min` minutes, the watcher runs the
+shutdown command, by default `ssh <target> "shutdown now"`.
+
+The watcher never shuts down the machine it runs on unless you pass `--local`.
+It refuses a target that resolves to the local host, because a remote shutdown
+would kill the watcher mid-run.
+
+Examples:
+  idle-shutdown --once                                  # print one sample and exit
+  idle-shutdown --target root@host --dry-run            # monitor, never power off
+  idle-shutdown --target root@host --grace-min 15
+  idle-shutdown --local --shutdown-cmd "systemctl poweroff"
+  idle-shutdown --status                                # last sample written to disk
+  idle-shutdown --hold | --release                       # arm or cancel shutdown
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shlex
+import socket
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+# Harness executables that mark the root of a process tree to measure.
+# `pi` is deliberately absent: an idle Pi TUI burns 7 % to 9 % of a core, so it
+# would look busy forever. Inside Herdr, the agent-state signal covers Pi.
+DEFAULT_ROOTS = (
+    r"herdr|herdr-mux|herdr-delegate|zcode|zcode-cli|zcode-host-local(-1)?"
+    r"|zcode-node-repl(-mcp)?|ZCode|dsh|dsh-web|hermes|hermes_cli\.main"
+    r"|codex|claude|opencode|cursor-agent"
+)
+# A process under Herdr, or Herdr itself. Herdr state replaces CPU for this side.
+HERDR_ROOTS = re.compile(r"^(herdr|herdr-mux)$")
+SELF_MARK = "idle-shutdown"
+CLK_TCK = os.sysconf("SC_CLK_TCK")
+STATES_ACTIVE_DEFAULT = "working"
+
+
+# --------------------------------------------------------------------- helpers
+class Config:
+    def __init__(self, args: argparse.Namespace) -> None:
+        state_dir = Path(
+            args.state_dir
+            or os.environ.get("IDLE_SHUTDOWN_STATE_DIR")
+            or Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
+            / "idle-shutdown"
+        )
+        self.state_dir = state_dir
+        self.log_file = Path(args.log or os.environ.get("IDLE_SHUTDOWN_LOG") or state_dir / "watcher.log")
+        self.state_file = state_dir / "state.json"
+        self.hold_file = state_dir / "hold"
+        self.target = args.target or ""
+        self.local = args.local
+        self.shutdown_cmd = args.shutdown_cmd
+        self.grace_min = args.grace_min
+        self.interval = args.interval
+        self.cpu_pct = args.cpu_pct
+        self.max_hours = args.max_hours
+        self.ssh_retries = args.ssh_retries
+        self.report_dir = Path(args.report_dir) if args.report_dir else None
+        self.roots = re.compile(
+            f"^({DEFAULT_ROOTS}"
+            + "".join(f"|{extra}" for extra in args.match)
+            + ")$"
+        )
+        self.active_states = {
+            state.strip()
+            for state in args.active_states.split(",")
+            if state.strip()
+        }
+        self.allow_self_target = args.allow_self_target
+        self.dry_run = args.dry_run
+
+
+def log(config: Config, message: str) -> None:
+    line = f"{time.strftime('%Y-%m-%d %H:%M:%S')} {message}"
+    print(line, flush=True)
+    try:
+        config.state_dir.mkdir(parents=True, exist_ok=True)
+        if config.log_file.exists() and config.log_file.stat().st_size > 2_000_000:
+            config.log_file.replace(config.log_file.with_suffix(".log.1"))
+        with config.log_file.open("a") as handle:
+            handle.write(line + "\n")
+    except OSError:
+        pass
+
+
+def notify(title: str, body: str) -> None:
+    if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+        subprocess.run(
+            ["notify-send", title, body],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+
+def local_names() -> set[str]:
+    names = {socket.gethostname(), socket.getfqdn(), "localhost"}
+    return {name.split(".")[0] for name in names if name} | {name for name in names if name}
+
+
+def machine_id(path: str = "/etc/machine-id") -> str | None:
+    try:
+        value = Path(path).read_text().strip()
+        return value or None
+    except OSError:
+        return None
+
+
+def ssh(config: Config, command: str, timeout: int = 60) -> subprocess.CompletedProcess:
+    argv = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10"]
+    argv += [config.target, command]
+    return subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
+
+
+def guard_target(config: Config) -> None:
+    """Refuse to power off the local host through ssh.
+
+    The check compares machine-id first, because an IP overlap is unreliable:
+    bridge addresses (docker0, vmbr0) repeat across hosts. Host names are the
+    second check. An IP check is not used at all.
+    """
+    if config.local or config.allow_self_target:
+        return
+    if not config.target:
+        sys.exit("error: pass --target user@host, or --local to power off this machine")
+    try:
+        probe = ssh(config, "hostname; cat /etc/machine-id 2>/dev/null")
+    except subprocess.TimeoutExpired:
+        sys.exit(f"error: ssh to {config.target} timed out")
+    if probe.returncode != 0:
+        sys.exit(f"error: ssh to {config.target} failed: {probe.stderr.strip()[:200]}")
+
+    lines = [line.strip() for line in probe.stdout.splitlines() if line.strip()]
+    remote_id = lines[-1] if lines and re.fullmatch(r"[0-9a-f]{32}", lines[-1]) else None
+    remote_names = {line.split(".")[0] for line in lines if line != remote_id}
+
+    local_id = machine_id()
+    overlap = remote_names & local_names()
+    same_machine = bool(local_id and remote_id and local_id == remote_id)
+    if same_machine or overlap:
+        detail = "machine-id matches" if same_machine else f"host name: {', '.join(sorted(overlap))}"
+        print(
+            f"refusing to shut down {config.target}: it is this host ({detail}). "
+            "Use --allow-self-target to override.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+
+# ---------------------------------------------------------------------- signals
+def process_table() -> tuple[dict[int, int], dict[int, float], dict[int, str]]:
+    ppid: dict[int, int] = {}
+    ticks: dict[int, float] = {}
+    label: dict[int, str] = {}
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        pid = int(entry.name)
+        try:
+            stat = (entry / "stat").read_text()
+            cmdline = (entry / "cmdline").read_bytes().decode("utf-8", "replace")
+        except OSError:
+            continue
+        args = [arg for arg in cmdline.split("\0") if arg]
+        if not args or SELF_MARK in cmdline:
+            continue
+        if ")" not in stat:
+            continue
+        # rpartition: the comm field may contain a closing parenthesis.
+        _, _, rest = stat.rpartition(")")
+        fields = rest.split()
+        ppid[pid] = int(fields[1])
+        ticks[pid] = (int(fields[11]) + int(fields[12])) / CLK_TCK
+        label[pid] = os.path.basename(args[0])
+    return ppid, ticks, label
+
+
+def tree_pids(
+    config: Config,
+    table: tuple[dict[int, int], dict[int, float], dict[int, str]],
+) -> tuple[set[int], set[int]]:
+    """Return (monitored pids, pids under Herdr).
+
+    The second set is excluded from the CPU signal when Herdr answers, because
+    an idle agent TUI keeps drawing and would read as permanent activity.
+    """
+    ppid, _, label = table
+    roots: set[int] = set()
+    for pid, name in label.items():
+        if config.roots.match(name):
+            roots.add(pid)
+            continue
+        try:
+            args = [
+                arg
+                for arg in (Path(f"/proc/{pid}/cmdline").read_bytes().decode("utf-8", "replace")).split("\0")
+                if arg
+            ]
+        except OSError:
+            continue
+        if any(config.roots.match(os.path.basename(arg)) for arg in args):
+            roots.add(pid)
+    if not roots:
+        return set(), set()
+
+    def descendants(root_set: set[int]) -> set[int]:
+        selected = set(root_set)
+        for pid in label:
+            current, hops = pid, 0
+            while current > 1 and hops < 40:
+                current = ppid.get(current, 1)
+                if current in root_set:
+                    selected.add(pid)
+                    break
+                hops += 1
+        return selected
+
+    monitored = descendants(roots)
+    herdr_roots = {pid for pid in monitored if HERDR_ROOTS.match(label.get(pid, ""))}
+    return monitored, descendants(herdr_roots) if herdr_roots else set()
+
+
+def agent_states() -> dict[str, int] | None:
+    """Agent counts per Herdr state, or None when Herdr is absent or fails."""
+    try:
+        result = subprocess.run(
+            ["herdr", "agent", "list"], capture_output=True, text=True, timeout=15
+        )
+        if result.returncode != 0:
+            return None
+        payload = json.loads(result.stdout[result.stdout.find("{"):])
+        agents = payload["result"]["agents"]
+    except Exception:
+        return None
+    counts: dict[str, int] = {}
+    for agent in agents:
+        state = agent.get("agent_status", "unknown")
+        counts[state] = counts.get(state, 0) + 1
+    return counts
+
+
+def sample(
+    config: Config,
+    previous_ticks: float | None,
+    previous_herdr_ticks: float | None,
+    previous_time: float | None,
+) -> tuple[dict, float, float, float]:
+    table = process_table()
+    monitored, herdr_side = tree_pids(config, table)
+    states = agent_states()
+
+    # Herdr owns its panes. The CPU signal decides only over the trees that
+    # Herdr does not manage (ZCode, DSH, a standalone Hermes gateway).
+    cpu_pids = monitored if states is None else monitored - herdr_side
+
+    now_ticks = sum(table[1].get(pid, 0.0) for pid in cpu_pids)
+    now_herdr_ticks = sum(table[1].get(pid, 0.0) for pid in herdr_side)
+    now = time.time()
+    if previous_time is None:
+        cpu_pct = 0.0
+        herdr_cpu_pct = 0.0
+    else:
+        elapsed = max(now - previous_time, 0.001)
+        cpu_pct = max(now_ticks - previous_ticks, 0.0) / elapsed * 100.0
+        herdr_cpu_pct = max(now_herdr_ticks - previous_herdr_ticks, 0.0) / elapsed * 100.0
+
+    busy_agents = None if states is None else sum(states.get(s, 0) for s in config.active_states)
+    working = bool(busy_agents) or cpu_pct >= config.cpu_pct
+    info = {
+        "ts": now,
+        "cpu_pct": round(cpu_pct, 2),
+        "cpu_herdr_pct": round(herdr_cpu_pct, 2),
+        "procs_cpu": len(cpu_pids),
+        "agent_states": states,
+        "busy_agents": busy_agents,
+        "working": working,
+    }
+    return info, now_ticks, now_herdr_ticks, now
+
+
+# --------------------------------------------------------------------- shutdown
+def write_report(config: Config, info: dict, note: str, result: str) -> None:
+    if config.report_dir is None:
+        return
+    try:
+        config.report_dir.mkdir(parents=True, exist_ok=True)
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        report = config.report_dir / f"idle-shutdown-{stamp}.md"
+        report.write_text(
+            f"# idle-shutdown report {stamp}\n\n"
+            f"- target: `{config.target or 'local'}`\n"
+            f"- shutdown command: `{config.shutdown_cmd}`\n"
+            f"- grace: {config.grace_min:g} min | cpu threshold: {config.cpu_pct:g} % "
+            f"| interval: {config.interval:g} s\n"
+            f"- final decision: {note}\n"
+            f"- final sample: cpu={info['cpu_pct']}% procs={info['procs_cpu']} "
+            f"agents={info['agent_states']}\n"
+            f"- outcome: {result}\n"
+            f"- log: `{config.log_file}`\n"
+        )
+    except OSError as error:
+        log(config, f"WARN no se pudo escribir el reporte: {error}")
+
+
+def shutdown(config: Config, note: str, info: dict) -> bool:
+    if config.local:
+        argv = shlex.split(config.shutdown_cmd)
+        log(config, f"APAGANDO host local :: {note}")
+        notify("Apagando host local", note)
+        result = "local shutdown enviado"
+        code = subprocess.run(argv, check=False).returncode
+        if code != 0:
+            result = f"local shutdown fallo rc={code}"
+        write_report(config, info, note, result)
+        return code == 0
+
+    log(config, f"APAGANDO {config.target} :: {note}")
+    notify("Apagando host remoto", note)
+    result = "sin exito"
+    for attempt in range(1, config.ssh_retries + 1):
+        try:
+            probe = ssh(config, config.shutdown_cmd)
+        except subprocess.TimeoutExpired:
+            result = "ssh timeout (normal cuando el host se apaga)"
+            log(config, f"  intento {attempt}: {result}")
+            write_report(config, info, note, result)
+            return True
+        if probe.returncode == 0:
+            result = f"shutdown enviado en el intento {attempt}"
+            log(config, f"  intento {attempt}: shutdown enviado OK")
+            write_report(config, info, note, result)
+            return True
+        result = f"ssh rc={probe.returncode}: {probe.stderr.strip()[:200]}"
+        log(config, f"  intento {attempt}: {result}")
+        if attempt < config.ssh_retries:
+            time.sleep(10)
+    log(config, "CRITICO: no se pudo enviar el apagado. El host queda encendido.")
+    write_report(config, info, note, result)
+    return False
+
+
+# ------------------------------------------------------------------------- loop
+def write_state(config: Config, info: dict, last_active: float, started: float, note: str) -> None:
+    config.state_dir.mkdir(parents=True, exist_ok=True)
+    config.state_file.write_text(
+        json.dumps(
+            {
+                **info,
+                "target": config.target or "local",
+                "shutdown_cmd": config.shutdown_cmd,
+                "grace_min": config.grace_min,
+                "cpu_threshold_pct": config.cpu_pct,
+                "idle_min": round((info["ts"] - last_active) / 60, 2),
+                "runtime_min": round((info["ts"] - started) / 60, 2),
+                "note": note,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
+
+def run(config: Config, once: bool) -> int:
+    guard_target(config)
+    started = time.time()
+    log(
+        config,
+        f"watcher iniciado :: target={config.target or 'local'} cmd={config.shutdown_cmd!r} "
+        f"gracia={config.grace_min:g}min intervalo={config.interval:g}s "
+        f"umbral_cpu={config.cpu_pct:g}% estados_activos={sorted(config.active_states)} "
+        f"tope={'ninguno' if config.max_hours <= 0 else f'{config.max_hours:g}h'}"
+        + (" [DRY-RUN]" if config.dry_run else ""),
+    )
+
+    previous_ticks: float | None = None
+    previous_herdr_ticks: float | None = None
+    previous_time: float | None = None
+    last_active = time.time()
+    warned_no_herdr = False
+
+    while True:
+        info, previous_ticks, previous_herdr_ticks, previous_time = sample(
+            config, previous_ticks or 0.0, previous_herdr_ticks or 0.0, previous_time
+        )
+        if info["agent_states"] is None and not warned_no_herdr:
+            log(config, "AVISO: herdr no disponible; la deteccion usa solo CPU de procesos")
+            warned_no_herdr = True
+        if info["working"]:
+            last_active = info["ts"]
+        idle_seconds = info["ts"] - last_active
+        runtime_hours = (info["ts"] - started) / 3600.0
+
+        note = "activo" if info["working"] else "quieto"
+        hard_stop = config.max_hours > 0 and runtime_hours >= config.max_hours
+        if config.hold_file.exists():
+            note = "hold"
+        elif idle_seconds >= config.grace_min * 60:
+            note = "LISTO PARA APAGAR"
+        elif hard_stop:
+            note = "TOPE DURO"
+
+        log(
+            config,
+            f"cpu_non_herdr={info['cpu_pct']:>6.2f}% (pids={info['procs_cpu']}) "
+            f"cpu_herdr={info['cpu_herdr_pct']:>6.2f}% "
+            f"agentes={info['agent_states']} working={info['working']} "
+            f"quieto={idle_seconds/60:>5.1f}min corriendo={runtime_hours*60:>5.1f}min -> {note}",
+        )
+        write_state(config, info, last_active, started, note)
+
+        if once:
+            print(json.dumps(info, indent=2))
+            return 0
+
+        ready = idle_seconds >= config.grace_min * 60
+        if (ready or hard_stop) and not config.hold_file.exists():
+            reason = (
+                f"sin actividad por {idle_seconds/60:.1f} min "
+                f"(cpu={info['cpu_pct']}%, agentes={info['agent_states']})"
+            )
+            if hard_stop:
+                reason = f"tope de {config.max_hours:g}h alcanzado; {reason}"
+            if config.dry_run:
+                log(config, f"[DRY-RUN] habria apagado: {reason}")
+                last_active = info["ts"]
+            else:
+                return 0 if shutdown(config, reason, info) else 1
+
+        time.sleep(config.interval)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="idle-shutdown",
+        description="Power off a host when monitored agent work stops.",
+    )
+    parser.add_argument("target", nargs="?", default=None, help="ssh target, for example root@host")
+    parser.add_argument("--target", dest="target_opt", default=None, help="ssh target (same as positional)")
+    parser.add_argument("--local", action="store_true", help="power off this machine instead of a remote host")
+    parser.add_argument("--shutdown-cmd", default="shutdown now", help="command to run on the target")
+    parser.add_argument("--grace-min", type=float, default=float(os.environ.get("IDLE_SHUTDOWN_GRACE_MIN", 15)))
+    parser.add_argument("--interval", type=float, default=float(os.environ.get("IDLE_SHUTDOWN_INTERVAL", 30)))
+    parser.add_argument("--cpu-pct", type=float, default=float(os.environ.get("IDLE_SHUTDOWN_CPU_PCT", 3.0)))
+    parser.add_argument("--max-hours", type=float, default=float(os.environ.get("IDLE_SHUTDOWN_MAX_HOURS", 0)))
+    parser.add_argument("--active-states", default=os.environ.get("IDLE_SHUTDOWN_ACTIVE_STATES", STATES_ACTIVE_DEFAULT))
+    parser.add_argument("--match", action="append", default=[], help="extra process-name regex for a harness")
+    parser.add_argument("--state-dir", default=None)
+    parser.add_argument("--log", default=None)
+    parser.add_argument("--report-dir", default=None, help="write one markdown report per shutdown")
+    parser.add_argument("--ssh-retries", type=int, default=3)
+    parser.add_argument("--allow-self-target", action="store_true")
+    parser.add_argument("--dry-run", "--simulate", dest="dry_run", action="store_true")
+    parser.add_argument("--once", action="store_true", help="print one sample and exit")
+    parser.add_argument("--status", action="store_true", help="print the last sample written to disk")
+    parser.add_argument("--hold", action="store_true", help="cancel the shutdown until --release")
+    parser.add_argument("--release", action="store_true", help="remove the hold file")
+    args = parser.parse_args()
+
+    args.target = args.target or args.target_opt
+    if args.target is None and not args.local:
+        parser.error("pass a target (user@host) or --local")
+    config = Config(args)
+
+    if args.status:
+        print(config.state_file.read_text() if config.state_file.exists() else "no sample yet")
+        return 0
+    if args.hold:
+        config.state_dir.mkdir(parents=True, exist_ok=True)
+        config.hold_file.touch()
+        print(f"hold on: {config.hold_file}")
+        return 0
+    if args.release:
+        config.hold_file.unlink(missing_ok=True)
+        print(f"hold off: {config.hold_file}")
+        return 0
+
+    return run(config, args.once)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

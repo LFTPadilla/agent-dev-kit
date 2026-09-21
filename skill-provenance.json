@@ -100,6 +100,17 @@
         "image tools when used"
       ]
     },
+    "idle-shutdown": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "high",
+      "dependencies": [
+        "python3",
+        "ssh",
+        "herdr (optional, agent-state signal)"
+      ]
+    },
     "improve": {
       "source": "third-party-adapted",
       "license": "see skill directory",
