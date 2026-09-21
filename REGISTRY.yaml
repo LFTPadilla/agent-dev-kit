@@ -1,7 +1,9 @@
 # REGISTRY.yaml — Canonical Machine-Readable Catalog for agent-dev-kit
 # Standard: ANRS-1.0 (Agent-Native Repository Specification)
+# Every skill under a `skills/` directory of a shipped subsystem is listed here.
+# `npm run validate` fails when this catalog drifts from disk.
 version: "1.0"
-updated: "2026-09-18"
+updated: "2026-09-21"
 
 subsystems:
   dev-skills:
@@ -21,25 +23,39 @@ profiles:
   agent-tutor-orchestrator:
     path: "profiles/agent-tutor-orchestrator.yml"
     role: "Strict orchestrator and liaison"
+  browser-lab:
+    path: "profiles/browser-lab.yml"
+    role: "Local logged-in Chromium browser work"
+  claude:
+    path: "profiles/claude.yml"
+    role: "Claude Code runtime profile"
+  codex:
+    path: "profiles/codex.yml"
+    role: "Codex CLI runtime profile"
+  opencode:
+    path: "profiles/opencode.yml"
+    role: "OpenCode runtime profile"
+  pi:
+    path: "profiles/pi.yml"
+    role: "Pi runtime profile"
 
 skills:
   agent-native-scaffold:
     path: "plugins/dev-skills/skills/agent-native-scaffold"
     scope: "architecture"
     requires: [python3, git]
-  orchestrate:
-    path: "plugins/dev-skills/skills/orchestrate"
-    scope: "orchestration"
-  multi-harness:
-    path: "overnight-task-kit/skills/multi-harness"
-    scope: "cross-harness"
-    requires: [python3]
-  overnight-task:
-    path: "overnight-task-kit/skills/overnight-task"
-    scope: "autonomous"
   diagram-render:
     path: "plugins/dev-skills/skills/diagram-render"
     scope: "visualization"
+    requires: [node]
+  drawio-skill:
+    path: "plugins/dev-skills/skills/drawio-skill"
+    scope: "visualization"
+    requires: [drawio desktop CLI]
+  excel-xlsx:
+    path: "plugins/dev-skills/skills/excel-xlsx"
+    scope: "documents"
+    requires: [python3]
   explain-concept:
     path: "plugins/dev-skills/skills/explain-concept"
     scope: "visualization"
@@ -48,10 +64,73 @@ skills:
     path: "plugins/dev-skills/skills/explainer-video"
     scope: "visualization"
     requires: [node, ffmpeg]
+  find-skills:
+    path: "plugins/dev-skills/skills/find-skills"
+    scope: "discovery"
+    requires: [npx]
+  git-essentials:
+    path: "plugins/dev-skills/skills/git-essentials"
+    scope: "version-control"
+    requires: [git]
   herdr:
     path: "plugins/dev-skills/skills/herdr"
     scope: "orchestration"
     requires: [herdr]
+  human-writing-style:
+    path: "plugins/dev-skills/skills/human-writing-style"
+    scope: "writing"
+  image-finalize:
+    path: "plugins/dev-skills/skills/image-finalize"
+    scope: "media"
+    requires: [image provider]
+  improve:
+    path: "plugins/dev-skills/skills/improve"
+    scope: "quality"
+  java-development:
+    path: "plugins/dev-skills/skills/java-development"
+    scope: "languages"
+    requires: [java, maven or gradle]
+  knip:
+    path: "plugins/dev-skills/skills/knip"
+    scope: "quality"
+    requires: [npx, knip]
+  live-qa:
+    path: "plugins/dev-skills/skills/live-qa"
+    scope: "quality"
+    requires: [playwright]
+  multi-harness:
+    path: "overnight-task-kit/skills/multi-harness"
+    scope: "cross-harness"
+    requires: [python3]
+  orchestrate:
+    path: "plugins/dev-skills/skills/orchestrate"
+    scope: "orchestration"
+  overnight-task:
+    path: "overnight-task-kit/skills/overnight-task"
+    scope: "autonomous"
+  pdf:
+    path: "plugins/dev-skills/skills/pdf"
+    scope: "documents"
+    requires: [pandoc or typst when used]
+  playwright-stability:
+    path: "plugins/dev-skills/skills/playwright-stability"
+    scope: "quality"
+    requires: [playwright]
+  security-checklist:
+    path: "plugins/dev-skills/skills/security-checklist"
+    scope: "security"
+  semgrep:
+    path: "plugins/dev-skills/skills/semgrep"
+    scope: "security"
+    requires: [semgrep]
+  stagehand:
+    path: "plugins/dev-skills/skills/stagehand"
+    scope: "quality"
+    requires: [node]
+  tex-render:
+    path: "plugins/dev-skills/skills/tex-render"
+    scope: "visualization"
+    requires: [node]
   tmux-delegation:
     path: "plugins/dev-skills/skills/tmux-delegation"
     scope: "orchestration"
@@ -60,6 +139,14 @@ skills:
     path: "plugins/dev-skills/skills/voice-studio"
     scope: "voice-synthesis"
     requires: [VoiceStudio, PipeWire]
+  web-browse:
+    path: "plugins/dev-skills/skills/web-browse"
+    scope: "browsing"
+    requires: [node]
+  word-docx:
+    path: "plugins/dev-skills/skills/word-docx"
+    scope: "documents"
+    requires: [office tooling when used]
 
 tools:
   agent-dev-kit:

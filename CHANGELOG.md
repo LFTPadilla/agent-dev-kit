@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1] - 2026-09-21
+
+### Added
+- `validate` checks `REGISTRY.yaml` against the skills on disk: it fails on a missing skill, a stale skill, or a path that points at the wrong directory
+- Agent harness availability checker (`scripts/check-agent-harnesses.py`) with its `test:check-agent-harnesses` contract suite
+- `docs/browserskill.md` documents driving a local, logged-in Chromium and the local CLI evaluation
+
+### Fixed
+- `REGISTRY.yaml` now catalogs all 28 shipped skills; it listed 10 and dropped the other 18
+- `REGISTRY.yaml` now lists all 6 shipped profiles; it listed 1
+- Public counts unified at 28 skills and 6 profiles, replacing the stale "25 skills" and "profiles-7" claims in the README badge, README tier table, WRITEUP, and docs index
+
 ## [Unreleased]
 
 ### Added
