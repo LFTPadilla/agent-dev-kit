@@ -274,6 +274,28 @@ if AGENT_DEV_KIT_HERMES_HOME="$symlinked_root" \
 fi
 test -z "$(find "$outside_skills" -mindepth 1 -print -quit)"
 
+# A Hermes runtime exports HERMES_HOME as the data directory of the active
+# profile. That path is not a root. The installer must ignore it and resolve the
+# root from $HOME/.hermes, so the global skills stay under that user root.
+#
+# This run clears the AGENT_DEV_KIT_HERMES_HOME override on purpose. With the
+# override set, both a broken and a fixed resolver keep the configured root.
+profile_home_root="$FIXTURE/profile-home"
+profile_data_home="$profile_home_root/.hermes/profiles/sample-profile"
+mkdir -p "$profile_home_root/home/.hermes/profiles/alpha" "$profile_data_home"
+env -u AGENT_DEV_KIT_HERMES_HOME \
+  HOME="$profile_home_root/home" HERMES_HOME="$profile_data_home" \
+  "$ROOT/scripts/install-hermes-workhorse.sh" --profile alpha >/dev/null
+test -f "$profile_home_root/home/.hermes/skills/caveman/SKILL.md"
+test -f "$profile_home_root/home/.hermes/skills/caveman/.agent-dev-kit-source"
+test -f "$profile_home_root/home/.hermes/skills/ponytail/.agent-dev-kit-source"
+assert_skill_checksum caveman
+assert_profile_skill_link alpha caveman
+test ! -e "$profile_data_home/skills"
+test "$(readlink "$profile_home_root/home/.hermes/profiles/alpha/skills/external/caveman")" \
+  = "$profile_home_root/home/.hermes/skills/caveman"
+assert_no_workhorse_lock "profile HERMES_HOME run left a workhorse lock behind"
+
 mkdir -p "$HERMES_HOME/profiles/beta/skills" \
   "$HERMES_HOME/profiles/link-collision/skills/external/ponytail"
 if "$ROOT/scripts/install-hermes-workhorse.sh" --profile beta \
