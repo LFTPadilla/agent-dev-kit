@@ -20,7 +20,7 @@ Orthogonal layers, each governing one thing, composed together:
 | **caveman** | how the agent *talks* | output compression (~75% fewer tokens) |
 | **ponytail** | what the agent *builds* | YAGNI / stdlib-first / shortest diff |
 | **GSD** | how work *flows* | plan → execute → verify |
-| **dev-skills** (this repo) | discrete *capabilities* | per-task skills + commands (28 skills) |
+| **dev-skills** (this repo) | discrete *capabilities* | per-task skills + commands (29 skills) |
 | **ship / overnight / orchestration** | gates, isolation, long runs | no-mistakes, jev-review, treehouse, gnhf, AXI/TOON, `orchestrate` |
 
 They don't overlap, so they don't fight. caveman and ponytail are other people's
@@ -28,7 +28,7 @@ plugins (credited); GSD is an npm package; the ship/overnight tools are external
 companions. The contribution here is treating them as a *layered system*, filling
 the capability layer, and making ship/overnight/orchestration first-class.
 
-Skill distribution is also layered: this marketplace ships the curated 28;
+Skill distribution is also layered: this marketplace ships the curated 29;
 **vercel-labs/skills** installs additional packs; **addyosmani/agent-skills**
 is a reference lifecycle pack (not vendored).
 

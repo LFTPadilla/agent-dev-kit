@@ -12,7 +12,17 @@ adopt [firstmate](https://github.com/kunchenguid/firstmate) as a runtime.
 | Workers | Claude Code TUIs in tmux session `tutor`, or Hermes Kanban | Crewmates in tmux / other backends |
 | Mutation | Tutor never edits/tests/commits/opens PRs; workers do | First mate read-only except guarded fleet paths |
 | Isolation | Branch-per-delegate worktrees; optional treehouse | treehouse (or backend-specific) by default |
+| Routing | `classifier-policy` skill: task class → harness, model tier, effort, in a versioned policy file | Preference files: task class → model, harness, effort |
 | Scope | One profile among talk/build/flow/ship/overnight layers | The whole product is the crew orchestrator |
+
+## Routing is a policy, not a preference
+
+firstmate routes by durable rules in preference files. This kit reaches the same
+place from the other side: the [`classifier-policy`](../plugins/dev-skills/skills/classifier-policy/SKILL.md)
+skill keeps the same rule table in one versioned file, names cost tiers instead
+of vendor models, and ships a checker for it. Use it when a routing decision must
+be reproducible on another machine. See
+[`skills-catalog.md`](skills-catalog.md).
 
 ## Why keep tutor as a pure orchestrator
 

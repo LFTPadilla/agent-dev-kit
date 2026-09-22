@@ -19,6 +19,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- `classifier-policy` skill: a declarative task-class → harness, model tier, and reasoning effort policy, a schema, two example policies, and a checker (`scripts/check-classifier-policy.mjs`) that never calls a remote service
+- `test:classifier-policy` contract suite; it asserts the shipped examples pass and that the checker rejects seven defect classes
 - Opt-in Jev Review wiring (`scripts/install-jev-review.sh`) for Hermes and Codex
 - `docs/jev/` as the single source of truth for the Jev Review loop, install, and harness map
 

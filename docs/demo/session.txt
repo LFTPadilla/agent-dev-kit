@@ -5,8 +5,9 @@ OK JSON files parse
 OK YAML files parse with strict syntax checks
 OK plugin manifest checked
 OK release versions aligned at 0.13.1
-OK 26 skill frontmatters checked
+OK 27 skill frontmatters checked
 OK skill provenance covers all skills
+OK REGISTRY.yaml catalogs all 29 shipped skills
 OK 17 pinned third-party skills checked
 OK 6 profile manifests checked
 OK Pi package research is inert and preserves compatibility contracts
@@ -14,8 +15,7 @@ OK sandbox policies checked
 OK eval suite checked (12 planted, 3 controls)
 OK relative markdown links checked
 OK privacy scan found no private project coupling
-
-13 checks: 0 failed, 0 warnings
+14 checks: 0 failed, 0 warnings
 
 $ npm run eval:semgrep
   -   01-sql-injection.ts

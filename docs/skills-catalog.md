@@ -13,7 +13,7 @@
    [how-it-fits-together.md](how-it-fits-together.md), and
    [jev/](jev/) for the Jev Review loop.
 
-## Skills (28)
+## Skills (29)
 
 ### Orchestration (agentic core)
 
@@ -23,6 +23,7 @@
 | `herdr` | Multi-Pane Workspaces | Agent-native terminal multiplexer: workspaces, tabs, panes, and agent lifecycle management (idle, working, blocked, done). | "herdr", running inside Herdr (HERDR_ENV=1), inspecting/controlling Herdr agents or panes |
 | `tmux-delegation` | Out-of-Process Panes | Multi-harness tmux delegation (Codex, Claude Code, Pi, OpenCode, cursor-agent): pane allocation, reliable multiline buffer injection, completion detection, disk audit. | "tmux delegation", delegating tasks to agents running in tmux panes across multiple harnesses |
 | `multi-harness` | Cross-Harness Delegation | Delegate bounded subtasks to other local harnesses (Pi, OpenCode, Codex CLI, Claude Code CLI, DHS) with prompt isolation and output contracts. | cross-harness requests, comparing harnesses, external-only runtimes |
+| `classifier-policy` | Declarative Routing | Task-class → harness, model tier, and reasoning effort as one versioned policy file, plus a checker for it. Shadow mode first; the policy names tiers, not vendor models, so it stays portable. | "which model should run this", routing work by task class, making a routing decision reproducible on another machine |
 | `overnight-task` | Long Runs / Autonomous | Autonomous execution protocol, state machines, and templates for unsupervised multi-hour workflows (gnhf). | overnight tasks, long-running batch jobs, autonomous milestone completion |
 
 ### Documents & media

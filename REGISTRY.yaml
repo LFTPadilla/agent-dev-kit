@@ -3,7 +3,7 @@
 # Every skill under a `skills/` directory of a shipped subsystem is listed here.
 # `npm run validate` fails when this catalog drifts from disk.
 version: "1.0"
-updated: "2026-09-21"
+updated: "2026-09-22"
 
 subsystems:
   dev-skills:
@@ -44,6 +44,10 @@ skills:
     path: "plugins/dev-skills/skills/agent-native-scaffold"
     scope: "architecture"
     requires: [python3, git]
+  classifier-policy:
+    path: "plugins/dev-skills/skills/classifier-policy"
+    scope: "orchestration"
+    requires: [node]
   diagram-render:
     path: "plugins/dev-skills/skills/diagram-render"
     scope: "visualization"
@@ -162,6 +166,10 @@ tools:
     entrypoint: "overnight-task-kit/skills/multi-harness/scripts/delegate.py"
     description: "Multi-harness dispatcher with worker contract mode (--task-json: task.json in, result.json validated, events.jsonl appended)"
     commands: ["--task", "--task-file", "--task-json", "--worktree", "--dry-run", "--diagnose", "--list-profiles"]
+  check-classifier-policy:
+    entrypoint: "plugins/dev-skills/skills/classifier-policy/scripts/check-classifier-policy.mjs"
+    description: "Validate a task-class routing policy against the classifier-policy schema; reads the policy only and calls no remote service"
+    commands: ["<policy.yml|policy.json>", "--json"]
   install-jev-review:
     entrypoint: "scripts/install-jev-review.sh"
     description: "Opt-in wiring of the Jev Review MCP into Hermes and Codex"

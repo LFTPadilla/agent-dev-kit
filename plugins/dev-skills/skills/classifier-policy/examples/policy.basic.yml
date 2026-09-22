@@ -1,0 +1,35 @@
+# Example policy: a small, local change versus a design change.
+#
+# Both routes use placeholder tiers. Replace the tiers on your machine; keep the
+# class names and the shape.
+version: "1.0"
+updated: "2026-09-22"
+policy:
+  name: example-basic
+  mode: shadow
+  default_route:
+    harness: any
+    model: standard-tier
+    effort: medium
+  thresholds:
+    delegate: 0.85
+    review: 0.6
+classes:
+  mechanical-fix:
+    criteria: A small, local change with a known shape, an existing test, and no new interface.
+    consequence: low
+    route:
+      harness: any
+      model: cheap-tier
+      effort: low
+  design-change:
+    criteria: A change that adds or moves an interface, a data shape, or a dependency between modules.
+    consequence: high
+    route:
+      harness: any
+      model: strong-tier
+      effort: high
+    fallback:
+      harness: any
+      model: standard-tier
+      effort: medium

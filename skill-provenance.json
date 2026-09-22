@@ -12,6 +12,16 @@
         "git"
       ]
     },
+    "classifier-policy": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "medium",
+      "dependencies": [
+        "node",
+        "yaml (kit root dependency, for YAML policies)"
+      ]
+    },
     "diagram-render": {
       "source": "local",
       "license": "MIT",

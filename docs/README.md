@@ -7,9 +7,9 @@ in the [root README](../README.md), then pick a lane.
 
 | Doc | Read it when |
 |---|---|
-| [https://agent-dev-kit.devpipe.net/](https://agent-dev-kit.devpipe.net/) | **Live Web Platform.** Interactive showcase, terminal simulator & 28-skills explorer (source: `agent-dev-kit-web`, a separate repo) |
+| [https://agent-dev-kit.devpipe.net/](https://agent-dev-kit.devpipe.net/) | **Live Web Platform.** Interactive showcase, terminal simulator & 29-skills explorer (source: `agent-dev-kit-web`, a separate repo) |
 | [how-it-fits-together.md](how-it-fits-together.md) | You want the one map: runtimes → behavior → orchestration → gates |
-| [skills-catalog.md](skills-catalog.md) | You want to know what the 28 skills do and what triggers them |
+| [skills-catalog.md](skills-catalog.md) | You want to know what the 29 skills do and what triggers them |
 | [external-deps.md](external-deps.md) | You want install commands for everything not vendored here |
 
 ## Orchestrators
@@ -24,6 +24,7 @@ in the [root README](../README.md), then pick a lane.
 | Doc | Read it when |
 |---|---|
 | [profiles.md](profiles.md) | You are wiring a runtime manifest in `profiles/` |
+| [classifier-policy skill](../plugins/dev-skills/skills/classifier-policy/SKILL.md) | You are deciding which harness and model tier a class of work uses |
 | [agent-native-architecture.md](agent-native-architecture.md) | **Architecture Standard.** ANRS-1.0 Context Engineering, Hub-and-Spoke AGENTS.md & O(1) REGISTRY.yaml |
 | [private-overlays.md](private-overlays.md) | Employer/org skills must stay out of this tree |
 | [sandbox-policies.md](sandbox-policies.md) | You are changing what a worker is allowed to touch |

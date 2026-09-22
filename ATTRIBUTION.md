@@ -109,6 +109,12 @@ obligations itself.
 1. **Agent Tutor Orchestrator vs firstmate** — this kit ships Agent Tutor Orchestrator as a generalist
    pure-orchestrator profile. firstmate is not adopted as a runtime; see
    [docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md).
-2. **Ship / overnight layer** — ship gates and overnight loops are first-class
+2. **`classifier-policy`** — the routing rule shape (task class → harness, model,
+   reasoning effort) adapts the durable-rules idea from
+   [kunchenguid/firstmate](https://github.com/kunchenguid/firstmate) configuration
+   docs, and the criteria-based model choice idea from the LangChain
+   `ModelRouterMiddleware` pattern. No code or text is copied. The kit names cost
+   tiers instead of vendor models, and adds a checker.
+3. **Ship / overnight layer** — ship gates and overnight loops are first-class
    in the architecture (README diagram), with gnhf preferred as the overnight
    engine and local overnight-task-kit as protocol.
