@@ -50,6 +50,7 @@ does not vendor their binaries or full skill trees.
 | [no-mistakes](https://github.com/kunchenguid/no-mistakes) | Ship gate / mistake catcher; complements `/pr-review` | kunchenguid/no-mistakes |
 | [treehouse](https://github.com/kunchenguid/treehouse) | Multi-agent worktree isolation / pools | kunchenguid/treehouse |
 | [gnhf](https://github.com/kunchenguid/gnhf) | Preferred overnight runner; `overnight-task-kit/` is protocol + templates | kunchenguid/gnhf |
+| [firstmate](https://github.com/kunchenguid/firstmate) | Optional third-party agent distro; owns task-class to model routing and crew supervision. Not vendored, not this kit's runtime | kunchenguid/firstmate — MIT, Copyright (c) 2026 Kun Chen |
 | [axi](https://github.com/kunchenguid/axi) (+ gh-axi) | Agent contract principles / AXIs | kunchenguid/axi |
 | [TOON](https://toonformat.dev) | Token-efficient structured output for agent-facing channels | toonformat.dev |
 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | Modern skill install CLI (`npx skills`) | vercel-labs/skills |
@@ -107,7 +108,8 @@ obligations itself.
 ## Judgment notes (not attribution of code)
 
 1. **Agent Tutor Orchestrator vs firstmate** — this kit ships Agent Tutor Orchestrator as a generalist
-   pure-orchestrator profile. firstmate is not adopted as a runtime; see
+   pure-orchestrator profile. firstmate is an optional external layer, documented
+   and bootstrapped, and is not vendored or adopted as this kit's runtime; see
    [docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md).
 2. **Ship / overnight layer** — ship gates and overnight loops are first-class
    in the architecture (README diagram), with gnhf preferred as the overnight

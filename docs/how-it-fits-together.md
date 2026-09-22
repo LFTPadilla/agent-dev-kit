@@ -19,13 +19,21 @@ direct          ship                 run
 caveman         /pr-review           agent-tutor-orchestrator
 ponytail        no-mistakes          gnhf (+ overnight-task-kit)
 GSD             jev-review           treehouse
-superpowers*    evals
+superpowers*    evals                firstmate*
 (+ dev-skills)
 ```
 
 1. **direct** — how the agent talks (caveman), what it builds (ponytail), how multi-step work flows (GSD), execution-phase engineering guardrails (Superpowers: TDD, systematic debugging, verification before claims, receiving code review), plus discrete capabilities in this repo (`dev-skills`).
 2. **ship** — adversarial `/pr-review`, the Jev Review score loop ([`jev/`](jev/)), the no-mistakes gate, and measured evals. Prefer both LLM review and deterministic SAST. Jev supplies scores; the coding agent still diagnoses and edits.
-3. **run** — orchestrator profile (Agent Tutor Orchestrator), overnight runner (gnhf), and worktree isolation (treehouse).
+3. **run** — orchestrator profile (Agent Tutor Orchestrator), overnight runner (gnhf), worktree isolation (treehouse), and optional third-party crew routing (firstmate).
+
+`*` external layer, installed from upstream. firstmate is the optional crew
+distro: it owns task-class to model routing through durable dispatch rules and
+supervises the workers that those rules select. It is not this kit's runtime;
+Agent Tutor Orchestrator stays the generalist orchestrator surface, and
+`orchestrate` stays the lean native path. Comparison:
+[`agent-tutor-vs-firstmate.md`](agent-tutor-vs-firstmate.md). Install:
+[`external-deps.md`](external-deps.md).
 
 ## Recommended loop
 
