@@ -78,6 +78,28 @@ be promoted at all until upstream adds a license. No current entry is
 [docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md); Agent Tutor Orchestrator remains the
 strict pure-orchestrator alternative, and `orchestrate` covers lean native delegation).
 
+### firstmate — external layer, documented and bootstrapped
+
+Adopted as an optional external layer, never vendored. Reasons:
+
+1. **Third-party copyright.** firstmate is Kun Chen's work (MIT, Copyright (c)
+   2026 Kun Chen). Copying its tree here would put its license, notice, and
+   update obligations on this repo.
+2. **No fork to maintain.** It is an active distro (6966 stars, commits daily,
+   no releases and no tags). A fork would drift within days and this repo would
+   owe a merge for every upstream change.
+3. **Follow upstream directly.** The cloned directory *is* the distro, so
+   tracking it is `git pull --ff-only`, or the distro's own `/updatefirstmate`
+   skill, pinned to the commit reviewed here
+   (`6f0f139962eadaea29487cafead418a0eb2ec6e4`).
+
+What this repo does instead: one row in
+[docs/external-deps.md](docs/external-deps.md), one place in the layer map in
+[docs/how-it-fits-together.md](docs/how-it-fits-together.md), and one table row
+in [ATTRIBUTION.md](ATTRIBUTION.md). No firstmate code, and no reimplementation
+of its task-class to model routing rules. Install only where a crew is wanted;
+this kit's own runtime choice is unchanged.
+
 ## Held back — need a rewrite, not a scrub
 
 These are bound to private platform assumptions (auth flows, gateway cron,

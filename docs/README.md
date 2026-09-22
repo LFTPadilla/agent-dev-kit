@@ -17,7 +17,7 @@ in the [root README](../README.md), then pick a lane.
 | Doc | Read it when |
 |---|---|
 | [agent-tutor-orchestrator.md](agent-tutor-orchestrator.md) | You need a strict liaison that never edits |
-| [agent-tutor-vs-firstmate.md](agent-tutor-vs-firstmate.md) | You are choosing between the strict profile and firstmate |
+| [agent-tutor-vs-firstmate.md](agent-tutor-vs-firstmate.md) | You are choosing between the strict profile and firstmate (optional external layer) |
 
 ## Configuration
 

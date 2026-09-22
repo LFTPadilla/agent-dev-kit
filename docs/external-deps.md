@@ -13,6 +13,7 @@ don't vendor. Flow map: [`how-it-fits-together.md`](how-it-fits-together.md).
 | **caveman** | Compressed agent talk | Codex: `./scripts/install-codex-workhorse.sh`; Claude: `/plugin marketplace add JuliusBrussee/caveman` then `/plugin install caveman@caveman`; Hermes: `./scripts/install-hermes-workhorse.sh --all-profiles` |
 | **ponytail** | Minimal diffs / YAGNI build mode | Codex: `./scripts/install-codex-workhorse.sh`; Claude: `/plugin marketplace add DietrichGebert/ponytail` then `/plugin install ponytail@ponytail`; Hermes: `./scripts/install-hermes-workhorse.sh --all-profiles` |
 | **Superpowers** (`obra/superpowers`) | Execution discipline (TDD, systematic debugging, verification evidence, review reception) | Antigravity: `agy plugin install https://github.com/obra/superpowers`; Codex: `/plugins` → search `superpowers`; Hermes: `hermes plugins install obra/superpowers --enable`; Claude: `/plugin marketplace add obra/superpowers-marketplace && /plugin install superpowers@superpowers-marketplace` (or `/plugin install superpowers@claude-plugins-official`) |
+| **firstmate** (`kunchenguid/firstmate`) | Agent distro for a crew of agents: it routes task classes to models through durable dispatch rules, then supervises the workers | `gh auth login && git clone https://github.com/kunchenguid/firstmate && cd firstmate`, then launch a supported harness in that directory (for example `claude`) |
 | **hypa** (`@hypabolic/hypa`) | Token-efficient shell + MCP proxy | `npm i -g @hypabolic/hypa && hypa init --agent claude && hypa init --agent codex` |
 | **jean-claude** *(optional)* | Multi-machine / multi-account Claude sync | `npm i -g jean-claude` |
 
@@ -63,6 +64,16 @@ optional tools.
 When Hermes is present, bootstrap additionally installs the pinned caveman and
 ponytail skills and links them into every existing Hermes profile. Each managed
 Hermes profile installer repeats that step for profiles created later.
+
+firstmate is an MIT upstream dependency and is not vendored. The cloned
+directory *is* the distro, so no package manager installs it. Upstream publishes
+no releases and no tags, only commits, so pin the commit you reviewed
+(`6f0f139962eadaea29487cafead418a0eb2ec6e4`, 2026-09-22) and update it with
+`git pull --ff-only`, or with the distro's own `/updatefirstmate` skill when a
+session is running. Install it only on hosts that run a crew. This kit documents
+and bootstraps it as a layer; it does not adopt it as this kit's runtime and it
+does not reimplement its task-class to model routing rules. Comparison:
+[`agent-tutor-vs-firstmate.md`](agent-tutor-vs-firstmate.md).
 
 Graphify is an Apache-2.0 upstream dependency and is not vendored. Use the
 reviewed version 0.9.25 and run `--code-only` by default. Semantic
