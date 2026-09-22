@@ -405,6 +405,49 @@ function validateEvals(checks) {
   if (cases.length < 12) checks.push(fail('eval suite should have at least 12 cases'))
   if (controls < 2) checks.push(fail('eval suite should have at least 2 clean controls'))
   checks.push(ok(`eval suite checked (${planted} planted, ${controls} controls)`))
+  validateCalibrationTaxonomy(checks, cases)
+}
+
+function validateCalibrationTaxonomy(checks, cases) {
+  const file = path.join(root, 'evals/calibration/taxonomy.json')
+  if (!existsSync(file)) {
+    checks.push(ok('calibration taxonomy absent (bench not installed)'))
+    return
+  }
+  const taxonomy = readJson(file, checks)
+  if (!taxonomy) return
+  const classes = taxonomy.classes || {}
+  const labelOf = taxonomy.cases || {}
+  if (typeof classes !== 'object' || Array.isArray(classes) || !Object.keys(classes).length) {
+    checks.push(fail('calibration taxonomy: classes must be a non-empty object'))
+    return
+  }
+  for (const [name, meta] of Object.entries(classes)) {
+    if (typeof meta?.description !== 'string' || !meta.description) {
+      checks.push(fail(`calibration taxonomy: class ${name} needs a description`))
+    }
+  }
+  for (const c of cases) {
+    const entry = labelOf[c.file]
+    if (!entry || typeof entry !== 'object') {
+      checks.push(fail(`calibration taxonomy: case ${c.file} has no class label`))
+      continue
+    }
+    if (!classes[entry.class]) {
+      checks.push(fail(`calibration taxonomy: case ${c.file} names unknown class ${entry.class}`))
+    }
+    if (typeof entry.difficulty !== 'string' || !entry.difficulty) {
+      checks.push(fail(`calibration taxonomy: case ${c.file} needs a difficulty`))
+    }
+    if (typeof entry.why !== 'string' || !entry.why) {
+      checks.push(fail(`calibration taxonomy: case ${c.file} needs a why note`))
+    }
+  }
+  const known = new Set(cases.map((c) => c.file))
+  for (const file of Object.keys(labelOf)) {
+    if (!known.has(file)) checks.push(fail(`calibration taxonomy: labels name unknown case ${file}`))
+  }
+  checks.push(ok('calibration taxonomy covers all eval cases'))
 }
 
 function validateLinks(checks, { files }) {

@@ -49,6 +49,7 @@ in the [root README](../README.md), then pick a lane.
 | [going-public.md](going-public.md) | You are publishing a change to this repo |
 | [../evals/README.md](../evals/README.md) | You want the benchmark, not the claim |
 | [../evals/PROTOCOL.md](../evals/PROTOCOL.md) | You want the scored runs and their caveats |
+| [../evals/calibration/README.md](../evals/calibration/README.md) | You want to route tasks to the cheapest model that passes |
 | [../ATTRIBUTION.md](../ATTRIBUTION.md) · [../CURATION.md](../CURATION.md) | What is borrowed, what was deliberately left out |
 
 ## Diagrams

@@ -21,6 +21,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Opt-in Jev Review wiring (`scripts/install-jev-review.sh`) for Hermes and Codex
 - `docs/jev/` as the single source of truth for the Jev Review loop, install, and harness map
+- `evals/calibration/` bench: it joins harness run files with a task-class taxonomy and reports the cheapest model that passes each class (`npm run eval:calibrate`)
+- `evals/calibration/taxonomy.json` labels all 15 eval cases with one of five task classes; `validate` fails when a new case has no label
+- `test:evals-calibration` contract suite for the bench
 
 ## [0.13.0] - 2026-08-17
 

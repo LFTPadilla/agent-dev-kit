@@ -32,6 +32,9 @@ function colour(line) {
   if (line.startsWith('FLAG')) return '#f59e0b'
   if (/^\d+ checks: 0 failed/.test(line)) return '#34d399'
   if (line.startsWith('semgrep floor:')) return '#f59e0b'
+  if (line.startsWith('calibration:')) return '#38bdf8'
+  if (line.startsWith('  WARN')) return '#f59e0b'
+  if (/^\s{2}\S.*\((priced|cost-unknown|partial|none)\)$/.test(line)) return '#a5b4fc'
   if (line.startsWith('>')) return '#475569'
   return '#94a3b8'
 }
@@ -86,7 +89,11 @@ try {
   rmSync(dir, { recursive: true, force: true })
 }
 
-// Self-check: the transcript must still contain the two claims the README cites.
-if (!text.includes('0 failed') || !text.includes('false positives 0/3')) {
+// Self-check: the transcript must still contain the claims the README cites.
+if (
+  !text.includes('0 failed') ||
+  !text.includes('false positives 0/3') ||
+  !text.includes('SYNTHETIC DATA')
+) {
   throw new Error('session.txt no longer shows the results the README quotes — recapture it')
 }

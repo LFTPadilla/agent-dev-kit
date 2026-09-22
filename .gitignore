@@ -34,6 +34,11 @@ playwright-report/
 # Generated local code-graph output
 /graphify-out/
 
+# Calibration bench output — regenerate from evals/calibration/runs/*.json.
+# A committed report goes stale and misstates the numbers.
+evals/calibration/report.json
+evals/calibration/report.md
+
 # OpenClaw/clawhub vendoring artifacts (in case a skill is copied in with them)
 .clawhub/
 .clawbot/

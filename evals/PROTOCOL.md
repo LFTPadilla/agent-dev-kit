@@ -211,3 +211,9 @@ kit runs both: semgrep as a deterministic floor, the LLM layer for intent.
 Add cases under `cases/`, append a row to `cases.json`. Good additions: more
 clean controls (aim ~30% of the set), subtler correctness bugs, and anything
 that stresses adversarial verify on ambiguous findings.
+
+Then label the new case in
+[`calibration/taxonomy.json`](calibration/taxonomy.json). `npm run validate`
+fails until you do. The [calibration bench](calibration/README.md) reads the same
+case set to answer a second question: for each task class, which is the cheapest
+model that still passes?

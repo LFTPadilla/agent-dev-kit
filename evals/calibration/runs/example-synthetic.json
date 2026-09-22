@@ -1,0 +1,393 @@
+{
+  "format": "adk-eval-run/1",
+  "label": "example-synthetic",
+  "synthetic": true,
+  "source": "Hand-written fixture. No model was called. Replace with a real harness run.",
+  "created": "2026-09-22",
+  "models": [
+    {
+      "id": "example/cheap-model",
+      "price_in_per_mtok": 0.05,
+      "price_out_per_mtok": 0.15
+    },
+    {
+      "id": "example/mid-model",
+      "price_in_per_mtok": 0.5,
+      "price_out_per_mtok": 1.5
+    },
+    {
+      "id": "example/frontier-model",
+      "price_in_per_mtok": 3.0,
+      "price_out_per_mtok": 15.0
+    }
+  ],
+  "results": [
+    {
+      "model": "example/cheap-model",
+      "case": "01-sql-injection.ts",
+      "finding": true,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "02-missing-auth.ts",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "03-n-plus-one.ts",
+      "finding": true,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "04-react-stale-closure.tsx",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "05-clean-control.ts",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "06-ssrf-fetch.ts",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "07-path-traversal.ts",
+      "finding": true,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "08-tenant-filter-missing.ts",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "09-race-condition.ts",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "10-overbroad-cors.ts",
+      "finding": true,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "11-clean-react-control.tsx",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "12-secret-logging.ts",
+      "finding": true,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "13-prompt-injection-tool.ts",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "14-missing-rate-limit.ts",
+      "finding": true,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/cheap-model",
+      "case": "15-clean-permission-control.ts",
+      "finding": false,
+      "tokens_in": 780,
+      "tokens_out": 120,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "01-sql-injection.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "02-missing-auth.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "03-n-plus-one.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "04-react-stale-closure.tsx",
+      "finding": false,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "05-clean-control.ts",
+      "finding": false,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "06-ssrf-fetch.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "07-path-traversal.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "08-tenant-filter-missing.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "09-race-condition.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "10-overbroad-cors.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "11-clean-react-control.tsx",
+      "finding": false,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "12-secret-logging.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "13-prompt-injection-tool.ts",
+      "finding": false,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "14-missing-rate-limit.ts",
+      "finding": true,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/mid-model",
+      "case": "15-clean-permission-control.ts",
+      "finding": false,
+      "tokens_in": 820,
+      "tokens_out": 240,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "01-sql-injection.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "02-missing-auth.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "03-n-plus-one.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "04-react-stale-closure.tsx",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "05-clean-control.ts",
+      "finding": false,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "06-ssrf-fetch.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "07-path-traversal.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "08-tenant-filter-missing.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "09-race-condition.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "10-overbroad-cors.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "11-clean-react-control.tsx",
+      "finding": false,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "12-secret-logging.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "13-prompt-injection-tool.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "14-missing-rate-limit.ts",
+      "finding": true,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    },
+    {
+      "model": "example/frontier-model",
+      "case": "15-clean-permission-control.ts",
+      "finding": false,
+      "tokens_in": 910,
+      "tokens_out": 310,
+      "notes": "synthetic fixture: no model was called"
+    }
+  ],
+  "classes": [
+    "pattern-scan",
+    "taint-trace",
+    "semantic-intent",
+    "state-reasoning",
+    "fp-discipline"
+  ]
+}

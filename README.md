@@ -59,6 +59,12 @@ planted bugs are clearer than production bugs* — that caveat is written down i
 [PROTOCOL.md](evals/PROTOCOL.md), along with the row still unmeasured (a live
 `/pr-review <PR-URL>` Workflow against a real multi-file PR).
 
+The same 15 cases feed a second instrument: the
+[calibration bench](evals/calibration/README.md) labels each case with a task
+class and reports the cheapest model that still passes the class. It reads run
+files from any harness (`npm run eval:calibrate`) and never calls a model itself,
+so it costs nothing and cannot fabricate a result.
+
 The contribution isn't the borrowed pieces (caveman, ponytail, GSD are credited)
 — it's the architecture they sit in, the original parts (adversarial PR review,
 layered live-QA, prompt-injection defense), and the
@@ -115,6 +121,7 @@ agent-dev-kit/
 │   ├── skills/<skill>/SKILL.md
 │   └── commands/pr-review.md         # multi-lens review + adversarial verify
 ├── evals/                            # planted bugs + clean controls
+│   └── calibration/                  # task class -> cheapest passing model
 ├── profiles/                         # runtime manifests + agent-tutor-orchestrator
 ├── policies/                         # sandbox policy contracts
 ├── scripts/                          # validation + strict tutor runtime
@@ -205,6 +212,7 @@ npm run validate
 npm run inventory
 npm run test:java
 npm run eval:semgrep        # deterministic floor, also runs in CI
+npm run eval:calibrate      # task class -> cheapest passing model (reads run files)
 npm run render:diagrams     # .d2 / .mmd -> SVG + social preview PNG
 npm run render:demo         # real session transcript -> README GIF (needs ffmpeg)
 ```

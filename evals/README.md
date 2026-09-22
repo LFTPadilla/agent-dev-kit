@@ -59,6 +59,21 @@ that gap is the point: it shows exactly what the LLM layer has to add.
 skills are scored by [`PROTOCOL.md`](PROTOCOL.md) — run them on the same cases,
 record findings, compute recall + false positives. Results go in a table there.
 
+**Model routing (calibration):** [`calibration/`](calibration/README.md) reuses
+the same 15 cases to answer a second question: for each task class, which is the
+cheapest model that still passes? It reads run files from any harness and writes
+a class to model table. It never calls a model itself.
+
+```bash
+npm run eval:calibrate                              # read calibration/runs/*.json
+node evals/calibration/run.mjs --template           # print an empty run file
+```
+
+Every case carries one class label in
+[`calibration/taxonomy.json`](calibration/taxonomy.json): `pattern-scan`,
+`taint-trace`, `semantic-intent`, `state-reasoning`, or `fp-discipline`.
+`npm run validate` fails when a new case has no label.
+
 ## Why this matters
 
 Most "I use AI to review code" claims are unmeasured. This says: here is the

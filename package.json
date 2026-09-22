@@ -17,9 +17,11 @@
     "test:multi-harness": "bash scripts/test-multi-harness.sh",
     "test:check-agent-harnesses": "python3 scripts/test-check-agent-harnesses.py",
     "test:jev-review": "bash scripts/test-jev-review.sh",
+    "test:evals-calibration": "bash scripts/test-evals-calibration.sh",
     "render:diagrams": "bash scripts/render-diagrams.sh",
     "overnight:init": "node overnight-task-kit/scripts/overnight-runner.mjs init",
     "eval:semgrep": "node evals/run.mjs",
+    "eval:calibrate": "node evals/calibration/run.mjs",
     "render:demo": "node scripts/render-demo.mjs"
   },
   "dependencies": {

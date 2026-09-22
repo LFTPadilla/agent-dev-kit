@@ -1,0 +1,103 @@
+{
+  "format": "adk-eval-taxonomy/1",
+  "note": "Task classes for the 15 cases in evals/cases.json. Every case belongs to exactly one class. `npm run validate` fails when this file drifts from cases.json.",
+  "classes": {
+    "pattern-scan": {
+      "description": "The defect follows from a well-known local pattern. The reviewer reads one function and reports it.",
+      "expects": "A cheap model should pass this class."
+    },
+    "taint-trace": {
+      "description": "The reviewer must follow untrusted input to a sink across a helper or an API boundary.",
+      "expects": "A cheap model may lose the source-to-sink link."
+    },
+    "semantic-intent": {
+      "description": "The reviewer must infer what the code should enforce. The file compiles and no rule matches it.",
+      "expects": "The reviewer needs the intended policy: auth, tenant scope, or rate limit."
+    },
+    "state-reasoning": {
+      "description": "The reviewer must reason about ordering, lifecycle, or concurrency instead of one statement.",
+      "expects": "The reviewer must model two interleaved states or a render cycle."
+    },
+    "fp-discipline": {
+      "description": "Clean control. The reviewer must report nothing here. Any finding is a false positive.",
+      "expects": "A model that flags everything fails this class."
+    }
+  },
+  "cases": {
+    "01-sql-injection.ts": {
+      "class": "pattern-scan",
+      "difficulty": "low",
+      "why": "A request value is interpolated into a SQL string. The sink is a project wrapper, so generic rules miss it. The pattern is local and well known."
+    },
+    "02-missing-auth.ts": {
+      "class": "semantic-intent",
+      "difficulty": "medium",
+      "why": "The delete route has no auth or ownership check. Nothing marks it as wrong without the intended policy."
+    },
+    "03-n-plus-one.ts": {
+      "class": "pattern-scan",
+      "difficulty": "medium",
+      "why": "One query per loop iteration. The defect is local and well known."
+    },
+    "04-react-stale-closure.tsx": {
+      "class": "state-reasoning",
+      "difficulty": "high",
+      "why": "The effect reads userId with an empty dependency list. The reviewer must model the render lifecycle."
+    },
+    "05-clean-control.ts": {
+      "class": "fp-discipline",
+      "difficulty": "low",
+      "why": "Parameterized query, ownership check, awaited, scoped columns."
+    },
+    "06-ssrf-fetch.ts": {
+      "class": "taint-trace",
+      "difficulty": "medium",
+      "why": "The reviewer must trace req.body.url into fetch and confirm that no allowlist exists."
+    },
+    "07-path-traversal.ts": {
+      "class": "taint-trace",
+      "difficulty": "medium",
+      "why": "The reviewer must trace the untrusted filename into path.join and past the base directory."
+    },
+    "08-tenant-filter-missing.ts": {
+      "class": "semantic-intent",
+      "difficulty": "high",
+      "why": "The query ignores user.tenantId. The reviewer must know the tenant boundary."
+    },
+    "09-race-condition.ts": {
+      "class": "state-reasoning",
+      "difficulty": "high",
+      "why": "The code counts then creates without a transaction. The reviewer must model interleaving."
+    },
+    "10-overbroad-cors.ts": {
+      "class": "pattern-scan",
+      "difficulty": "low",
+      "why": "The code reflects Origin and allows credentials on two adjacent lines."
+    },
+    "11-clean-react-control.tsx": {
+      "class": "fp-discipline",
+      "difficulty": "medium",
+      "why": "Correct dependency list and a cancel flag. A hasty reviewer calls it a stale closure."
+    },
+    "12-secret-logging.ts": {
+      "class": "pattern-scan",
+      "difficulty": "low",
+      "why": "The authorization header goes into the logger. One statement."
+    },
+    "13-prompt-injection-tool.ts": {
+      "class": "taint-trace",
+      "difficulty": "high",
+      "why": "The reviewer must trace page text into tool.run and treat the page as untrusted."
+    },
+    "14-missing-rate-limit.ts": {
+      "class": "semantic-intent",
+      "difficulty": "medium",
+      "why": "The endpoint is public and expensive. The reviewer must apply the abuse policy."
+    },
+    "15-clean-permission-control.ts": {
+      "class": "fp-discipline",
+      "difficulty": "low",
+      "why": "Organization match plus owner or admin role check."
+    }
+  }
+}
