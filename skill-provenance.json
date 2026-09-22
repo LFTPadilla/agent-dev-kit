@@ -12,6 +12,16 @@
         "git"
       ]
     },
+    "agent-session-monitor": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "low",
+      "dependencies": [
+        "python3",
+        "herdr"
+      ]
+    },
     "diagram-render": {
       "source": "local",
       "license": "MIT",

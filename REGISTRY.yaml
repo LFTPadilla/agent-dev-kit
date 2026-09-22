@@ -44,6 +44,10 @@ skills:
     path: "plugins/dev-skills/skills/agent-native-scaffold"
     scope: "architecture"
     requires: [python3, git]
+  agent-session-monitor:
+    path: "plugins/dev-skills/skills/agent-session-monitor"
+    scope: "orchestration"
+    requires: [python3, herdr]
   diagram-render:
     path: "plugins/dev-skills/skills/diagram-render"
     scope: "visualization"

@@ -16,6 +16,7 @@
     "test:tutor-home": "bash scripts/test-tutor-home-lib.sh",
     "test:multi-harness": "bash scripts/test-multi-harness.sh",
     "test:check-agent-harnesses": "python3 scripts/test-check-agent-harnesses.py",
+    "test:agent-session-monitor": "python3 plugins/dev-skills/skills/agent-session-monitor/scripts/test-agent-sessions.py",
     "test:jev-review": "bash scripts/test-jev-review.sh",
     "render:diagrams": "bash scripts/render-diagrams.sh",
     "overnight:init": "node overnight-task-kit/scripts/overnight-runner.mjs init",
