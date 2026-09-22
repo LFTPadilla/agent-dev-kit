@@ -21,10 +21,10 @@ Sample output:
 
 ```text
 7 sessions
-working  hermes      wN    wN:p6Y    /home/user/project
-working  hermes      wN    wN:p71    /home/user/project
-idle     hermes      wP    wP:p5R    /home/user/dotfiles
-done     hermes      wN    wN:p6X    /home/user/project
+working  hermes      w1    w1:p3     /home/user/project
+working  hermes      w1    w1:p4     /home/user/project
+idle     hermes      w2    w2:p1     /home/user/dotfiles
+done     hermes      w1    w1:p2     /home/user/project
 
 harness: hermes 7
 state: working 3, idle 3, done 1
