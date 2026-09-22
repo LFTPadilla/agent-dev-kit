@@ -19,6 +19,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- `agent-session-monitor` skill: one read-only table of the live Herdr agent sessions with harness, state, workspace, pane, and cwd
 - Opt-in Jev Review wiring (`scripts/install-jev-review.sh`) for Hermes and Codex
 - `docs/jev/` as the single source of truth for the Jev Review loop, install, and harness map
 
