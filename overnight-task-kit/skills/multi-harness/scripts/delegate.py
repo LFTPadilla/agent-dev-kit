@@ -9,12 +9,16 @@ import functools
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
 import textwrap
+import uuid
 from pathlib import Path
 from typing import Any
+
+from harnesses import CAPABILITY_MATRIX, command_for
 
 # Default Profile Declarations (Dynamic model resolution)
 DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
@@ -24,13 +28,8 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
     "codex-review": {"harness": "codex", "model": "auto", "model_family": "sol", "mode": "read", "timeout": 1800, "description": "Independent verifier/reviewer via Codex CLI."},
 
     # Claude Code CLI
-    "claude-review": {"harness": "claude", "model": "default", "mode": "read", "timeout": 1800, "description": "Adversarial code review via Claude Code CLI."},
-    "claude-implement": {"harness": "claude", "model": "default", "mode": "write", "timeout": 2400, "description": "Scoped implementation via Claude Code CLI. Requires --allow-write or --yolo."},
-
-    # DeepSeek Harness (DHS/DSH) — Headless runner (no interactive terminal TUI)
-    "dhs-review": {"harness": "dhs", "model": "default", "mode": "read", "timeout": 1800, "description": "Headless read-only review via DeepSeek Harness (DHS/DSH)."},
-    "dhs-implement": {"harness": "dhs", "model": "default", "mode": "write", "timeout": 2400, "description": "Headless scoped implementation via DeepSeek Harness (DHS/DSH). Requires --allow-write or --yolo."},
-    "dhs-fast": {"harness": "dhs", "model": "default", "mode": "read", "timeout": 1200, "description": "Headless fast scan via DeepSeek Harness (DHS/DSH)."},
+    "claude-review": {"harness": "claude", "model": "auto", "mode": "read", "timeout": 1800, "description": "Adversarial code review via Claude Code CLI."},
+    "claude-implement": {"harness": "claude", "model": "auto", "mode": "write", "timeout": 2400, "description": "Scoped implementation via Claude Code CLI. Requires --allow-write or --yolo."},
 
     # Pi CLI (dynamic frontier model resolution from local models.json)
     "pi-glm-review": {"harness": "pi", "model": "auto", "model_family": "glm", "thinking": "xhigh", "mode": "read", "timeout": 1800, "description": "Deep read-only review with latest local GLM frontier model via Pi."},
@@ -41,9 +40,9 @@ DEFAULT_PROFILES: dict[str, dict[str, Any]] = {
     "pi-minimax-large": {"harness": "pi", "model": "auto", "model_family": "minimax", "thinking": "medium", "mode": "read", "timeout": 1800, "description": "Large-context read-only sweep with latest local MiniMax model via Pi."},
 
     # Pi-Profile Isolated Environments
-    "pi-lean": {"harness": "pi", "pi_profile": "lean", "model": "auto", "mode": "read", "timeout": 1800, "description": "Isolated lightweight Pi runner via local pi-profile lean."},
-    "pi-gsd": {"harness": "pi", "pi_profile": "gsd", "model": "auto", "mode": "read", "timeout": 1800, "description": "GSD-enhanced Pi runner via local pi-profile gsd."},
-    "pi-search": {"harness": "pi", "pi_profile": "search", "model": "auto", "mode": "read", "timeout": 1800, "description": "Research and web search Pi runner via local pi-profile search."},
+    "pi-lean": {"harness": "pi", "pi_profile": "lean", "model": "default", "mode": "read", "timeout": 1800, "description": "Isolated lightweight Pi runner via local pi-profile lean."},
+    "pi-gsd": {"harness": "pi", "pi_profile": "gsd", "model": "default", "mode": "read", "timeout": 1800, "description": "GSD-enhanced Pi runner via local pi-profile gsd."},
+    "pi-search": {"harness": "pi", "pi_profile": "search", "model": "default", "mode": "read", "timeout": 1800, "description": "Research and web search Pi runner via local pi-profile search."},
 
     # OpenCode
     "opencode-fast": {"harness": "opencode", "model": "default", "mode": "read", "timeout": 1200, "description": "Fast OpenCode scan. Read-only by prompt contract."},
@@ -62,9 +61,6 @@ TASK_TYPE_DEFAULTS = {
     "verify": "codex-review",
     "lean": "pi-lean",
 }
-
-READ_ONLY_TOOLS = "read,grep,find,ls"
-WRITE_TOOLS = "read,grep,find,ls,bash,edit,write"
 
 # Worker contract mode (--task-json): task_id doubles as the worktree slug.
 TASK_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
@@ -89,9 +85,30 @@ def find_binary(names: list[str]) -> str | None:
     return None
 
 
+def load_model_catalog(path: str) -> tuple[set[str], str | None]:
+    catalog_path = Path(path).expanduser().resolve()
+    if not catalog_path.is_file():
+        raise SystemExit(f"Model catalog not found: {catalog_path}")
+    try:
+        data = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"Could not read model catalog {catalog_path}: {exc}")
+    if not isinstance(data, dict) or not isinstance(data.get("models"), list):
+        raise SystemExit(f"Invalid model catalog {catalog_path}: expected an object with a models array.")
+
+    models = {item["id"] for item in data["models"] if isinstance(item, dict) and isinstance(item.get("id"), str) and item["id"]}
+    default = data.get("default")
+    if default is not None and (not isinstance(default, str) or default not in models):
+        raise SystemExit(f"Invalid model catalog {catalog_path}: default must match a models[].id value.")
+    return models, default
+
+
 @functools.lru_cache(maxsize=16)
-def available_models(harness: str) -> set[str]:
+def available_models(harness: str, model_catalog: str | None = None) -> set[str]:
     """Extract registered model IDs from local harness config files."""
+    if harness in {"codex", "claude"}:
+        return load_model_catalog(model_catalog)[0] if model_catalog else set()
+
     home = Path.home()
     if harness == "pi":
         data = load_json(home / ".pi/agent/models.json")
@@ -108,29 +125,41 @@ def available_models(harness: str) -> set[str]:
             for p, cfg in data.get("provider", {}).items()
             for m in cfg.get("models", {}).keys()
         }
-    if harness == "codex":
-        data = load_json(home / ".codex/models_cache.json")
-        return {m["id"] for m in data.get("models", []) if isinstance(m, dict) and "id" in m}
     return set()
 
 
 def available_pi_profiles() -> list[str]:
-    """Detect isolated profiles configured in ~/pi-lab/profiles or ~/programming/pi-lab/profiles."""
-    for base in [Path.home() / "pi-lab/profiles", Path.home() / "programming/pi-lab/profiles"]:
-        if base.is_dir():
-            return sorted(d.name for d in base.iterdir() if d.is_dir() and not d.name.startswith("."))
-    return []
+    """Detect profiles under the caller-configured Pi profile directory."""
+    base = Path(os.environ["PI_PROFILE_DIR"]).expanduser() if os.environ.get("PI_PROFILE_DIR") else None
+    if base is None or not base.is_dir():
+        return []
+    return sorted(d.name for d in base.iterdir() if d.is_dir() and not d.name.startswith("."))
 
 
-def resolve_dynamic_model(harness: str, family: str | None, explicit_model: str | None) -> str:
+def resolve_dynamic_model(
+    harness: str,
+    family: str | None,
+    explicit_model: str | None,
+    model_catalog: str | None = None,
+) -> str:
     """Dynamically resolve to the newest active frontier model in local configurations."""
     if explicit_model and explicit_model != "auto":
         return explicit_model
+
+    catalog_default = None
+    if harness in {"codex", "claude"} and model_catalog:
+        models, catalog_default = load_model_catalog(model_catalog)
+    else:
+        models = available_models(harness, model_catalog)
     if not family:
+        if catalog_default in models:
+            return catalog_default
+        if len(models) == 1:
+            return next(iter(models))
         return "default"
 
-    models = [m for m in available_models(harness) if family.lower() in m.lower()]
-    if not models:
+    matching = [m for m in models if family.lower() in m.lower()]
+    if not matching:
         return "default"
 
     # ponytail: sort by extracted floating-point version descending to pick newest frontier
@@ -138,10 +167,10 @@ def resolve_dynamic_model(harness: str, family: str | None, explicit_model: str 
         matches = re.findall(r"(\d+(?:\.\d+)?)", s)
         return (float(matches[-1]) if matches else 0.0, s)
 
-    return sorted(models, key=version_key, reverse=True)[0]
+    return sorted(matching, key=version_key, reverse=True)[0]
 
 
-def setup_worktree(repo_root: Path, slug: str) -> Path:
+def setup_worktree(repo_root: Path, slug: str, create: bool = True) -> Path:
     """Safely create or attach to an isolated git worktree under .worktrees/<slug>."""
     if not re.match(r"^[a-zA-Z0-9_-]+$", slug):
         raise SystemExit(f"Invalid worktree slug {slug!r}. Alphanumeric, dashes, and underscores only.")
@@ -154,6 +183,9 @@ def setup_worktree(repo_root: Path, slug: str) -> Path:
     worktree_dir = (worktrees_root / slug).resolve()
     if not str(worktree_dir).startswith(str(worktrees_root)):
         raise SystemExit(f"Security error: worktree path {worktree_dir} escapes {worktrees_root}")
+
+    if not create:
+        return worktree_dir
 
     if worktree_dir.exists():
         proc = subprocess.run(["git", "-C", str(repo_root), "worktree", "list", "--porcelain"], capture_output=True, text=True, check=False)
@@ -338,63 +370,6 @@ def append_event(root: Path, task_id: str, event: str, harness: str, status: str
         print(f"[multi-harness] warning: could not append {event!r} event to {path}: {exc}", file=sys.stderr)
 
 
-def command_for(profile: dict[str, Any], cwd: Path, prompt: str, allow_write: bool, skip_permissions: bool) -> list[str]:
-    harness, model, mode = profile["harness"], profile["model"], profile["mode"]
-    effective_write = mode == "write" and (allow_write or skip_permissions)
-    if mode == "write" and not effective_write:
-        raise SystemExit(f"Profile requires write access. Run with --allow-write or --yolo.")
-
-    if harness == "pi":
-        tools = WRITE_TOOLS if effective_write else READ_ONLY_TOOLS
-        pi_bin = find_binary(["pi-profile", str(Path.home() / "pi-lab/bin/pi-profile")]) if profile.get("pi_profile") else None
-        cmd = [pi_bin, profile["pi_profile"], "--"] if pi_bin else ["pi"]
-        cmd.extend(["--print", "--no-session", "--mode", "text", "--tools", tools])
-        if model != "default":
-            cmd.extend(["--model", model])
-        if profile.get("thinking"):
-            cmd.extend(["--thinking", str(profile["thinking"])])
-        return [*cmd, prompt]
-
-    if harness == "opencode":
-        cmd = ["opencode", "run", "--dir", str(cwd)]
-        if model != "default":
-            cmd.extend(["--model", model])
-        if profile.get("agent"):
-            cmd.extend(["--agent", str(profile["agent"])])
-        if profile.get("variant"):
-            cmd.extend(["--variant", str(profile["variant"])])
-        if skip_permissions:
-            cmd.append("--auto")
-        return [*cmd, prompt]
-
-    if harness == "codex":
-        cmd = ["codex", "exec", "--ephemeral", "-C", str(cwd)]
-        if model != "default":
-            cmd.extend(["-m", model])
-        if skip_permissions:
-            cmd.append("--yolo")
-        return [*cmd, prompt]
-
-    if harness == "claude":
-        cmd = ["claude", "-p", prompt]
-        if mode == "read":
-            cmd.extend(["--permission-mode", "plan"])
-        elif skip_permissions:
-            cmd.append("--dangerously-skip-permissions")
-        return cmd
-
-    if harness == "dhs":
-        dhs_bin = find_binary(["dhs", "dsh", "deepseek-harness"]) or "dhs"
-        cmd = [dhs_bin, "exec", "--dir", str(cwd)]
-        if model != "default":
-            cmd.extend(["--model", model])
-        if skip_permissions:
-            cmd.append("--yolo")
-        return [*cmd, prompt]
-
-    raise SystemExit(f"Unsupported harness: {harness}")
-
-
 def print_profiles() -> None:
     rows = []
     header = ["profile", "harness", "target / model (dynamic)", "mode", "description"]
@@ -416,24 +391,26 @@ def print_profiles() -> None:
         print("  ".join(str(cell).ljust(widths[i]) for i, cell in enumerate(row)))
 
 
-def diagnose() -> int:
+def diagnose(model_catalog: str | None = None) -> int:
     print("Universal Harness Adapter — Diagnostics\n========================================")
-    for h, binaries in [("codex", ["codex"]), ("claude", ["claude"]), ("dhs", ["dhs", "dsh", "deepseek-harness"]), ("pi", ["pi"]), ("opencode", ["opencode"])]:
-        path = find_binary(binaries)
-        extra = " (headless runner)" if h == "dhs" else ""
+    if not model_catalog:
+        print("Codex and Claude auto profiles need --model-catalog or explicit --model.")
+    for h in ("codex", "claude", "pi", "opencode"):
+        path = find_binary([CAPABILITY_MATRIX[h]["binary"]])
         ver = subprocess.run([path, "--version"], capture_output=True, text=True, check=False).stdout.strip() if path else ""
-        print(f"{h:10}: {path or '<missing>'}{extra}" + (f"\n  version : {ver}" if ver else ""))
+        print(f"{h:10}: {path or '<missing>'}" + (f"\n  version : {ver}" if ver else ""))
 
-    pi_prof_bin = find_binary(["pi-profile", str(Path.home() / "pi-lab/bin/pi-profile")])
+    pi_prof_bin = find_binary(["pi-profile"])
     pi_profs = available_pi_profiles() if pi_prof_bin else []
     print(f"{'pi-profile':10}: {pi_prof_bin or '<missing>'}")
     if pi_prof_bin:
         print(f"  profiles: {', '.join(pi_profs) or '<none found>'}")
 
     print("\nDetected Models per Harness:")
-    for h in ["codex", "pi", "opencode"]:
+    for h in ["codex", "claude", "pi", "opencode"]:
         print(f"{h.capitalize()}:")
-        mods = sorted(available_models(h))
+        catalog = model_catalog if h in {"codex", "claude"} else None
+        mods = sorted(available_models(h, catalog))
         for m in (mods or ["<none found>"]):
             print(f"  - {m}")
     print()
@@ -441,10 +418,11 @@ def diagnose() -> int:
     missing = []
     for name, p in DEFAULT_PROFILES.items():
         h = p["harness"]
-        bins = ["dhs", "dsh", "deepseek-harness"] if h == "dhs" else [h]
+        bins = ["pi-profile"] if p.get("pi_profile") else [h]
         prof_ok = (p["pi_profile"] in pi_profs) if p.get("pi_profile") else True
         bin_ok = bool(find_binary(bins)) and prof_ok
-        resolved = resolve_dynamic_model(h, p.get("model_family"), p["model"])
+        catalog = model_catalog if h in {"codex", "claude"} else None
+        resolved = resolve_dynamic_model(h, p.get("model_family"), p["model"], catalog)
         model_found = (resolved != "default") if (p["model"] == "auto" and not p.get("pi_profile")) else True
 
         if not bin_ok:
@@ -484,14 +462,202 @@ def resolve_profile(args: argparse.Namespace) -> tuple[str, dict[str, Any]]:
     if args.model:
         profile["model"] = args.model
     if args.harness:
+        if args.harness != profile["harness"]:
+            profile.pop("model_family", None)
         profile["harness"] = args.harness
+        if args.harness == "mcode":
+            if args.model:
+                raise SystemExit("mcode uses the model already selected in its Herdr pane; do not pass --model.")
+            if not getattr(args, "mcode_pane_id", None):
+                raise SystemExit("mcode requires an explicit --mcode-pane-id.")
+            profile["model"] = "default"
     if args.timeout:
         profile["timeout"] = args.timeout
     if args.pi_profile:
         profile["pi_profile"] = args.pi_profile
 
-    profile["model"] = resolve_dynamic_model(profile["harness"], profile.get("model_family"), profile.get("model"))
+    model_catalog = getattr(args, "model_catalog", None)
+    if model_catalog and profile["harness"] not in {"codex", "claude"}:
+        raise SystemExit("--model-catalog is supported only for Codex and Claude profiles.")
+    model = resolve_dynamic_model(profile["harness"], profile.get("model_family"), profile.get("model"), model_catalog)
+    if profile.get("model") == "auto" and model == "default" and not profile.get("pi_profile"):
+        if profile["harness"] in {"codex", "claude"}:
+            source = "a valid --model-catalog or explicit --model"
+        else:
+            source = "a matching configured model or explicit --model"
+        raise SystemExit(f"No model discovered for profile {profile_name!r} ({profile['harness']}); provide {source}.")
+    profile["model"] = model
     return profile_name, profile
+
+
+def herdr_json(args: list[str]) -> dict[str, Any] | None:
+    try:
+        proc = subprocess.run(["herdr", *args], capture_output=True, text=True, timeout=5, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if proc.returncode != 0:
+        return None
+    try:
+        payload = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return None
+    result = payload.get("result") if isinstance(payload, dict) else None
+    return result if isinstance(result, dict) else None
+
+
+def same_herdr_directory(row: dict[str, Any], cwd: Path) -> bool:
+    def matches(path: Any) -> bool:
+        if not isinstance(path, str) or not path:
+            return False
+        try:
+            return Path(path).expanduser().resolve() == cwd.resolve()
+        except OSError:
+            return False
+
+    return matches(row.get("cwd")) and matches(row.get("foreground_cwd"))
+
+
+def foreground_is_mcode(process_info: dict[str, Any], pane_id: str) -> bool:
+    if process_info.get("pane_id") != pane_id:
+        return False
+    processes = process_info.get("foreground_processes")
+    if not isinstance(processes, list):
+        return False
+
+    runtimes = {"node", "nodejs", "bun", "deno", "python", "python3", "npm", "npx"}
+    for process in processes:
+        if not isinstance(process, dict):
+            continue
+        argv = process.get("argv") if isinstance(process.get("argv"), list) else []
+        cmdline = process.get("cmdline")
+        try:
+            cmdline_argv = shlex.split(cmdline) if isinstance(cmdline, str) else []
+        except ValueError:
+            cmdline_argv = []
+        candidates = [process.get("name")]
+        if argv:
+            candidates.extend(argv[:2] if Path(str(argv[0])).name.casefold() in runtimes else argv[:1])
+        if cmdline_argv:
+            candidates.extend(cmdline_argv[:2] if Path(cmdline_argv[0]).name.casefold() in runtimes else cmdline_argv[:1])
+        if any(isinstance(value, str) and Path(value).name.casefold() in {"mcode", "mcode.exe"} for value in candidates):
+            return True
+    return False
+
+
+def herdr_dispatch_result(args: list[str], timeout: int) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(args, capture_output=True, text=True, timeout=timeout, check=False)
+    except OSError as exc:
+        return subprocess.CompletedProcess(args, 127, "", str(exc))
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout.decode() if isinstance(exc.stdout, bytes) else exc.stdout or ""
+        stderr = exc.stderr.decode() if isinstance(exc.stderr, bytes) else exc.stderr or ""
+        return subprocess.CompletedProcess(args, 124, stdout, stderr or f"Herdr dispatch timed out after {timeout}s.")
+
+
+def herdr_response_text(value: Any) -> str | None:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        parts = [herdr_response_text(item) for item in value]
+        return "\n".join(part for part in parts if part is not None)
+    if isinstance(value, dict):
+        for key in ("text", "output", "content", "transcript", "recent_unwrapped", "recent-unwrapped"):
+            if key in value:
+                text = herdr_response_text(value[key])
+                if text is not None:
+                    return text
+        for key in ("result", "data", "snapshot"):
+            if key in value:
+                text = herdr_response_text(value[key])
+                if text is not None:
+                    return text
+    return None
+
+
+def herdr_read_output(args: list[str], timeout: int = 15) -> subprocess.CompletedProcess[str]:
+    proc = herdr_dispatch_result(args, timeout)
+    if proc.returncode != 0:
+        return proc
+    try:
+        payload = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return proc
+    result = payload.get("result") if isinstance(payload, dict) else payload
+    text = herdr_response_text(result)
+    if text is None:
+        return subprocess.CompletedProcess(args, 1, "", "Herdr read returned no transcript text.")
+    return subprocess.CompletedProcess(args, proc.returncode, text, proc.stderr)
+
+
+def dispatch_with_herdr(
+    profile: dict[str, Any], cwd: Path, prompt: str, timeout: int, mcode_pane_id: str | None = None
+) -> subprocess.CompletedProcess[str] | None:
+    """Reuse a same-directory idle agent or an explicitly selected mcode pane."""
+    if os.environ.get("HERDR_ENV") != "1":
+        return None
+    timeout_ms = max(1, int(timeout * 1000))
+    harness = profile["harness"]
+
+    if harness == "mcode":
+        if not mcode_pane_id:
+            return None
+        listing = herdr_json(["pane", "list"])
+        panes = listing.get("panes", []) if listing else []
+        for pane in panes:
+            if not isinstance(pane, dict) or pane.get("pane_id") != mcode_pane_id:
+                continue
+            agent = pane.get("agent")
+            status = pane.get("agent_status")
+            if status in {"working", "blocked"} or not same_herdr_directory(pane, cwd):
+                continue
+            if agent:
+                if str(agent).casefold() != "mcode" or status != "idle":
+                    continue
+            elif status != "unknown":
+                continue
+            details = herdr_json(["pane", "process-info", "--pane", mcode_pane_id])
+            process_info = details.get("process_info", {}) if details else {}
+            if not isinstance(process_info, dict) or not foreground_is_mcode(process_info, mcode_pane_id):
+                continue
+
+            sentinel = f"MULTI_HARNESS_DONE_{uuid.uuid4().hex}"
+            task = f"{prompt}\n\nWhen finished, print exactly {sentinel} on a line by itself."
+            run_args = ["herdr", "pane", "run", mcode_pane_id, task]
+            sent = herdr_dispatch_result(run_args, 15)
+            if sent.returncode != 0:
+                return sent
+            settled = herdr_dispatch_result(
+                ["herdr", "pane", "wait-output", "--match", sentinel, mcode_pane_id, "--timeout", str(timeout_ms)],
+                timeout + 5,
+            )
+            if settled.returncode != 0:
+                return settled
+            response = herdr_read_output(
+                ["herdr", "pane", "read", "--source", "recent-unwrapped", mcode_pane_id]
+            )
+            if response.returncode == 0:
+                response.stdout = "\n".join(line for line in response.stdout.splitlines() if line.strip() != sentinel)
+            return response
+        return None
+
+    listing = herdr_json(["agent", "list"])
+    agents = listing.get("agents", []) if listing else []
+    for agent in agents:
+        if not isinstance(agent, dict) or agent.get("agent_status") != "idle" or not same_herdr_directory(agent, cwd):
+            continue
+        if str(agent.get("agent", "")).casefold() != harness.casefold():
+            continue
+        target = agent.get("pane_id")
+        if isinstance(target, str) and target:
+            dispatched = herdr_dispatch_result(
+                ["herdr", "agent", "prompt", target, prompt, "--wait", "--timeout", str(timeout_ms)],
+                timeout + 5,
+            )
+            if dispatched.returncode != 0:
+                return dispatched
+            return herdr_read_output(["herdr", "agent", "read", target, "--source", "recent-unwrapped"])
+    return None
 
 
 def main() -> int:
@@ -505,11 +671,12 @@ def main() -> int:
     parser.add_argument("--worktree", help="Isolate task in a dedicated git worktree under .worktrees/<slug>.")
     parser.add_argument("--timeout", type=int, help="Override timeout in seconds.")
     parser.add_argument("--model", help="Override model for the selected profile.")
+    parser.add_argument("--model-catalog", help="Explicit JSON model catalog for Codex or Claude auto-selection.")
+    parser.add_argument("--mcode-pane-id", help="Explicit Herdr pane ID for an mcode dispatch.")
     parser.add_argument("--pi-profile", help="Run within an isolated local Pi profile (e.g. lean, gsd, search).")
-    parser.add_argument("--harness", choices=["pi", "opencode", "codex", "claude", "dhs"], help="Override harness.")
+    parser.add_argument("--harness", choices=["pi", "opencode", "codex", "claude", "mcode"], help="Override harness.")
     parser.add_argument("--allow-write", action="store_true", help="Allow a write-capable profile to run.")
     parser.add_argument("--yolo", action="store_true", help="Bypass confirmation prompts and skip permissions.")
-    parser.add_argument("--dangerously-skip-permissions", action="store_true", help="Alias for --yolo.")
     parser.add_argument("--dry-run", action="store_true", help="Print command metadata without executing.")
     parser.add_argument("--no-save", action="store_true", help="Do not write run artifacts.")
     parser.add_argument("--save-dir", default=str(Path.home() / ".cache/multi-harness/runs"))
@@ -521,11 +688,13 @@ def main() -> int:
         print_profiles()
         return 0
     if args.diagnose:
-        return diagnose()
+        return diagnose(args.model_catalog)
 
-    skip_perms = args.yolo or args.dangerously_skip_permissions
+    skip_perms = args.yolo
     allow_write = args.allow_write or skip_perms
     profile_name, profile = resolve_profile(args)
+    if args.mcode_pane_id and profile["harness"] != "mcode":
+        raise SystemExit("--mcode-pane-id requires --harness mcode.")
 
     contract: dict[str, Any] | None = None
     if args.task_json:
@@ -545,7 +714,7 @@ def main() -> int:
         raise SystemExit(f"Working directory does not exist: {cwd}")
     orchestrator_root = cwd
     if args.worktree or contract:
-        cwd = setup_worktree(cwd, args.worktree or contract["task_id"])
+        cwd = setup_worktree(cwd, args.worktree or contract["task_id"], create=not args.dry_run)
 
     # Read task
     if contract:
@@ -556,20 +725,20 @@ def main() -> int:
             raise SystemExit("Provide --task, --task-file, or stdin.")
 
     prompt = build_prompt(profile_name, profile, cwd, task, allow_write, contract=contract)
-    cmd = command_for(profile, cwd, prompt, allow_write, skip_perms)
-
-    display_cmd = [arg if arg != prompt else "<prompt>" for arg in cmd]
+    if profile["harness"] == "mcode":
+        if profile["mode"] == "write" and not allow_write:
+            raise SystemExit("Profile requires write access. Run with --allow-write or --yolo.")
+        cmd = []
+        display_cmd = ["Herdr mcode pane", "<idle same-directory target>", "<prompt>", "<completion sentinel>"]
+    else:
+        cmd = command_for(profile, cwd, prompt, allow_write, skip_perms)
+        display_cmd = [arg if arg != prompt else "<prompt>" for arg in cmd]
     save_path = Path(args.save_dir).expanduser() / f"{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{profile_name}" if not args.no_save else None
 
     if args.dry_run:
         print("DRY RUN\nCommand:", " ".join(display_cmd))
         if contract:
             print("\nPrompt:\n" + prompt)
-        if save_path:
-            save_path.mkdir(parents=True, exist_ok=True)
-            (save_path / "prompt.md").write_text(prompt + "\n", encoding="utf-8")
-            (save_path / "meta.json").write_text(json.dumps({"profile": profile_name, "cwd": str(cwd), "command": display_cmd, "dry_run": True}, indent=2) + "\n", encoding="utf-8")
-            print("Run dir:", save_path)
         return 0
 
     if contract:
@@ -581,7 +750,14 @@ def main() -> int:
         append_event(orchestrator_root, contract["task_id"], "dispatch", harness_label, None)
 
     try:
-        proc = subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True, timeout=int(profile["timeout"]), check=False)
+        proc = dispatch_with_herdr(profile, cwd, prompt, int(profile["timeout"]), args.mcode_pane_id)
+        if proc is None and profile["harness"] == "mcode":
+            if contract:
+                append_event(orchestrator_root, contract["task_id"], "result", harness_label, "failed")
+            print("Error: mcode requires HERDR_ENV=1 and an idle mcode pane in the task directory.", file=sys.stderr)
+            return 2
+        if proc is None:
+            proc = subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True, timeout=int(profile["timeout"]), check=False)
     except FileNotFoundError:
         if contract:
             append_event(orchestrator_root, contract["task_id"], "result", harness_label, "failed")
