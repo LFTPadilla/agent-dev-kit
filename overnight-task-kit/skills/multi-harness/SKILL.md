@@ -87,7 +87,7 @@ Default choices:
 - Fast mechanical scan or OpenCode-specific command behavior: `opencode-fast`.
 - Implementation by another harness: only a `*-implement` profile with `--allow-write` or `--yolo`.
 
-GLM, DeepSeek, and OpenAI profiles automatically resolve to the highest version available in your local runtime configuration (e.g. `glm-5.3` when configured) unless an explicit `--model` is supplied.
+GLM and DeepSeek profiles resolve to the highest version in the local Pi configuration unless the caller supplies `--model`. Codex and Claude profiles need `--model-catalog` or `--model`.
 
 ## Delegation Workflow
 

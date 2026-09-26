@@ -6,7 +6,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 CAPABILITY_MATRIX: dict[str, dict[str, Any]] = {
     "codex": {
         "binary": "codex",
