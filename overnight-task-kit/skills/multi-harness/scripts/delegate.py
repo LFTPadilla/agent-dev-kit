@@ -699,7 +699,7 @@ def main() -> int:
     parser.add_argument("--pi-profile", help="Run within an isolated local Pi profile (e.g. lean, gsd, search).")
     parser.add_argument("--harness", choices=["pi", "opencode", "codex", "claude", "mcode"], help="Override harness.")
     parser.add_argument("--allow-write", action="store_true", help="Allow a write-capable profile to run.")
-    parser.add_argument("--yolo", action="store_true", help="Bypass confirmation prompts and skip permissions.")
+    parser.add_argument("--yolo", action="store_true", help="Bypass harness permissions for write-capable profiles. Read-only profiles ignore it.")
     parser.add_argument("--dry-run", action="store_true", help="Print command metadata without executing.")
     parser.add_argument("--no-save", action="store_true", help="Do not write run artifacts.")
     parser.add_argument("--save-dir", default=str(Path.home() / ".cache/multi-harness/runs"))
@@ -713,11 +713,13 @@ def main() -> int:
     if args.diagnose:
         return diagnose(args.model_catalog)
 
-    skip_perms = args.yolo
-    allow_write = args.allow_write or skip_perms
     if args.harness == "mcode" and not args.herdr:
         raise SystemExit("mcode requires the explicit --herdr option.")
     profile_name, profile = resolve_profile(args)
+    skip_perms = args.yolo and profile["mode"] == "write"
+    if args.yolo and not skip_perms:
+        print(f"Warning: --yolo ignored for read-only profile {profile_name}; running read-only.", file=sys.stderr)
+    allow_write = args.allow_write or skip_perms
     if args.herdr:
         if profile["mode"] != "write":
             raise SystemExit("--herdr is only allowed for write-capable profiles.")
@@ -797,7 +799,7 @@ def main() -> int:
     except FileNotFoundError:
         if contract:
             append_event(orchestrator_root, contract["task_id"], "result", harness_label, "failed")
-        print(f"Error: Harness executable '{cmd[0]}' not found. Run --diagnose to check installed harnesses.", file=sys.stderr)
+        print(f"Error: Harness executable '{cmd[0] if cmd else 'herdr'}' not found. Run --diagnose to check installed harnesses.", file=sys.stderr)
         return 127
     except subprocess.TimeoutExpired as exc:
         if contract:

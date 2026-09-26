@@ -11,7 +11,7 @@ CAPABILITY_MATRIX: dict[str, dict[str, Any]] = {
     "codex": {
         "binary": "codex",
         "help_args": ["exec", "--help"],
-        "required_flags": ["--ephemeral", "-C", "-m", "--dangerously-bypass-approvals-and-sandbox"],
+        "required_flags": ["--ephemeral", "-C", "-m", "--sandbox", "--dangerously-bypass-approvals-and-sandbox"],
     },
     "claude": {
         "binary": "claude",
@@ -50,7 +50,8 @@ def command_for(
 ) -> list[str]:
     """Build argv for one local CLI. Herdr-only targets do not use this module."""
     harness, model, mode = profile["harness"], profile["model"], profile["mode"]
-    effective_write = mode == "write" and (allow_write or skip_permissions)
+    yolo = mode == "write" and skip_permissions
+    effective_write = mode == "write" and (allow_write or yolo)
     if mode == "write" and not effective_write:
         raise SystemExit("Profile requires write access. Run with --allow-write or --yolo.")
 
@@ -75,7 +76,7 @@ def command_for(
             cmd.extend(["--agent", str(profile["agent"])])
         if profile.get("variant"):
             cmd.extend(["--variant", str(profile["variant"])])
-        if skip_permissions:
+        if yolo:
             cmd.append("--auto")
         return [*cmd, prompt]
 
@@ -83,8 +84,10 @@ def command_for(
         cmd = ["codex", "exec", "--ephemeral", "-C", str(cwd)]
         if model != "default":
             cmd.extend(["-m", model])
-        if skip_permissions:
+        if yolo:
             cmd.append("--dangerously-bypass-approvals-and-sandbox")
+        elif effective_write:
+            cmd.extend(["--sandbox", "workspace-write"])
         return [*cmd, prompt]
 
     if harness == "claude":
@@ -93,8 +96,10 @@ def command_for(
             cmd.extend(["--model", model])
         if mode == "read":
             cmd.extend(["--permission-mode", "plan"])
-        elif skip_permissions:
+        elif yolo:
             cmd.append("--dangerously-skip-permissions")
+        else:
+            cmd.extend(["--permission-mode", "acceptEdits"])
         return cmd
 
     raise SystemExit(f"Unsupported harness: {harness}")

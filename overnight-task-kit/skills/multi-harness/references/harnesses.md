@@ -4,7 +4,7 @@
 
 | Harness | Binary | Help probe | Required flags | Model source |
 |---|---|---|---|---|
-| Codex | `codex` | `exec --help` | `--ephemeral`, `-C`, `-m`, `--dangerously-bypass-approvals-and-sandbox` | Explicit `--model-catalog` or `--model`. |
+| Codex | `codex` | `exec --help` | `--ephemeral`, `-C`, `-m`, `--sandbox`, `--dangerously-bypass-approvals-and-sandbox` | Explicit `--model-catalog` or `--model`. |
 | Claude Code | `claude` | `--help` | `-p`, `--model`, `--permission-mode`, `--dangerously-skip-permissions` | Explicit `--model-catalog` or `--model`. |
 | OpenCode | `opencode` | `run --help` | `--dir`, `--model`, `--agent`, `--variant`, `--auto` | Local OpenCode configuration. |
 | Pi | `pi` | `--help` | `--print`, `--no-session`, `--mode`, `--tools`, `--model`, `--thinking` | Local Pi model configuration. |

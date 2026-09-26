@@ -73,7 +73,25 @@ assert harnesses.command_for({"harness": "claude", "model": "model-x", "mode": "
     "claude", "-p", prompt, "--model", "model-x", "--dangerously-skip-permissions"
 ]
 assert harnesses.command_for({"harness": "opencode", "model": "p/m", "agent": "reviewer", "variant": "high", "mode": "read"}, cwd, prompt, False, True) == [
-    "opencode", "run", "--dir", str(cwd), "--model", "p/m", "--agent", "reviewer", "--variant", "high", "--auto", prompt
+    "opencode", "run", "--dir", str(cwd), "--model", "p/m", "--agent", "reviewer", "--variant", "high", prompt
+]
+assert harnesses.command_for({"harness": "opencode", "model": "default", "mode": "write"}, cwd, prompt, True, True) == [
+    "opencode", "run", "--dir", str(cwd), "--auto", prompt
+]
+assert harnesses.command_for({"harness": "codex", "model": "model-x", "mode": "write"}, cwd, prompt, True, False) == [
+    "codex", "exec", "--ephemeral", "-C", str(cwd), "-m", "model-x", "--sandbox", "workspace-write", prompt
+]
+assert harnesses.command_for({"harness": "codex", "model": "model-x", "mode": "read"}, cwd, prompt, False, True) == [
+    "codex", "exec", "--ephemeral", "-C", str(cwd), "-m", "model-x", prompt
+]
+assert harnesses.command_for({"harness": "claude", "model": "model-x", "mode": "write"}, cwd, prompt, True, False) == [
+    "claude", "-p", prompt, "--model", "model-x", "--permission-mode", "acceptEdits"
+]
+assert harnesses.command_for({"harness": "claude", "model": "model-x", "mode": "read"}, cwd, prompt, False, True) == [
+    "claude", "-p", prompt, "--model", "model-x", "--permission-mode", "plan"
+]
+assert harnesses.command_for({"harness": "pi", "model": "default", "mode": "read"}, cwd, prompt, False, True) == [
+    "pi", "--print", "--no-session", "--mode", "text", "--tools", "read,grep,find,ls", prompt
 ]
 assert harnesses.command_for({"harness": "pi", "model": "p/m", "thinking": "high", "mode": "read"}, cwd, prompt, False, False) == [
     "pi", "--print", "--no-session", "--mode", "text", "--tools", "read,grep,find,ls", "--model", "p/m", "--thinking", "high", prompt
@@ -355,6 +373,24 @@ try:
     assert output.getvalue() == "local worker response"
     assert "No safe idle same-directory Herdr agent matched" not in errors.getvalue()
 
+    local_calls.clear()
+    sys.argv = ["delegate.py", "--profile", "codex-review", "--model", "codex-test", "--yolo", "--cwd", str(herdr_cwd), "--task", "review task", "--no-save"]
+    output = io.StringIO()
+    errors = io.StringIO()
+    with contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+        assert d.main() == 0
+    assert "--yolo ignored for read-only profile codex-review" in errors.getvalue()
+    assert "--dangerously-bypass-approvals-and-sandbox" not in local_calls[0]
+    assert "--sandbox" not in local_calls[0]
+
+    sys.argv = ["delegate.py", "--profile", "codex-review", "--model", "codex-test", "--yolo", "--task-json", str(scratch / "task-ok.json"), "--cwd", str(herdr_cwd), "--no-save"]
+    try:
+        d.main()
+        raise AssertionError("--yolo must not elevate a read-only profile to contract mode")
+    except SystemExit as exc:
+        assert "write-capable" in str(exc)
+    assert len(local_calls) == 1
+
     d.subprocess.run = stub_herdr
     d.dispatch_with_herdr = real_dispatch
     sys.argv = ["delegate.py", "--profile", "codex-review", "--model", "codex-test", "--herdr", "--cwd", str(herdr_cwd), "--task", "review task", "--no-save"]
@@ -390,6 +426,14 @@ try:
     with contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
         assert d.main() == 2
     assert herdr_calls == [["herdr", "pane", "list"]]
+
+    def missing_herdr(*args, **kwargs):
+        raise FileNotFoundError("herdr")
+    d.dispatch_with_herdr = missing_herdr
+    errors = io.StringIO()
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(errors):
+        assert d.main() == 127
+    assert "Harness executable 'herdr' not found" in errors.getvalue()
     sys.argv = real_argv
     d.subprocess.run = stub_herdr
     d.dispatch_with_herdr = real_dispatch

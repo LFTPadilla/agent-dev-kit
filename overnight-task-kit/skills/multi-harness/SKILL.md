@@ -31,7 +31,7 @@ The adapter supports Codex, Claude Code, Pi, Pi-profile, OpenCode, and mcode pan
 
 Profiles with `model: auto` resolve from the selected harness catalog. Codex and Claude require an explicit `--model-catalog` unless the caller supplies `--model`. Other harnesses use their configured local catalogs. Auto-selection fails when discovery returns no model.
 
-Pass `--yolo` to request the selected harness's permission-bypass mode. Never substitute another harness when the requested runtime is unavailable.
+Pass `--yolo` to request the selected harness's permission-bypass mode on a write-capable profile. Read-only profiles ignore `--yolo` and print a warning. Never substitute another harness when the requested runtime is unavailable.
 
 The adapter always uses a fresh local subprocess by default. Pass `--herdr` to opt into agent reuse. Herdr reuse requires a write-capable profile, `--allow-write` or `--yolo`, and `HERDR_ENV=1`. It reuses only idle agents whose cwd and foreground cwd both match the task directory. If no safe agent matches, CLI-backed harnesses use the local subprocess.
 
