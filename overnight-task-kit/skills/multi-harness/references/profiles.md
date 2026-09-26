@@ -42,5 +42,6 @@ Pass `--model-catalog` for Codex or Claude auto-selection. The file must use thi
 
 - `--allow-write` permits a write-capable profile to run.
 - `--yolo` also requests the selected harness's permission-bypass mode.
+- `--herdr` opts into same-directory idle agent reuse for write-capable profiles. Default dispatch always uses a fresh local subprocess.
 - `--worktree <slug>` isolates the task under `.worktrees/<slug>`.
 - `--dry-run` prints the planned command and prompt without writing artifacts or creating a worktree.

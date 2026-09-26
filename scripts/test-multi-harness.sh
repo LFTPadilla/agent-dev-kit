@@ -42,6 +42,7 @@ import io
 import json
 import os
 import pathlib
+import stat
 import sys
 
 delegate_path = pathlib.Path(sys.argv[1])
@@ -59,8 +60,11 @@ harnesses_spec.loader.exec_module(harnesses)
 
 cwd = pathlib.Path("/tmp/worktree")
 prompt = "task prompt"
+assert harnesses.has_flag("--model <name>", "--model")
+assert not harnesses.has_flag("--modeling --model-extra", "--model")
+assert not harnesses.has_flag("--model", "-m")
 assert harnesses.command_for({"harness": "codex", "model": "model-x", "mode": "write"}, cwd, prompt, True, True) == [
-    "codex", "exec", "--ephemeral", "-C", str(cwd), "-m", "model-x", "--yolo", prompt
+    "codex", "exec", "--ephemeral", "-C", str(cwd), "-m", "model-x", "--dangerously-bypass-approvals-and-sandbox", prompt
 ]
 assert harnesses.command_for({"harness": "claude", "model": "model-x", "mode": "read"}, cwd, prompt, False, False) == [
     "claude", "-p", prompt, "--model", "model-x", "--permission-mode", "plan"
@@ -68,11 +72,11 @@ assert harnesses.command_for({"harness": "claude", "model": "model-x", "mode": "
 assert harnesses.command_for({"harness": "claude", "model": "model-x", "mode": "write"}, cwd, prompt, True, True) == [
     "claude", "-p", prompt, "--model", "model-x", "--dangerously-skip-permissions"
 ]
-assert harnesses.command_for({"harness": "opencode", "model": "p/m", "agent": "reviewer", "mode": "read"}, cwd, prompt, False, True) == [
-    "opencode", "run", "--dir", str(cwd), "--model", "p/m", "--agent", "reviewer", "--auto", prompt
+assert harnesses.command_for({"harness": "opencode", "model": "p/m", "agent": "reviewer", "variant": "high", "mode": "read"}, cwd, prompt, False, True) == [
+    "opencode", "run", "--dir", str(cwd), "--model", "p/m", "--agent", "reviewer", "--variant", "high", "--auto", prompt
 ]
-assert harnesses.command_for({"harness": "pi", "model": "p/m", "mode": "read"}, cwd, prompt, False, False) == [
-    "pi", "--print", "--no-session", "--mode", "text", "--tools", "read,grep,find,ls", "--model", "p/m", prompt
+assert harnesses.command_for({"harness": "pi", "model": "p/m", "thinking": "high", "mode": "read"}, cwd, prompt, False, False) == [
+    "pi", "--print", "--no-session", "--mode", "text", "--tools", "read,grep,find,ls", "--model", "p/m", "--thinking", "high", prompt
 ]
 assert harnesses.command_for({"harness": "pi", "pi_profile": "lean", "model": "default", "mode": "read"}, cwd, prompt, False, False) == [
     "pi-profile", "lean", "--", "--print", "--no-session", "--mode", "text", "--tools", "read,grep,find,ls", prompt
@@ -183,8 +187,12 @@ panes = []
 agent_read_result = {"text": "integrated agent response"}
 foreground_processes = [{"name": "mcode", "argv": ["mcode"], "cmdline": "mcode"}]
 reported_process_pane_id = "pane-mcode"
+mcode_state = {"prompt_path": None, "prompt_text": None, "marker": None}
+fail_mcode_wait = False
 herdr_calls = []
 real_run = d.subprocess.run
+real_dispatch = d.dispatch_with_herdr
+real_argv = sys.argv
 
 def stub_herdr(argv, **kwargs):
     herdr_calls.append(argv)
@@ -194,9 +202,31 @@ def stub_herdr(argv, **kwargs):
         result = {"panes": panes}
     elif argv[1:3] == ["pane", "process-info"]:
         result = {"process_info": {"pane_id": reported_process_pane_id, "foreground_processes": foreground_processes}}
+    elif argv[1:3] == ["pane", "run"]:
+        request = argv[4]
+        assert len(request.splitlines()) == 1
+        assert request.startswith("Read ") and request.endswith(" and execute it.")
+        mcode_state["prompt_path"] = pathlib.Path(request[5:-len(" and execute it.")])
+        assert stat.S_IMODE(mcode_state["prompt_path"].stat().st_mode) == 0o600
+        mcode_state["prompt_text"] = mcode_state["prompt_path"].read_text(encoding="utf-8")
+        assert "review task" in mcode_state["prompt_text"]
+        result = {"accepted": True}
+    elif argv[1:3] == ["pane", "wait-output"]:
+        if fail_mcode_wait:
+            return d.subprocess.CompletedProcess(argv, 1, "", "sentinel timeout")
+        assert argv[3] == "--regex"
+        pattern = argv[4]
+        assert pattern.startswith("(?m)^") and pattern.endswith("$")
+        mcode_state["marker"] = pattern[len("(?m)^"):-1]
+        assert mcode_state["prompt_path"].is_file()
+        assert mcode_state["marker"] not in mcode_state["prompt_text"]
+        assert "MULTI_HARNESS_DONE_" in mcode_state["prompt_text"]
+        assert mcode_state["marker"].removeprefix("MULTI_HARNESS_DONE_") in mcode_state["prompt_text"]
+        result = {"accepted": True, "matched": True}
     elif argv[1:3] == ["agent", "read"]:
         result = agent_read_result
     elif argv[1:3] == ["pane", "read"]:
+        assert mcode_state["prompt_path"].is_file()
         result = {"text": "mcode pane response"}
     else:
         result = {"accepted": True, "status": "idle", "matched": True}
@@ -247,10 +277,16 @@ try:
     assert herdr_calls[1] == ["herdr", "pane", "process-info", "--pane", "pane-mcode"]
     assert herdr_calls[2][:4] == ["herdr", "pane", "run", "pane-mcode"]
     wait_call = herdr_calls[3]
-    assert wait_call[:4] == ["herdr", "pane", "wait-output", "--match"]
-    sentinel = wait_call[4]
-    assert sentinel in herdr_calls[2][4] and wait_call[5:] == ["pane-mcode", "--timeout", "12000"]
+    assert wait_call[:4] == ["herdr", "pane", "wait-output", "--regex"]
+    assert mcode_state["marker"] in wait_call[4] and wait_call[5:] == ["pane-mcode", "--timeout", "12000"]
     assert herdr_calls[4] == ["herdr", "pane", "read", "--source", "recent-unwrapped", "pane-mcode"], herdr_calls
+    assert not mcode_state["prompt_path"].exists()
+
+    fail_mcode_wait = True
+    herdr_calls.clear()
+    proc = d.dispatch_with_herdr({"harness": "mcode"}, herdr_cwd, "review task", 12, "pane-mcode")
+    assert proc.returncode == 1 and not mcode_state["prompt_path"].exists()
+    fail_mcode_wait = False
 
     reported_process_pane_id = "different-pane"
     herdr_calls.clear()
@@ -297,7 +333,69 @@ try:
     proc = d.dispatch_with_herdr({"harness": "mcode"}, herdr_cwd, "review task", 12, "pane-mcode")
     assert proc.returncode == 0
     assert herdr_calls[2][:4] == ["herdr", "pane", "run", "pane-mcode"]
+
+    agents[0].update(agent_status="idle", cwd=str(herdr_cwd), foreground_cwd=str(herdr_cwd))
+    local_calls = []
+    def local_cli(argv, **kwargs):
+        local_calls.append(argv)
+        return d.subprocess.CompletedProcess(argv, 0, "local worker response", "")
+    def forbidden_default_herdr(*args, **kwargs):
+        raise AssertionError("default dispatch must not use Herdr")
+
+    d.subprocess.run = local_cli
+    d.dispatch_with_herdr = forbidden_default_herdr
+    sys.argv = ["delegate.py", "--profile", "codex-complex", "--model", "codex-test", "--allow-write", "--yolo", "--cwd", str(herdr_cwd), "--task", "local task", "--no-save"]
+    output = io.StringIO()
+    errors = io.StringIO()
+    with contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+        assert d.main() == 0
+    assert len(local_calls) == 1
+    assert local_calls[0][0] == "codex" and ["-m", "codex-test"] == local_calls[0][5:7]
+    assert "--dangerously-bypass-approvals-and-sandbox" in local_calls[0]
+    assert output.getvalue() == "local worker response"
+    assert "No safe idle same-directory Herdr agent matched" not in errors.getvalue()
+
+    d.subprocess.run = stub_herdr
+    d.dispatch_with_herdr = real_dispatch
+    sys.argv = ["delegate.py", "--profile", "codex-review", "--model", "codex-test", "--herdr", "--cwd", str(herdr_cwd), "--task", "review task", "--no-save"]
+    try:
+        d.main()
+        raise AssertionError("--herdr must reject read-only profiles")
+    except SystemExit as exc:
+        assert "write-capable" in str(exc)
+
+    herdr_calls.clear()
+    sys.argv = ["delegate.py", "--profile", "codex-complex", "--model", "codex-test", "--allow-write", "--herdr", "--cwd", str(herdr_cwd), "--task", "write task", "--no-save"]
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output):
+        assert d.main() == 0
+    assert any(call[:4] == ["herdr", "agent", "prompt", "pane-idle"] and "write task" in call[4] and call[-3:] == ["--wait", "--timeout", "2400000"] for call in herdr_calls)
+    assert len(local_calls) == 1
+
+    agents[0]["agent_status"] = "working"
+    herdr_calls.clear()
+    sys.argv = ["delegate.py", "--profile", "codex-complex", "--model", "codex-test", "--allow-write", "--herdr", "--cwd", str(herdr_cwd), "--task", "fallback task", "--no-save"]
+    output = io.StringIO()
+    errors = io.StringIO()
+    with contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+        assert d.main() == 0
+    assert "No safe idle same-directory Herdr agent matched; using the local subprocess." in errors.getvalue()
+    assert herdr_calls[0] == ["herdr", "agent", "list"]
+    assert any(call and call[0] == "codex" for call in herdr_calls)
+
+    panes[0]["agent_status"] = "working"
+    herdr_calls.clear()
+    sys.argv = ["delegate.py", "--profile", "codex-complex", "--allow-write", "--herdr", "--harness", "mcode", "--mcode-pane-id", "pane-mcode", "--cwd", str(herdr_cwd), "--task", "mcode task", "--no-save"]
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
+        assert d.main() == 2
+    assert herdr_calls == [["herdr", "pane", "list"]]
+    sys.argv = real_argv
+    d.subprocess.run = stub_herdr
+    d.dispatch_with_herdr = real_dispatch
 finally:
+    sys.argv = real_argv
+    d.dispatch_with_herdr = real_dispatch
     d.subprocess.run = real_run
     if previous_herdr_env is None:
         os.environ.pop("HERDR_ENV", None)
@@ -426,10 +524,13 @@ for name, capability in harnesses.CAPABILITY_MATRIX.items():
         continue
     proc = subprocess.run([binary, *capability["help_args"]], capture_output=True, text=True, check=False)
     help_text = proc.stdout + proc.stderr
-    missing = [flag for flag in capability["required_flags"] if flag not in help_text]
+    missing = [flag for flag in capability["required_flags"] if not harnesses.has_flag(help_text, flag)]
     if proc.returncode or missing:
         raise SystemExit(f"FAIL {name} help conformance: exit={proc.returncode}, missing={missing}")
     print(f"OK {name} help conformance")
 PY
+
+grep -Fq '| `multi-harness` | Cross-Harness Delegation | Delegate bounded subtasks to local harnesses (Pi, OpenCode, Codex CLI, Claude Code CLI, or mcode via Herdr) with prompt isolation and output contracts. | cross-harness requests, comparing harnesses, external-only runtimes |' \
+  "$ROOT/docs/skills-catalog.md" || fail "skills catalog still lists a removed harness"
 
 echo "test-multi-harness: OK"

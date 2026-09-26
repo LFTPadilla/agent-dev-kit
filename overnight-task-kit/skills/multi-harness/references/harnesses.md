@@ -4,13 +4,17 @@
 
 | Harness | Binary | Help probe | Required flags | Model source |
 |---|---|---|---|---|
-| Codex | `codex` | `exec --help` | `--ephemeral`, `-C`, `-m` | Explicit `--model-catalog` or `--model`. |
+| Codex | `codex` | `exec --help` | `--ephemeral`, `-C`, `-m`, `--dangerously-bypass-approvals-and-sandbox` | Explicit `--model-catalog` or `--model`. |
 | Claude Code | `claude` | `--help` | `-p`, `--model`, `--permission-mode`, `--dangerously-skip-permissions` | Explicit `--model-catalog` or `--model`. |
-| OpenCode | `opencode` | `run --help` | `--dir`, `--model`, `--agent`, `--auto` | Local OpenCode configuration. |
-| Pi | `pi` | `--help` | `--print`, `--no-session`, `--mode`, `--tools`, `--model` | Local Pi model configuration. |
+| OpenCode | `opencode` | `run --help` | `--dir`, `--model`, `--agent`, `--variant`, `--auto` | Local OpenCode configuration. |
+| Pi | `pi` | `--help` | `--print`, `--no-session`, `--mode`, `--tools`, `--model`, `--thinking` | Local Pi model configuration. |
 | Pi-profile | `pi-profile` | `--help` | `--` | Profile directory from `PI_PROFILE_DIR`; binary on `PATH`. |
 | mcode | Herdr pane | Not applicable | Idle pane and sentinel wait | Existing same-directory mcode pane. |
 
 The Codex catalog is caller-selected because local catalog precedence is not fixed. Catalog files use `{"models":[{"id":"model-name"}],"default":"model-name"}`. Claude requires a default when its catalog lists multiple models. An explicit model bypasses discovery.
 
-When `HERDR_ENV=1`, detected agents are reusable only when Herdr reports `idle` and both cwd fields match the selected task directory. Blocked, working, unknown, and other-directory agents are skipped. Herdr does not detect mcode, so its pane can have no `agent` value and an `unknown` status. The caller must pass `--harness mcode --mcode-pane-id <id>` to select it explicitly. The adapter checks that pane's directory, rejects any detected non-mcode agent, and verifies `process-info` identifies a foreground mcode process; an idle shell is not enough. It accepts `unknown` only when no agent is detected and the caller selected that exact pane. After either dispatch path completes, the adapter reads `recent-unwrapped` output for the delegated response. CLI-backed harnesses run normally when no idle agent matches.
+The adapter uses a fresh local subprocess unless the caller passes `--herdr`. Herdr reuse requires a write-capable profile, write permission, and `HERDR_ENV=1`. Reuse only detected agents with status `idle` and exact cwd/foreground-cwd matches. If no safe agent matches, CLI-backed harnesses use the local subprocess.
+
+`--herdr` reuses the live agent's model, tools, and conversation. Profile model, Pi-profile, and thinking settings do not override that session.
+
+Herdr does not detect mcode, so its pane can have no `agent` value and an `unknown` status. The caller must pass `--herdr --harness mcode --mcode-pane-id <id>`. The adapter checks the pane's directory and foreground process, writes the full prompt to a mode-0600 temporary file, then sends one file-read instruction line. It waits for a whole-line completion regex built from a random suffix not echoed in the prompt and reads the recent-unwrapped response. It rejects panes assigned to another detected agent or foreground process.

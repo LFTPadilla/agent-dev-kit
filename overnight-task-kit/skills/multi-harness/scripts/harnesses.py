@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +11,7 @@ CAPABILITY_MATRIX: dict[str, dict[str, Any]] = {
     "codex": {
         "binary": "codex",
         "help_args": ["exec", "--help"],
-        "required_flags": ["--ephemeral", "-C", "-m"],
+        "required_flags": ["--ephemeral", "-C", "-m", "--dangerously-bypass-approvals-and-sandbox"],
     },
     "claude": {
         "binary": "claude",
@@ -20,12 +21,12 @@ CAPABILITY_MATRIX: dict[str, dict[str, Any]] = {
     "opencode": {
         "binary": "opencode",
         "help_args": ["run", "--help"],
-        "required_flags": ["--dir", "--model", "--agent", "--auto"],
+        "required_flags": ["--dir", "--model", "--agent", "--variant", "--auto"],
     },
     "pi": {
         "binary": "pi",
         "help_args": ["--help"],
-        "required_flags": ["--print", "--no-session", "--mode", "--tools", "--model"],
+        "required_flags": ["--print", "--no-session", "--mode", "--tools", "--model", "--thinking"],
     },
     "pi-profile": {
         "binary": "pi-profile",
@@ -33,6 +34,11 @@ CAPABILITY_MATRIX: dict[str, dict[str, Any]] = {
         "required_flags": ["--"],
     },
 }
+
+
+def has_flag(help_text: str, flag: str) -> bool:
+    pattern = rf"(?<![A-Za-z0-9_-]){re.escape(flag)}(?![A-Za-z0-9_-])"
+    return re.search(pattern, help_text) is not None
 
 
 def command_for(
@@ -78,7 +84,7 @@ def command_for(
         if model != "default":
             cmd.extend(["-m", model])
         if skip_permissions:
-            cmd.append("--yolo")
+            cmd.append("--dangerously-bypass-approvals-and-sandbox")
         return [*cmd, prompt]
 
     if harness == "claude":

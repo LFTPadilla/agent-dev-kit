@@ -33,7 +33,11 @@ Profiles with `model: auto` resolve from the selected harness catalog. Codex and
 
 Pass `--yolo` to request the selected harness's permission-bypass mode. Never substitute another harness when the requested runtime is unavailable.
 
-When `HERDR_ENV=1`, the adapter may reuse an idle agent only when both Herdr directory fields match the task directory. It skips working, blocked, unknown, and other-directory agents. mcode is not auto-detected. Select its exact pane with `--harness mcode --mcode-pane-id <id>`. The adapter rejects panes assigned to another detected agent and permits unknown only when no agent is detected. After the sentinel wait, it reads recent-unwrapped output. CLI-backed harnesses run normally when no idle agent matches.
+The adapter always uses a fresh local subprocess by default. Pass `--herdr` to opt into agent reuse. Herdr reuse requires a write-capable profile, `--allow-write` or `--yolo`, and `HERDR_ENV=1`. It reuses only idle agents whose cwd and foreground cwd both match the task directory. If no safe agent matches, CLI-backed harnesses use the local subprocess.
+
+`--herdr` reuses the live agent's model, tools, and conversation. Profile model, Pi-profile, and thinking settings do not override that session.
+
+mcode is not auto-detected. Select it with `--herdr --harness mcode --mcode-pane-id <id>` on a write-capable profile. The adapter verifies the pane directory and foreground mcode process, writes the full prompt to a private temporary file, and sends the pane a one-line file instruction. It waits for a unique marker built from separate prefix and suffix lines, then reads the recent-unwrapped response. Herdr-only mcode dispatch fails closed when the pane is not verified.
 
 For delegated implementation with worktree auto-isolation:
 Pass `--worktree <slug>` to `delegate.py`. It will:

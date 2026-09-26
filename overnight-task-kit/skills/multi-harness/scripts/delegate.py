@@ -13,6 +13,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import textwrap
 import uuid
 from pathlib import Path
@@ -590,6 +591,44 @@ def herdr_read_output(args: list[str], timeout: int = 15) -> subprocess.Complete
     return subprocess.CompletedProcess(args, proc.returncode, text, proc.stderr)
 
 
+def dispatch_to_mcode_pane(pane_id: str, prompt: str, timeout: int, timeout_ms: int) -> subprocess.CompletedProcess[str]:
+    prefix = "MULTI_HARNESS_DONE_"
+    suffix = uuid.uuid4().hex
+    full_marker = f"{prefix}{suffix}"
+    prompt_text = (
+        f"{prompt}\n\nCompletion marker prefix: {prefix}\n"
+        f"Completion marker suffix: {suffix}\n"
+        "After completing the task, print the prefix immediately followed by the suffix on a line by itself."
+    )
+    fd, prompt_path = tempfile.mkstemp(prefix="multi-harness-", suffix=".md")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as prompt_file:
+            os.fchmod(prompt_file.fileno(), 0o600)
+            prompt_file.write(prompt_text)
+
+        instruction = f"Read {prompt_path} and execute it."
+        if "\n" in instruction or "\r" in instruction:
+            return subprocess.CompletedProcess([], 2, "", "The temporary prompt path cannot fit on one line.")
+        sent = herdr_dispatch_result(["herdr", "pane", "run", pane_id, instruction], 15)
+        if sent.returncode != 0:
+            return sent
+        settled = herdr_dispatch_result(
+            ["herdr", "pane", "wait-output", "--regex", f"(?m)^{re.escape(full_marker)}$", pane_id, "--timeout", str(timeout_ms)],
+            timeout + 5,
+        )
+        if settled.returncode != 0:
+            return settled
+        response = herdr_read_output(["herdr", "pane", "read", "--source", "recent-unwrapped", pane_id])
+        if response.returncode == 0:
+            response.stdout = "\n".join(line for line in response.stdout.splitlines() if line.strip() != full_marker)
+        return response
+    finally:
+        try:
+            Path(prompt_path).unlink()
+        except FileNotFoundError:
+            pass
+
+
 def dispatch_with_herdr(
     profile: dict[str, Any], cwd: Path, prompt: str, timeout: int, mcode_pane_id: str | None = None
 ) -> subprocess.CompletedProcess[str] | None:
@@ -621,24 +660,7 @@ def dispatch_with_herdr(
             if not isinstance(process_info, dict) or not foreground_is_mcode(process_info, mcode_pane_id):
                 continue
 
-            sentinel = f"MULTI_HARNESS_DONE_{uuid.uuid4().hex}"
-            task = f"{prompt}\n\nWhen finished, print exactly {sentinel} on a line by itself."
-            run_args = ["herdr", "pane", "run", mcode_pane_id, task]
-            sent = herdr_dispatch_result(run_args, 15)
-            if sent.returncode != 0:
-                return sent
-            settled = herdr_dispatch_result(
-                ["herdr", "pane", "wait-output", "--match", sentinel, mcode_pane_id, "--timeout", str(timeout_ms)],
-                timeout + 5,
-            )
-            if settled.returncode != 0:
-                return settled
-            response = herdr_read_output(
-                ["herdr", "pane", "read", "--source", "recent-unwrapped", mcode_pane_id]
-            )
-            if response.returncode == 0:
-                response.stdout = "\n".join(line for line in response.stdout.splitlines() if line.strip() != sentinel)
-            return response
+            return dispatch_to_mcode_pane(mcode_pane_id, prompt, timeout, timeout_ms)
         return None
 
     listing = herdr_json(["agent", "list"])
@@ -673,6 +695,7 @@ def main() -> int:
     parser.add_argument("--model", help="Override model for the selected profile.")
     parser.add_argument("--model-catalog", help="Explicit JSON model catalog for Codex or Claude auto-selection.")
     parser.add_argument("--mcode-pane-id", help="Explicit Herdr pane ID for an mcode dispatch.")
+    parser.add_argument("--herdr", action="store_true", help="Opt in to reuse a same-directory idle Herdr agent.")
     parser.add_argument("--pi-profile", help="Run within an isolated local Pi profile (e.g. lean, gsd, search).")
     parser.add_argument("--harness", choices=["pi", "opencode", "codex", "claude", "mcode"], help="Override harness.")
     parser.add_argument("--allow-write", action="store_true", help="Allow a write-capable profile to run.")
@@ -692,9 +715,20 @@ def main() -> int:
 
     skip_perms = args.yolo
     allow_write = args.allow_write or skip_perms
+    if args.harness == "mcode" and not args.herdr:
+        raise SystemExit("mcode requires the explicit --herdr option.")
     profile_name, profile = resolve_profile(args)
+    if args.herdr:
+        if profile["mode"] != "write":
+            raise SystemExit("--herdr is only allowed for write-capable profiles.")
+        if not allow_write:
+            raise SystemExit("--herdr requires --allow-write or --yolo.")
+        if os.environ.get("HERDR_ENV") != "1":
+            raise SystemExit("--herdr requires HERDR_ENV=1.")
     if args.mcode_pane_id and profile["harness"] != "mcode":
         raise SystemExit("--mcode-pane-id requires --harness mcode.")
+    if args.mcode_pane_id and not args.herdr:
+        raise SystemExit("--mcode-pane-id requires --herdr.")
 
     contract: dict[str, Any] | None = None
     if args.task_json:
@@ -750,13 +784,15 @@ def main() -> int:
         append_event(orchestrator_root, contract["task_id"], "dispatch", harness_label, None)
 
     try:
-        proc = dispatch_with_herdr(profile, cwd, prompt, int(profile["timeout"]), args.mcode_pane_id)
+        proc = dispatch_with_herdr(profile, cwd, prompt, int(profile["timeout"]), args.mcode_pane_id) if args.herdr else None
         if proc is None and profile["harness"] == "mcode":
             if contract:
                 append_event(orchestrator_root, contract["task_id"], "result", harness_label, "failed")
             print("Error: mcode requires HERDR_ENV=1 and an idle mcode pane in the task directory.", file=sys.stderr)
             return 2
         if proc is None:
+            if args.herdr:
+                print("No safe idle same-directory Herdr agent matched; using the local subprocess.", file=sys.stderr)
             proc = subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True, timeout=int(profile["timeout"]), check=False)
     except FileNotFoundError:
         if contract:
