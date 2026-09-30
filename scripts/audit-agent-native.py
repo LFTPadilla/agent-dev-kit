@@ -18,22 +18,8 @@ import re
 import sys
 from pathlib import Path
 
-IGNORED_DIRS = {
-    ".git",
-    ".github",
-    ".venv",
-    "venv",
-    "node_modules",
-    ".worktrees",
-    ".ruff_cache",
-    ".pytest_cache",
-    ".cache",
-    "dist",
-    "build",
-    "_build",
-    "deps",
-    "graphify-out",
-}
+# Dot-directories are skipped separately in check_directory_depth.
+IGNORED_DIRS = {"venv", "node_modules", "dist", "build", "_build", "deps", "graphify-out"}
 
 # Workspace profile: active when 2+ markers exist, or when forced with --profile workspace.
 WORKSPACE_MARKERS = ("PROJECT.md", "STATUS.md", "inbox", "areas", "work")
@@ -56,10 +42,7 @@ def check_root_agents_md(root: Path, max_lines: int) -> list[str]:
     if not agents_md.exists():
         return [f"Missing root AGENTS.md at {agents_md}"]
 
-    try:
-        lines = agents_md.read_text(encoding="utf-8").splitlines()
-    except Exception as exc:
-        return [f"Failed to read AGENTS.md: {exc}"]
+    lines = agents_md.read_text(encoding="utf-8").splitlines()
 
     line_count = len(lines)
     if line_count > max_lines:
@@ -88,23 +71,12 @@ def check_root_agents_md(root: Path, max_lines: int) -> list[str]:
 
 
 def check_registry_yaml(root: Path) -> list[str]:
-    errors = []
     registry = root / "REGISTRY.yaml"
     if not registry.exists():
-        registry_alt = root / "REGISTRY.yml"
-        if registry_alt.exists():
-            registry = registry_alt
-        else:
-            return ["Missing declarative catalog: REGISTRY.yaml at repository root"]
-
-    try:
-        content = registry.read_text(encoding="utf-8")
-        if "version:" not in content:
-            errors.append("REGISTRY.yaml is missing required 'version' field.")
-    except Exception as exc:
-        errors.append(f"Failed to parse REGISTRY.yaml: {exc}")
-
-    return errors
+        return ["Missing declarative catalog: REGISTRY.yaml at repository root"]
+    if "version:" not in registry.read_text(encoding="utf-8"):
+        return ["REGISTRY.yaml is missing required 'version' field."]
+    return []
 
 
 def workspace_profile_active(root: Path, mode: str) -> bool:

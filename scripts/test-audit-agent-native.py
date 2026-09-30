@@ -41,17 +41,13 @@ def audit(root: Path, *extra: str):
 
 
 class WorkspaceProfileTests(unittest.TestCase):
-    def test_plain_repo_output_has_no_profile_keys(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            rc, out = audit(make_root(tmp, dirs=["src", "tests"]))
-        self.assertEqual(rc, 0)
-        self.assertNotIn("profile", out)
-        self.assertEqual(set(out["checks"]), {"agents_md", "registry_yaml", "directory_depth"})
-
-    def test_one_marker_is_not_enough(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            _, out = audit(make_root(tmp, dirs=["work"]))
-        self.assertNotIn("profile", out)
+    def test_plain_repo_and_single_marker_have_no_profile(self):
+        for dirs in (["src", "tests"], ["work"]):
+            with tempfile.TemporaryDirectory() as tmp:
+                rc, out = audit(make_root(tmp, dirs=dirs))
+            self.assertEqual(rc, 0)
+            self.assertNotIn("profile", out)
+            self.assertEqual(set(out["checks"]), {"agents_md", "registry_yaml", "directory_depth"})
 
     def test_detected_profile_warns_but_passes(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -65,19 +61,14 @@ class WorkspaceProfileTests(unittest.TestCase):
         self.assertNotIn("Missing foundation file: STATUS.md", warnings)
         self.assertNotIn("Missing foundation folder: inbox/", warnings)
 
-    def test_complete_foundation_has_no_warnings(self):
+    def test_profile_flag_and_complete_foundation(self):
         with tempfile.TemporaryDirectory() as tmp:
-            rc, out = audit(make_root(tmp, files=FILES, dirs=DIRS))
-        self.assertEqual(rc, 0)
-        self.assertEqual(out["checks"]["workspace_profile"]["warning_count"], 0)
-
-    def test_profile_flag_forces_on_and_off(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_root(tmp)
-            _, forced = audit(root, "--profile", "workspace")
+            _, forced = audit(make_root(tmp), "--profile", "workspace")
             self.assertEqual(forced["checks"]["workspace_profile"]["warning_count"], len(FILES) + len(DIRS))
         with tempfile.TemporaryDirectory() as tmp:
             root = make_root(tmp, files=FILES, dirs=DIRS)
+            _, auto = audit(root)
+            self.assertEqual(auto["checks"]["workspace_profile"]["warning_count"], 0)
             _, off = audit(root, "--profile", "none")
             self.assertNotIn("profile", off)
 

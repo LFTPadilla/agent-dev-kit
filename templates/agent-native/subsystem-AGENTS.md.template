@@ -17,18 +17,7 @@ This subsystem owns `<RESPONSIBILITY>`.
 
 ---
 
-## 2. Directory Structure & Key Files
-
-```text
-<SUBSYSTEM_PATH>/
-├── src/                        # Core source code
-├── tests/                      # Unit and integration test suite
-└── config/                     # Static configuration
-```
-
----
-
-## 3. Subsystem Commands & Verification
+## 2. Subsystem Commands & Verification
 
 ```bash
 # Run local tests for this subsystem only
