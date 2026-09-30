@@ -1,7 +1,7 @@
 ---
 name: agent-native-scaffold
 description: Audit, scaffold, or refactor any software repository into the Agent-Native Repository Architecture (ANRS-1.0) with Hub-and-Spoke context, O(1) REGISTRY.yaml, and shallow directory ergonomics.
-tags: [agent-native, architecture, context-engineering, scaffolding, refactor, skill]
+tags: [agent-native, architecture, context-engineering, scaffolding, refactor, workspace-profile, skill]
 metadata:
   openclaw:
     emoji: 🏛️
@@ -10,7 +10,7 @@ metadata:
     requires:
       bins: [python3, git]
 created: 2026-08-22
-updated: 2026-08-31
+updated: 2026-09-30
 ---
 
 # agent-native-scaffold 🏛️
@@ -20,6 +20,7 @@ Transform greenfield or legacy software repositories into high-efficiency **Agen
 ## When to invoke
 - User says: "Make this repo Agent-Native", "Organize this codebase for AI agents", "Audit repository context bloat", "reorganiza esta carpeta", "renombra los archivos".
 - Initializing a new repository or refactoring a legacy project with bloated root prompts.
+- Setting up a workspace or project folder (client workspace, research, ops): use the [Workspace profile](#workspace-profile-optional-overlay).
 - When an AI agent experiences high tool hallucination or context rot.
 
 ## When NOT to invoke
@@ -44,6 +45,9 @@ Git repos and never will be. Classify the target before choosing a path:
    folder typically holds Digital IDs, owner-only `.env` files, signed
    PDFs, and personal data. There is no commit to undo; the only safety
    net is the pre-snapshot (Phase 0b).
+
+For a workspace or project folder (not a code repo), also apply the
+[Workspace profile](#workspace-profile-optional-overlay) after Phase 3.
 
 > Pitfall: do not assume the AGENTS.md `worktree` rule applies. That rule
 > governs repos with a remote and a default branch. Ops folders that are
@@ -193,6 +197,86 @@ hand-wave — and the agent must report its exit code:
 > production `.env` just to "prove the path works". The script's
 > existence and correct path constants are sufficient evidence; the
 > idempotent `compile()` check covers the syntax half.
+
+---
+
+## Workspace profile (optional overlay)
+
+Use this profile for workspace or project folders: client workspaces, research, ops.
+It complements ANRS-1.0. It does not replace it. Keep the hub, the spokes, and `REGISTRY.yaml`.
+Do not apply it to code repos. A code repo already has `src/`, `tests/`, and similar folders.
+
+**Principle:** start with the universal foundation. Add structure downward only when complexity earns it.
+
+### Layout
+
+```text
+<workspace>/
+├── AGENTS.md          # Rules for every agent (hub)
+├── REGISTRY.yaml      # Machine catalog
+├── PROJECT.md         # Goal, scope, definition of done
+├── STATUS.md          # Current state and next steps
+├── DECISIONS.md       # Important choices, kept for later
+├── inbox/             # New things land here first
+├── areas/<area>/      # Natural sections of the project
+├── work/
+│   ├── queued/<slug>/     # brief.md, notes.md, handoffs/
+│   ├── active/<slug>/
+│   └── completed/<slug>/
+├── resources/         # Files, references, assets, data
+├── outputs/           # Finished or review-ready work
+└── archive/           # Old or replaced material
+```
+
+Templates: [`PROJECT.md`](../../../../templates/agent-native/PROJECT.md.template),
+[`STATUS.md`](../../../../templates/agent-native/STATUS.md.template),
+[`DECISIONS.md`](../../../../templates/agent-native/DECISIONS.md.template).
+Use the existing hub template for `AGENTS.md`. Add the three root files to its routing table.
+
+### Map to ANRS
+
+| Foundation file | ANRS concept | Rule |
+|---|---|---|
+| `AGENTS.md` | Hub (L0) | Same budget as ANRS. Holds rules for every agent. |
+| `areas/<area>/AGENTS.md` | Spoke (L1) | Create it only when the area has rules the hub does not state. |
+| `REGISTRY.yaml` | Catalog (L3) | Machine items only. Do not list work items or status here. |
+| `STATUS.md` | Replaces `WORKING-STATE.md` | Rename the old file. Keep one status file. |
+| `DECISIONS.md` | Project decision log | Not the agent authority matrix. That stays in `agents/<slug>/`. |
+
+The same rule repeats one level deeper. A sub-area gets its own `AGENTS.md` only when its complexity earns it.
+
+### Lifecycle rules
+
+1. **Enter.** Every new thing (request, file, idea, transcript) goes to `inbox/` first.
+   Name it `<YYYY-MM-DD>-<short-name>`. Do not put it in `areas/` or `work/` directly.
+2. **Triage.** At session start, empty `inbox/`. Send each item to exactly one place:
+   - Work to do: `work/queued/<slug>/`. Write `brief.md` (goal, done criteria, inputs).
+   - Reference material: `resources/`, or `areas/<area>/` if one area owns it.
+   - A choice already made: `DECISIONS.md`.
+   - Not needed: `archive/`. Agents do not delete.
+3. **Start.** Move `work/queued/<slug>/` to `work/active/<slug>/` when work begins.
+   Move the whole folder. `brief.md` must state the done criteria first. List the item in `STATUS.md`.
+4. **Finish.** Move the folder to `work/completed/<slug>/` when every done criterion is met.
+   Record the evidence in `notes.md`. Put finished or review-ready files in `outputs/`.
+   Link them from `notes.md`.
+5. **Archive.** Move `work/completed/<slug>/` to `archive/<slug>/` when the output is
+   accepted and no follow-up is open. Move replaced material from `resources/` or `outputs/` the same way.
+   Do not edit archived material.
+6. **Hand off.** Write handoffs inside the item: `work/<stage>/<slug>/handoffs/<YYYY-MM-DD>-<topic>.md`.
+   State what is done, what is next, and what is open. The handoffs move with the folder.
+   Do not keep a global handoffs folder.
+7. **Status.** Rewrite `STATUS.md` in place at the end of every session. Do not append history.
+   Mark a blocked item in `STATUS.md` and `brief.md`. There is no `blocked/` stage.
+8. **Decide.** Add an entry to `DECISIONS.md` when a choice is hard to reverse, changes scope
+   or the definition of done, changes a rule in `AGENTS.md`, or someone will ask "why" later.
+   Append entries. Supersede an old entry with a new one. Put routine task facts in `notes.md`.
+
+### Audit
+
+`scripts/audit-agent-native.py` detects the profile when at least two of `PROJECT.md`, `STATUS.md`,
+`inbox/`, `areas/`, `work/` exist. Use `--profile workspace` to force it on and `--profile none` to force it off.
+The audit warns about a missing foundation file or folder. It never fails on them.
+Repos that do not use the profile get the same output as before.
 
 ---
 

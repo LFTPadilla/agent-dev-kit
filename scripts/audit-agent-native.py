@@ -6,6 +6,7 @@ Verifies:
 2. Root AGENTS.md contains a valid Semantic Routing Table with reachable links.
 3. Root REGISTRY.yaml exists and contains basic schema keys.
 4. Directory tree depth does not exceed recommended ergonomic limits (<= 4).
+5. Workspace profile only: foundation files and folders exist (warnings, never failures).
 """
 
 from __future__ import annotations
@@ -33,6 +34,20 @@ IGNORED_DIRS = {
     "deps",
     "graphify-out",
 }
+
+# Workspace profile: active when 2+ markers exist, or when forced with --profile workspace.
+WORKSPACE_MARKERS = ("PROJECT.md", "STATUS.md", "inbox", "areas", "work")
+WORKSPACE_FILES = ("PROJECT.md", "STATUS.md", "DECISIONS.md")
+WORKSPACE_DIRS = (
+    "inbox",
+    "areas",
+    "work/queued",
+    "work/active",
+    "work/completed",
+    "resources",
+    "outputs",
+    "archive",
+)
 
 
 def check_root_agents_md(root: Path, max_lines: int) -> list[str]:
@@ -92,6 +107,18 @@ def check_registry_yaml(root: Path) -> list[str]:
     return errors
 
 
+def workspace_profile_active(root: Path, mode: str) -> bool:
+    if mode != "auto":
+        return mode == "workspace"
+    return sum((root / marker).exists() for marker in WORKSPACE_MARKERS) >= 2
+
+
+def check_workspace_profile(root: Path) -> list[str]:
+    warnings = [f"Missing foundation file: {name}" for name in WORKSPACE_FILES if not (root / name).is_file()]
+    warnings += [f"Missing foundation folder: {name}/" for name in WORKSPACE_DIRS if not (root / name).is_dir()]
+    return warnings
+
+
 def check_directory_depth(root: Path, max_depth: int) -> list[str]:
     warnings = []
     for dirpath, dirnames, filenames in os.walk(root):
@@ -111,14 +138,20 @@ def check_directory_depth(root: Path, max_depth: int) -> list[str]:
     return warnings
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".", help="Target repository root path (default: current dir)")
     parser.add_argument("--max-lines", type=int, default=150, help="Max line count for root AGENTS.md (default: 150)")
     parser.add_argument("--max-depth", type=int, default=4, help="Max directory depth threshold (default: 4)")
     parser.add_argument("--strict-depth", action="store_true", help="Treat directory depth warnings as hard failures")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--profile",
+        choices=["auto", "workspace", "none"],
+        default="auto",
+        help="Workspace profile: auto-detect (default), force on, or force off",
+    )
+    args = parser.parse_args(argv)
 
     root = Path(args.repo_root).resolve()
     if not root.is_dir():
@@ -128,6 +161,8 @@ def main() -> int:
     agents_errors = check_root_agents_md(root, args.max_lines)
     registry_errors = check_registry_yaml(root)
     depth_warnings = check_directory_depth(root, args.max_depth)
+    workspace = workspace_profile_active(root, args.profile)
+    workspace_warnings = check_workspace_profile(root) if workspace else []
 
     hard_errors = agents_errors + registry_errors
     if args.strict_depth:
@@ -147,6 +182,12 @@ def main() -> int:
                 "directory_depth": {"warning_count": len(depth_warnings), "warnings": depth_warnings[:10]},
             },
         }
+        if workspace:
+            result["profile"] = "workspace"
+            result["checks"]["workspace_profile"] = {
+                "warning_count": len(workspace_warnings),
+                "warnings": workspace_warnings,
+            }
         print(json.dumps(result, indent=2))
     else:
         print(f"--- Agent-Native Repository Audit (ANRS-1.0) ---")
@@ -175,6 +216,13 @@ def main() -> int:
                 print(f"  ... and {len(depth_warnings) - 10} more")
         else:
             print(f"✅ Directory Hierarchy: Shallow (<= {args.max_depth} depth)")
+
+        if workspace and workspace_warnings:
+            print(f"\n⚠️ Workspace Profile Warnings ({len(workspace_warnings)}):")
+            for warn in workspace_warnings:
+                print(f"  - {warn}")
+        elif workspace:
+            print("✅ Workspace Profile: Foundation complete")
 
     return 0 if passed else 1
 

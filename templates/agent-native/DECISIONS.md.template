@@ -1,0 +1,10 @@
+# DECISIONS.md — <PROJECT_NAME>
+
+> Append-only. Do not edit an accepted entry. Add a new entry that supersedes it.
+
+## D-001 — <SHORT_TITLE>
+- Date: <YYYY-MM-DD>
+- Status: accepted
+- Decision: <WHAT_WE_CHOSE>
+- Reason: <WHY>
+- Rejected: <ALTERNATIVE_AND_WHY_NOT>
