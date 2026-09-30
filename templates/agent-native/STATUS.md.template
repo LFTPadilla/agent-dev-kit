@@ -1,0 +1,20 @@
+# STATUS.md — <PROJECT_NAME>
+
+> Current state only. Rewrite this file at the end of every session. Do not append history.
+> History lives in `work/<stage>/<slug>/handoffs/` and in [`DECISIONS.md`](DECISIONS.md).
+
+Updated: <YYYY-MM-DD> by <AGENT_OR_PERSON>
+
+## 1. State
+<TWO_SENTENCE_SUMMARY>
+
+## 2. Inbox
+<N> item(s) wait for triage.
+
+## 3. Active Work
+| Item | Next step | Blocker |
+|---|---|---|
+| [`work/active/<SLUG>/`](work/active/<SLUG>/) | <NEXT_STEP> | none |
+
+## 4. Next Steps
+1. <NEXT_STEP_1>

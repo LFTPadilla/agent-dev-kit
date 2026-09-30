@@ -16,14 +16,14 @@ Traditional software repositories are architected exclusively for human cognitiv
 graph LR
     subgraph Legacy ["Legacy Codebase Architecture"]
         L1["Monolithic AGENTS.md (1000+ lines)"]
-        L2["Deeply Nested Trees (depth > 5)"]
+        L2["Deeply Nested Trees (depth > 4)"]
         L3["Fuzzy Search Across Unstructured YAMLs"]
         L1 & L2 & L3 --> Fail["Context Rot · Lost-in-the-Middle · High Latency"]
     end
 
     subgraph AgentNative ["Agent-Native Architecture (ANRS-1.0)"]
         A1["Hierarchical Context (Hub-and-Spoke)"]
-        A2["Shallow Semantic Trees (depth ≤ 3)"]
+        A2["Shallow Semantic Trees (depth ≤ 4)"]
         A3["Deterministic O(1) REGISTRY.yaml"]
         A1 & A2 & A3 --> Win["Maximum Token Density · Zero Hallucination · 85%+ Cache Hits"]
     end
@@ -53,7 +53,7 @@ ANRS structures repository knowledge into four distinct abstraction layers:
 
 ```mermaid
 graph TD
-    L0["Layer 0: Global Kernel (Root AGENTS.md ~80-120 lines)\nSecurity Invariants · Worktree Rules · SSoT · Semantic Sitemap"]
+    L0["Layer 0: Global Kernel (Root AGENTS.md ≤150 lines)\nSecurity Invariants · Worktree Rules · SSoT · Semantic Sitemap"]
     
     L1["Layer 1: Domain Subsystems (Nested subsystem AGENTS.md)\nk8s/AGENTS.md · mcp/AGENTS.md · ops/AGENTS.md · skills/AGENTS.md"]
     
@@ -68,7 +68,7 @@ graph TD
 ```
 
 ### Layer 0: Global Kernel (`AGENTS.md` at Repository Root)
-* **Budget:** $\le 120$ lines (strictly enforced).
+* **Budget:** $\le 150$ lines (enforced by `scripts/audit-agent-native.py`).
 * **Scope:**
   1. Repository Identity & Boundaries (what belongs here vs what is prohibited).
   2. Inviolable Operational Rules (e.g., Mandatory Git Worktrees, No direct push to `main`/`master`).
@@ -98,9 +98,9 @@ graph TD
 
 Empirical evidence from autonomous coding benchmarks indicates key structural drivers of agent success:
 
-### 4.1 Shallow Semantic Directory Depth ($\le 3$)
+### 4.1 Shallow Semantic Directory Depth ($\le 4$)
 * Deeply nested paths (e.g. `src/modules/core/controllers/v1/auth/service.ts`) cause high rates of path truncation and edit errors.
-* **Standard:** Keep directory depth to $\le 3$ levels wherever possible (e.g. `services/auth/service.ts`).
+* **Standard:** Keep directory depth to $\le 4$ levels (e.g. `services/auth/service.ts`).
 
 ### 4.2 Fail-Closed Local Verifiers
 Agents self-correct with high fidelity when given deterministic validation scripts:

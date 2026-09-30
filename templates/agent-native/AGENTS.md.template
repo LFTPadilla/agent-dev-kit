@@ -1,6 +1,6 @@
 # AGENTS.md — Master Agent Context (Hub)
 
-> **LOAD THIS FIRST.** This is the canonical, lightweight entry point (~100 lines) for coding agents.
+> **LOAD THIS FIRST.** This is the canonical, lightweight entry point (150 lines max) for coding agents.
 > Deep subsystem context is progressively disclosed via the Semantic Routing Table below.
 
 ---
@@ -23,23 +23,11 @@ This repository (`<ORG>/<REPO>`) contains <BRIEF_DESCRIPTION>.
    - **Secrets & Credentials:** Infisical / Secret Manager (never commit plaintext credentials or `.env`).
    - **Declarative State:** Git repository is the canonical source for code, manifests, and skills.
 
-3. **Multi-Agent & Tool Safety Boundaries:**
-   - Autonomous changes must pass local verifiers before pushing.
-   - Non-negotiable safety policies: <LIST_ANY_STRICT_PROJECT_POLICIES>.
+3. **Safety:** Autonomous changes must pass local verifiers before pushing. Strict project policies: <LIST_ANY_STRICT_PROJECT_POLICIES>.
 
 ---
 
-## 2. Global Coordinates & Environment
-
-| Component | Target / Coordinate | Role / Access |
-|---|---|---|
-| Runtime | Node.js / Python / Go / Rust | Primary application runtime |
-| Local Dev | `http://localhost:<PORT>` | Local development server |
-| CI/CD | GitHub Actions (`.github/workflows/`) | Automated test and deployment pipeline |
-
----
-
-## 3. Semantic Routing Table (Agent Sitemap)
+## 2. Semantic Routing Table (Agent Sitemap)
 
 | If your task relates to... | Read this context file |
 |---|---|
@@ -52,7 +40,7 @@ This repository (`<ORG>/<REPO>`) contains <BRIEF_DESCRIPTION>.
 
 ---
 
-## 4. Standard Verification Commands
+## 3. Standard Verification Commands
 
 ```bash
 # Run unit tests

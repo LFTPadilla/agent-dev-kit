@@ -1,0 +1,22 @@
+# PROJECT.md — <PROJECT_NAME>
+
+> Stable file. Change it only when the goal or scope changes. Record the reason in [`DECISIONS.md`](DECISIONS.md).
+
+## 1. Goal
+<ONE_SENTENCE_GOAL>
+
+## 2. Scope
+In scope:
+- <IN_SCOPE_1>
+
+Out of scope:
+- <OUT_OF_SCOPE_1>
+
+## 3. Definition of Done
+- [ ] <CHECKABLE_CRITERION_1>
+- [ ] <CHECKABLE_CRITERION_2>
+
+## 4. People & Systems
+| Name | Role / Access |
+|---|---|
+| <PERSON_OR_SYSTEM> | <ROLE, e.g. owner / read-only> |
