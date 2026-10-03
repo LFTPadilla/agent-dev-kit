@@ -1,50 +1,48 @@
-# Multi-harness Profiles (Universal Harness Adapter)
+# Multi-harness Profiles
 
-Use this reference to choose profiles and maintain the profile table in `scripts/delegate.py`.
+Use this reference to choose a profile. Profile definitions live in `scripts/delegate.py`.
 
-## Supported Local Harnesses
+Read `harnesses.md` for supported binaries, argument capabilities, and model discovery.
 
-- `codex`: Runs `codex exec --ephemeral -C <cwd> [-m <model>] [--yolo]`.
-- `claude`: Runs `claude -p "<prompt>" [--dangerously-skip-permissions]`.
-- `dhs` (alias `dsh`): Runs `dsh exec --dir <cwd> [--model <model>] [--yolo]` *(Headless execution engine; no interactive terminal TUI)*.
-- `pi`: Runs `pi --print --mode text [--model <provider/model>] --tools <allowlist>`.
-- `opencode`: Runs `opencode run --dir <cwd> [--model <provider/model>] [--agent <agent>]`.
+## Built-in Profiles
 
-Run `delegate.py --diagnose` before assuming any specific harness or model is available locally.
-
-## Built-in Profiles (Dynamic Frontier Models)
-
-Profiles with `model: auto` dynamically discover and select the highest active version in your local configuration (e.g. `glm-5.3+`, latest `deepseek-v4+`, `gpt-5.x`), or accept explicit overrides via `--model <name>`.
+Profiles with `model: auto` select from the configured harness catalog. Codex and Claude require an explicit catalog or `--model`. Other harnesses use their local configuration. Auto-selection fails when no model is available.
 
 | Profile | Harness | Model | Mode | Description |
 |---|---|---|---|---|
-| `codex-complex` | Codex | `auto` (flagship) | write | Complex multi-file implementation via Codex CLI. |
-| `codex-fast` | Codex | `auto` (fast tier) | read-only | Fast mechanical exploration and log triage via Codex CLI. |
-| `codex-review` | Codex | `auto` (reasoning) | read-only | Independent verifier and security/correctness reviewer. |
-| `claude-review` | Claude Code | `default` | read-only | Adversarial multi-lens code review via Claude Code CLI. |
-| `claude-implement` | Claude Code | `default` | write | Scoped implementation via Claude Code CLI. |
-| `dhs-review` | DHS / DSH | `default` | read-only | Headless review via DeepSeek Harness. |
-| `dhs-implement` | DHS / DSH | `default` | write | Headless scoped implementation via DeepSeek Harness. |
-| `dhs-fast` | DHS / DSH | `default` | read-only | Headless fast triage via DeepSeek Harness. |
-| `pi-glm-review` | Pi | `auto` (latest GLM) | read-only | Deep code review, design critique, and security reasoning. |
-| `pi-glm-plan` | Pi | `auto` (latest GLM) | read-only | Task decomposition and implementation planning. |
-| `pi-glm-debug` | Pi | `auto` (latest GLM) | read-only | Hypothesis and root-cause analysis without editing files. |
-| `pi-glm-implement` | Pi | `auto` (latest GLM) | write | Scoped implementation with latest active GLM model. |
-| `pi-deepseek-review` | Pi | `auto` (latest DeepSeek) | read-only | Deep review with latest active DeepSeek model. |
-| `pi-minimax-large` | Pi | `auto` (latest MiniMax) | read-only | Broad context sweeps across large repositories. |
-| `pi-lean` | Pi | `pi-profile:lean` | read-only | Isolated lightweight Pi runner via local pi-profile lean. |
-| `pi-gsd` | Pi | `pi-profile:gsd` | read-only | GSD-enhanced Pi runner via local pi-profile gsd. |
-| `pi-search` | Pi | `pi-profile:search` | read-only | Research and web search Pi runner via local pi-profile search. |
-| `opencode-fast` | OpenCode | `default` | read-only | Fast codebase scan via OpenCode. |
-| `opencode-review` | OpenCode | `default` | read-only | GSD-style review via OpenCode reviewer agent. |
+| `codex-complex` | Codex | `auto` (flagship) | write | Complex multi-file implementation. |
+| `codex-fast` | Codex | `auto` (fast tier) | read-only | Fast exploration and log triage. |
+| `codex-review` | Codex | `auto` (reasoning) | read-only | Independent verifier and reviewer. |
+| `claude-review` | Claude Code | `auto` (catalog) | read-only | Adversarial code review. |
+| `claude-implement` | Claude Code | `auto` (catalog) | write | Scoped implementation. |
+| `pi-glm-review` | Pi | `auto` (latest GLM) | read-only | Deep code review and security reasoning. |
+| `pi-glm-plan` | Pi | `auto` (latest GLM) | read-only | Task decomposition and planning. |
+| `pi-glm-debug` | Pi | `auto` (latest GLM) | read-only | Hypothesis and root-cause analysis. |
+| `pi-glm-implement` | Pi | `auto` (latest GLM) | write | Scoped implementation with GLM. |
+| `pi-deepseek-review` | Pi | `auto` (latest DeepSeek) | read-only | Deep review with DeepSeek. |
+| `pi-minimax-large` | Pi | `auto` (latest MiniMax) | read-only | Broad context sweeps. |
+| `pi-lean` | Pi-profile | `default` | read-only | Isolated lightweight Pi runner. |
+| `pi-gsd` | Pi-profile | `default` | read-only | GSD-enhanced Pi runner. |
+| `pi-search` | Pi-profile | `default` | read-only | Research and web search Pi runner. |
+| `opencode-fast` | OpenCode | `default` | read-only | Fast codebase scan. |
+| `opencode-review` | OpenCode | `default` | read-only | GSD-style review. |
 | `opencode-implement` | OpenCode | `default` | write | OpenCode implementation task. |
 
-## Permission Bypass Modes
+## Model Catalog Input
 
-For write-capable profiles, use any of:
-- `--allow-write`: Grants write permissions.
-- `--yolo` / `--dangerously-skip-permissions`: Automatically bypasses interactive confirmations across all harnesses (`--yolo` for Codex/DHS, `--dangerously-skip-permissions` for Claude Code, `--auto` for OpenCode, full tool allowlist for Pi).
+Pass `--model-catalog` for Codex or Claude auto-selection. The file must use this JSON shape:
 
-## Worktree Auto-Isolation
+```json
+{"models":[{"id":"model-name"}],"default":"model-name"}
+```
 
-Pass `--worktree <slug>` to automatically isolate the delegated run inside `.worktrees/<slug>` on branch `task/<slug>`, keeping the main checkout clean. Slugs are strictly validated (alphanumeric, dashes, and underscores only; rejecting `.`, `..`, traversal segments, and absolute paths) and resolved under `.worktrees`, verifying git worktree registration.
+`default` is required when a Claude catalog has more than one model. An explicit `--model` skips catalog discovery.
+
+## Access and Isolation
+
+- `--allow-write` permits a write-capable profile to run. Codex gets `--sandbox workspace-write`. Claude gets `--permission-mode acceptEdits`.
+- `--yolo` requests the selected harness's permission-bypass mode for write-capable profiles only.
+- Read-only profiles ignore `--yolo`, stay read-only, and print a warning.
+- `--herdr` opts into same-directory idle agent reuse for write-capable profiles. Default dispatch always uses a fresh local subprocess.
+- `--worktree <slug>` isolates the task under `.worktrees/<slug>`.
+- `--dry-run` prints the planned command and prompt without writing artifacts or creating a worktree.

@@ -23,11 +23,11 @@ Operate as the orchestrator for multi-harness delegation. Use the canonical skil
 
 <execution_context>
 Canonical skill:
-~/programming/agent-dev-kit/overnight-task-kit/skills/multi-harness/SKILL.md
+./SKILL.md
 
 Required references when routing is non-trivial:
-~/programming/agent-dev-kit/overnight-task-kit/skills/multi-harness/references/profiles.md
-~/programming/agent-dev-kit/overnight-task-kit/skills/multi-harness/references/prompt-contracts.md
+./references/profiles.md
+./references/prompt-contracts.md
 </execution_context>
 
 <context>
@@ -40,10 +40,10 @@ $ARGUMENTS
 3. If the requested external route/profile is unclear, read `references/profiles.md`.
 4. If the task can write files or touches sensitive systems, read `references/prompt-contracts.md`.
 5. Run diagnostics if external-harness availability is uncertain:
-   `python3 ~/programming/agent-dev-kit/overnight-task-kit/skills/multi-harness/scripts/delegate.py --diagnose`
+   `python3 ./scripts/delegate.py --diagnose`
 6. Build a bounded delegated task. Include objective, scope, non-goals, permission mode, and expected output.
 7. Run the wrapper. Prefer read-only profiles unless the user clearly requested external edits:
-   `python3 ~/programming/agent-dev-kit/overnight-task-kit/skills/multi-harness/scripts/delegate.py --profile <profile> --cwd "$PWD" --task "<task>"`
+   `python3 ./scripts/delegate.py --profile <profile> --cwd "$PWD" --task "<task>"`
 8. For write-capable profiles, require `--allow-write`, then inspect `git status` and diffs afterward before accepting the delegate's work.
 9. Synthesize the delegated output. Report the harness/profile used, accepted findings or changes, local verification, and residual risk.
 </process>
