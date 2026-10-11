@@ -89,8 +89,9 @@ exact value the LLM layer has to add. The method is the point; keep counts and
 2. The source registry had ~45 skills; over half were coupled to private infra or
    were redundant with existing plugins. `CURATION.md` records exactly what was
    cut and why. Shipping less, on purpose, is the senior move.
-3. firstmate as a runtime — documented comparison only; Agent Tutor Orchestrator remains the
-   generalist orchestrator surface here.
+3. firstmate as a runtime — optional external layer, documented and bootstrapped
+   but never vendored; Agent Tutor Orchestrator remains the generalist
+   orchestrator surface here (see [docs/agent-tutor-vs-firstmate.md](docs/agent-tutor-vs-firstmate.md)).
 4. Vendoring entire third-party skill packs (addyosmani and similar) — install
    via skills CLI instead.
 

@@ -1,7 +1,11 @@
 # Agent Tutor Orchestrator vs firstmate
 
 This kit ships **Agent Tutor Orchestrator** as its pure orchestrator. It does **not**
-adopt [firstmate](https://github.com/kunchenguid/firstmate) as a runtime.
+adopt [firstmate](https://github.com/kunchenguid/firstmate) as a runtime. firstmate
+is tracked as an optional external layer: documented in
+[`external-deps.md`](external-deps.md), placed in the layer map in
+[`how-it-fits-together.md`](how-it-fits-together.md), and credited in
+[`ATTRIBUTION.md`](../ATTRIBUTION.md). No firstmate code lives here.
 
 ## Short verdict
 

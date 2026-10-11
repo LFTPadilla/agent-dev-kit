@@ -7,7 +7,7 @@
    "use knip", "run the live-qa skill", "orchestrate". Nothing to import.
 2. **Commands** are typed with a slash: `/pr-review <PR-URL>`.
 3. **Templates** are files you copy into a project (not auto-applied).
-4. **External tools** (GSD, caveman, ponytail, no-mistakes, jev-review, treehouse, gnhf,
+4. **External tools** (GSD, caveman, ponytail, firstmate, no-mistakes, jev-review, treehouse, gnhf,
    skills CLI, MCP servers) install separately — see
    [external-deps.md](external-deps.md),
    [how-it-fits-together.md](how-it-fits-together.md), and
