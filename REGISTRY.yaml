@@ -3,7 +3,7 @@
 # Every skill under a `skills/` directory of a shipped subsystem is listed here.
 # `npm run validate` fails when this catalog drifts from disk.
 version: "1.0"
-updated: "2026-09-21"
+updated: "2026-11-06"
 
 subsystems:
   dev-skills:
@@ -127,6 +127,9 @@ skills:
     path: "plugins/dev-skills/skills/stagehand"
     scope: "quality"
     requires: [node]
+  task-intake:
+    path: "plugins/dev-skills/skills/task-intake"
+    scope: "orchestration"
   tex-render:
     path: "plugins/dev-skills/skills/tex-render"
     scope: "visualization"

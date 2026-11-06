@@ -186,6 +186,13 @@
         "stagehand"
       ]
     },
+    "task-intake": {
+      "source": "local",
+      "license": "MIT",
+      "visibility": "public",
+      "risk": "low",
+      "dependencies": []
+    },
     "tex-render": {
       "source": "local",
       "license": "MIT",

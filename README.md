@@ -5,7 +5,7 @@
 ![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin%20marketplace-8A2BE2)
 ![Codex](https://img.shields.io/badge/Codex-compatible-000000)
 ![Hermes](https://img.shields.io/badge/Hermes-profiles-4B0082)
-![Skills](https://img.shields.io/badge/skills-28-4f46e5)
+![Skills](https://img.shields.io/badge/skills-29-4f46e5)
 ![Profiles](https://img.shields.io/badge/profiles-6-f59e0b)
 ![Evals](https://img.shields.io/badge/evals-12%20planted%20%C2%B7%203%20controls-10b981)
 [![Live Website](https://img.shields.io/badge/live--demo-agent--dev--kit.devpipe.net-00d2ff)](https://agent-dev-kit.devpipe.net/)
@@ -135,7 +135,7 @@ A fresh clone does **not** assume Hermes or any private overlay. Pick a tier:
 
 | Tier | You get | Requires |
 |---|---|---|
-| **A — Kit only** | 28 skills, `/pr-review`, evals | Node/npm |
+| **A — Kit only** | 29 skills, `/pr-review`, evals | Node/npm |
 | **B — Agent Tutor Orchestrator** | Pure orchestrator that coordinates via tmux / Kanban | Hermes |
 | **C — Private overlay** | Org skills linked from outside this tree | optional |
 

@@ -10,6 +10,17 @@ an adversarial `/pr-review` command, evals, overnight protocol templates, and
 orchestration profiles. The kit composes with optional
 **private org skills overlays** that live *outside* this git tree.
 
+## Core philosophy
+
+"Take as little human attention as possible and give as much value as possible."
+
+1. Find facts yourself (memory, code, docs, tickets) before you ask the user.
+2. Ask only the questions whose answer changes the plan. Give a recommended answer with each question.
+3. To explain, start with one diagram or one ELI5 analogy. Add text only for what the picture cannot show. Use a narrated video only when the order of events matters.
+4. Start each new task with the `task-intake` skill.
+5. Before a plan or a design, grill the user with a grilling skill. Ask only what rule 2 allows.
+6. Build with the `ponytail` rules: the smallest change that works, with no speculative complexity.
+
 ## Layers (do not collapse them)
 
 | Layer | Governs | Where |
@@ -93,7 +104,7 @@ worked examples.
 | Declarative catalog (ANRS-1.0) | [`REGISTRY.yaml`](REGISTRY.yaml) |
 | Dev-Skills Subsystem | [`plugins/dev-skills/AGENTS.md`](plugins/dev-skills/AGENTS.md) |
 | Overnight Task Kit Subsystem | [`overnight-task-kit/AGENTS.md`](overnight-task-kit/AGENTS.md) |
-| Skill catalog (all 28) | [`docs/skills-catalog.md`](docs/skills-catalog.md) |
+| Skill catalog (all 29) | [`docs/skills-catalog.md`](docs/skills-catalog.md) |
 | Provenance / license / risk | [`skill-provenance.json`](skill-provenance.json) |
 | Curation decisions | [`CURATION.md`](CURATION.md) |
 | Design thesis | [`WRITEUP.md`](WRITEUP.md) |
