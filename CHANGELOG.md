@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-11-06
+
+### Added
+- `task-intake` skill. It links short chat summaries to complete briefs, source notes, one diagram, one analogy, and at most 3 questions.
+- Core philosophy in `AGENTS.md`: verified completion, reversible initiative within authority, and useful results grouped for delivery.
+- Conversational replies default to 120 words and short paragraphs. Requested artifacts and code remain complete.
+
 ## [0.13.2] - 2026-09-30
 
 ### Changed

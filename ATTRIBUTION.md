@@ -2,6 +2,13 @@
 
 This kit adapts ideas and text from other open-source projects, with thanks.
 
+## Core philosophy — deepseek-ai/dsh-superagent-prototype (MIT)
+
+The attention-and-value principle in `AGENTS.md` and `task-intake` draws from
+[000 Philosophy](https://github.com/deepseek-ai/dsh-superagent-prototype/blob/main/docs/000-philosophy.md).
+The kit applies the principle through its own workflow and communication rules.
+The `task-intake` skill remains an original local workflow.
+
 ## ECC — affaan-m/ECC (MIT)
 
 The following are adapted (condensed and reworded) from ECC's reviewer agents:
