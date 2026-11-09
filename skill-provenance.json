@@ -191,6 +191,7 @@
       "license": "MIT",
       "visibility": "public",
       "risk": "low",
+      "notes": "Original local workflow. Short chat summaries link to complete task artifacts.",
       "dependencies": []
     },
     "tex-render": {

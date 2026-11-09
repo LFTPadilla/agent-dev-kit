@@ -7,8 +7,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.14.0] - 2026-11-06
 
 ### Added
-- `task-intake` skill. It starts a task from the sources, writes one diagram and one analogy, and asks at most 3 questions.
-- Core philosophy in `AGENTS.md`. Take as little human attention as possible and give as much value as possible.
+- `task-intake` skill. It links short chat summaries to complete briefs, source notes, one diagram, one analogy, and at most 3 questions.
+- Core philosophy in `AGENTS.md`: verified completion, reversible initiative within authority, and useful results grouped for delivery.
+- Conversational replies default to 120 words and short paragraphs. Requested artifacts and code remain complete.
 
 ## [0.13.2] - 2026-09-30
 

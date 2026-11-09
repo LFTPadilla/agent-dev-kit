@@ -16,10 +16,14 @@ orchestration profiles. The kit composes with optional
 
 1. Find facts yourself (memory, code, docs, tickets) before you ask the user.
 2. Ask only the questions whose answer changes the plan. Give a recommended answer with each question.
-3. To explain, start with one diagram or one ELI5 analogy. Add text only for what the picture cannot show. Use a narrated video only when the order of events matters.
+3. Start explanations with one diagram or one ELI5 analogy. Add only what the picture cannot show. Use a narrated video only when event order matters.
 4. Start each new task with the `task-intake` skill.
 5. Before a plan or a design, grill the user with a grilling skill. Ask only what rule 2 allows.
 6. Build with the `ponytail` rules: the smallest change that works, with no speculative complexity.
+7. Complete the requested task and verify the result before claiming success.
+8. Take reversible, low-impact initiative within existing authority. Respect the user's preferences.
+9. Get specific permission before extra costs, destructive actions, or broader access.
+10. Group useful results into one concise delivery. Follow the user's timing and communication preferences.
 
 ## Layers (do not collapse them)
 
@@ -71,6 +75,11 @@ messages, eval fixtures, PR descriptions, and commit messages.
 
 Two exemptions. Persuasive or marketing copy is out of scope. Quoted text is
 never rewritten.
+
+Default to at most 120 words in conversational replies. Use 1–3 short paragraphs
+or at most 5 bullets. Keep each paragraph to at most 3 sentences.
+Expand only when the user requests detail or a safe, correct decision requires it.
+Keep requested artifacts and code complete. Link supporting detail when appropriate.
 
 Agent-facing text pays twice for ambiguity: the reader has no author to ask, and
 a misread becomes a wrong action rather than a re-read. The

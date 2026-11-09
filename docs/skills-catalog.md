@@ -19,7 +19,7 @@
 
 | Skill | Layer | Adds | Triggers on |
 |---|---|---|---|
-| `task-intake` | Task start | One-page brief with one diagram, one ELI5 analogy, and at most 3 questions | "new task", "I got assigned", "where do I start" |
+| `task-intake` | Task start | Short chat summary linking to a complete brief, diagram, analogy, source notes, and at most 3 questions | "new task", "I got assigned", "where do I start" |
 | `orchestrate` | Native Subagents | Lean native orchestrator: zero-touch code ban, self-contained briefs (implementation + read-only), strictly delegates to host workers, verifies on disk. Cap of 3 parallel writers; no tmux or model routing. | "$orchestrate", "orchestrate", "delegate to subagents", "orchestrate this", "use workers" |
 | `herdr` | Multi-Pane Workspaces | Agent-native terminal multiplexer: workspaces, tabs, panes, and agent lifecycle management (idle, working, blocked, done). | "herdr", running inside Herdr (HERDR_ENV=1), inspecting/controlling Herdr agents or panes |
 | `tmux-delegation` | Out-of-Process Panes | Multi-harness tmux delegation (Codex, Claude Code, Pi, OpenCode, cursor-agent): pane allocation, reliable multiline buffer injection, completion detection, disk audit. | "tmux delegation", delegating tasks to agents running in tmux panes across multiple harnesses |

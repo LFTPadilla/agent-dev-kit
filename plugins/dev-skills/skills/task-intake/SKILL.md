@@ -10,11 +10,15 @@ description: 'Starts a new task with full context and minimum human attention. C
 
 ## Output contract
 
-The human receives one page, at most 3 questions, and one stakeholder message.
+The human receives a short chat summary and links to the full task record.
 
-1. The page gives the gist in 2 minutes and full depth in 10 minutes.
-2. Each question includes a recommended answer.
-3. The stakeholder questions are one message, ready to send.
+1. Keep chat within 120 words by default. Expand for requested detail or a safe, correct decision.
+2. Save the complete brief, source notes, approach options, and stakeholder message in the task record.
+3. The brief gives the gist in 2 minutes and full depth in 10 minutes.
+4. Ask at most 3 questions. Include a recommended answer with each question.
+5. Draft the stakeholder questions as one message, ready to send.
+
+Keep requested artifacts complete. Link detailed evidence instead of repeating it in chat.
 
 ## Step 0. Open the task record
 
@@ -78,7 +82,8 @@ Route through `explain-concept` when that default does not fit.
 
 ## Step 6. Hand off to planning
 
-Give 2 or 3 approach options. State the trade-offs. Recommend one option.
+Record 2 or 3 approach options in the brief. State the trade-offs and recommend one option.
+In chat, link the brief and give the recommendation.
 
 Apply the ponytail rules. Choose the smallest approach that meets every constraint.
 
